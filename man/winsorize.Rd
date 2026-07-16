@@ -4,7 +4,13 @@
 \alias{winsorize}
 \title{Winsorize outliers using a robust MAD threshold}
 \usage{
-winsorize(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE)
+winsorize(
+  x,
+  threshold = 3.5,
+  constant = 1.4826,
+  na_rm = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -14,6 +20,8 @@ winsorize(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE)
 \item{constant}{A positive scaling constant passed to \code{\link[stats:mad]{stats::mad()}}.}
 
 \item{na_rm}{Logical. Should missing values be removed?}
+
+\item{verbose}{Logical. If \code{TRUE}, report how many values were capped.}
 }
 \value{
 A numeric vector the same length as \code{x}, with outliers capped.

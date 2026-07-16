@@ -9,6 +9,8 @@ uses semantic version numbers for releases.
 
 ### Added
 
+- `verbose = FALSE` arguments across exported functions, with optional `cli`
+  summaries and `mad_qc()` metric progress.
 - Initial package documentation, README, and package-level help.
 - MAD-based helpers for scores, outlier detection, winsorization, matrix
   scaling, QC summaries, and variable feature selection.

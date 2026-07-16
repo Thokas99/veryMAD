@@ -4,7 +4,15 @@
 \alias{mad_qc}
 \title{Flag QC outliers using directional MAD thresholds}
 \usage{
-mad_qc(data, metrics, nmads = 3, transform = NULL, group_by = NULL, ...)
+mad_qc(
+  data,
+  metrics,
+  nmads = 3,
+  transform = NULL,
+  group_by = NULL,
+  verbose = FALSE,
+  ...
+)
 }
 \arguments{
 \item{data}{A data frame (one row per observation, e.g. cell or sample)
@@ -24,6 +32,9 @@ to apply to specific metrics before computing thresholds, one of
 
 \item{group_by}{An optional column name in \code{data} (e.g. sample or batch)
 within which medians and MADs are computed separately.}
+
+\item{verbose}{Logical. If \code{TRUE}, report QC progress with
+\code{\link[cli:cli_progress_bar]{cli::cli_progress_bar()}} and \code{\link[cli:cli_inform]{cli::cli_inform()}}.}
 
 \item{...}{Passed to methods.}
 }

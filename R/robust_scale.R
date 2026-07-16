@@ -17,6 +17,7 @@
 #'   scaled values to `NA`), or `"error"` (abort).
 #'
 #' @return A numeric matrix the same shape as `x`.
+#' @param verbose Logical. If `TRUE`, report the matrix margin scaled.
 #' @export
 #'
 #' @family robust MAD helpers
@@ -29,7 +30,8 @@ robust_scale <- function(
   margin = 1,
   center = TRUE,
   scale = TRUE,
-  zero_mad = c("zero", "na", "error")
+  zero_mad = c("zero", "na", "error"),
+  verbose = FALSE
 ) {
   zero_mad <- match.arg(zero_mad)
 
@@ -81,5 +83,8 @@ robust_scale <- function(
     scaled <- t(scaled)
   }
 
+  if (isTRUE(verbose)) {
+    cli::cli_inform("Robust-scaled a {nrow(x)} x {ncol(x)} matrix across {if (margin == 1L) 'rows' else 'columns'}.")
+  }
   scaled
 }

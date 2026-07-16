@@ -4,7 +4,13 @@
 \alias{is_outlier}
 \title{Flag robust outliers}
 \usage{
-is_outlier(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE)
+is_outlier(
+  x,
+  threshold = 3.5,
+  constant = 1.4826,
+  na_rm = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -15,6 +21,8 @@ modified z-score convention of Iglewicz and Hoaglin (1993).}
 \item{constant}{A positive scaling constant passed to \code{\link[stats:mad]{stats::mad()}}.}
 
 \item{na_rm}{Logical. Should missing values be removed?}
+
+\item{verbose}{Logical. If \code{TRUE}, report how many values were flagged.}
 }
 \value{
 A logical vector the same length as \code{x}. \code{NA} where \code{x} is

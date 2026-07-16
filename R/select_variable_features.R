@@ -10,6 +10,7 @@
 #'   or `2` to rank columns.
 #' @param na_rm Logical. Should missing values be removed?
 #' @param constant A positive scaling constant passed to [row_mad()].
+#' @param verbose Logical. If `TRUE`, report how many features were selected.
 #'
 #' @return A character vector of the top `n` row (or column) names, ordered
 #'   by decreasing MAD. If `x` has no names on that margin, an integer
@@ -27,7 +28,8 @@ select_variable_features <- function(
   n = 2000,
   margin = 1,
   na_rm = FALSE,
-  constant = 1.4826
+  constant = 1.4826,
+  verbose = FALSE
 ) {
   if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n <= 0 || n != as.integer(n)) {
     cli::cli_abort("{.arg n} must be one finite positive whole number.")
@@ -41,5 +43,9 @@ select_variable_features <- function(
   }
 
   n <- min(n, length(scores))
-  labels[order(scores, decreasing = TRUE)][seq_len(n)]
+  result <- labels[order(scores, decreasing = TRUE)][seq_len(n)]
+  if (isTRUE(verbose)) {
+    cli::cli_inform("Selected {length(result)} variable feature{?s} by MAD.")
+  }
+  result
 }

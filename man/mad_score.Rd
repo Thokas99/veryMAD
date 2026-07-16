@@ -4,7 +4,7 @@
 \alias{mad_score}
 \title{Calculate robust MAD scores}
 \usage{
-mad_score(x, constant = 1.4826, na_rm = FALSE)
+mad_score(x, constant = 1.4826, na_rm = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{x}{A numeric vector.}
@@ -12,6 +12,8 @@ mad_score(x, constant = 1.4826, na_rm = FALSE)
 \item{constant}{A positive scaling constant passed to \code{\link[stats:mad]{stats::mad()}}.}
 
 \item{na_rm}{Logical. Should missing values be removed?}
+
+\item{verbose}{Logical. If \code{TRUE}, report a short summary with \code{\link[cli:cli_inform]{cli::cli_inform()}}.}
 }
 \value{
 A numeric vector with one robust score per input value.

@@ -18,6 +18,8 @@
 #'   `"identity"` (the default for any metric not listed) or `"log10"`.
 #' @param group_by An optional column name in `data` (e.g. sample or batch)
 #'   within which medians and MADs are computed separately.
+#' @param verbose Logical. If `TRUE`, report QC progress with
+#'   [cli::cli_progress_bar()] and [cli::cli_inform()].
 #' @param ... Passed to methods.
 #'
 #' @return For a data frame, a data frame with one row per
@@ -43,7 +45,7 @@
 mad_qc <- S7::new_generic(
   "mad_qc",
   "data",
-  function(data, metrics, nmads = 3, transform = NULL, group_by = NULL, ...) {
+  function(data, metrics, nmads = 3, transform = NULL, group_by = NULL, verbose = FALSE, ...) {
     S7::S7_dispatch()
   }
 )
@@ -54,6 +56,7 @@ S7::method(mad_qc, S7::class_any) <- function(
   nmads = 3,
   transform = NULL,
   group_by = NULL,
+  verbose = FALSE,
   ...
 ) {
   cli::cli_abort(
@@ -67,6 +70,7 @@ S7::method(mad_qc, S7::new_S3_class("data.frame")) <- function(
   nmads = 3,
   transform = NULL,
   group_by = NULL,
+  verbose = FALSE,
   ...
 ) {
   metric_names <- names(metrics)
@@ -106,7 +110,12 @@ S7::method(mad_qc, S7::new_S3_class("data.frame")) <- function(
 
   id <- if (!is.null(rownames(data))) rownames(data) else seq_len(nrow(data))
 
+  if (isTRUE(verbose)) {
+    pb <- cli::cli_progress_bar("Checking QC metrics", total = length(metric_names))
+    on.exit(cli::cli_progress_done(id = pb), add = TRUE)
+  }
   results <- lapply(metric_names, function(metric) {
+    if (isTRUE(verbose)) cli::cli_progress_update(id = pb)
     direction <- metrics[[metric]]
     transform_type <- if (metric %in% names(transform)) {
       transform[[metric]]
@@ -145,6 +154,9 @@ S7::method(mad_qc, S7::new_S3_class("data.frame")) <- function(
 
   out <- do.call(rbind, results)
   rownames(out) <- NULL
+  if (isTRUE(verbose)) {
+    cli::cli_inform("QC flagged {sum(out$is_outlier, na.rm = TRUE)} outlier observation-metric pair{?s}.")
+  }
   out
 }
 
@@ -156,6 +168,7 @@ mad_qc_seurat_method <- function(
   nmads = 3,
   transform = NULL,
   group_by = NULL,
+  verbose = FALSE,
   ...
 ) {
   meta <- data@meta.data

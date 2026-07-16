@@ -4,7 +4,7 @@
 \alias{row_mad}
 \title{Calculate MAD across rows or columns of a matrix}
 \usage{
-row_mad(x, margin = 1, na_rm = FALSE, constant = 1.4826)
+row_mad(x, margin = 1, na_rm = FALSE, constant = 1.4826, verbose = FALSE)
 }
 \arguments{
 \item{x}{A numeric matrix.}
@@ -16,6 +16,8 @@ per feature), or \code{2} to compute across columns.}
 
 \item{constant}{A positive scaling constant passed to
 \code{\link[matrixStats:rowMads]{matrixStats::rowMads()}}/\code{\link[matrixStats:colMads]{matrixStats::colMads()}}.}
+
+\item{verbose}{Logical. If \code{TRUE}, report the matrix margin summarized.}
 }
 \value{
 A numeric vector of MAD values, one per row (or column) of \code{x},

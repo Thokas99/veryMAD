@@ -6,6 +6,7 @@
 #' @param x A numeric vector.
 #' @param constant A positive scaling constant passed to [stats::mad()].
 #' @param na_rm Logical. Should missing values be removed?
+#' @param verbose Logical. If `TRUE`, report a short summary with [cli::cli_inform()].
 #'
 #' @return A numeric vector with one robust score per input value.
 #' @export
@@ -14,7 +15,7 @@
 #'
 #' @examples
 #' mad_score(c(1, 2, 2, 3, 100))
-mad_score <- function(x, constant = 1.4826, na_rm = FALSE) {
+mad_score <- function(x, constant = 1.4826, na_rm = FALSE, verbose = FALSE) {
   if (!is.numeric(x)) {
     cli::cli_abort("{.arg x} must be a numeric vector.")
   }
@@ -35,5 +36,9 @@ mad_score <- function(x, constant = 1.4826, na_rm = FALSE) {
     return(rep(NA_real_, length(x)))
   }
 
-  (x - centre) / scale
+  result <- (x - centre) / scale
+  if (isTRUE(verbose)) {
+    cli::cli_inform("Calculated MAD scores for {length(x)} value{?s}.")
+  }
+  result
 }

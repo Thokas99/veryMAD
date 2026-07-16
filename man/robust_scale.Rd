@@ -9,7 +9,8 @@ robust_scale(
   margin = 1,
   center = TRUE,
   scale = TRUE,
-  zero_mad = c("zero", "na", "error")
+  zero_mad = c("zero", "na", "error"),
+  verbose = FALSE
 )
 }
 \arguments{
@@ -26,6 +27,8 @@ feature), or \code{2} to scale across columns.}
 sparse omics data, where a feature can be constant within a group).
 One of \code{"zero"} (set scaled values to 0, the default), \code{"na"} (set
 scaled values to \code{NA}), or \code{"error"} (abort).}
+
+\item{verbose}{Logical. If \code{TRUE}, report the matrix margin scaled.}
 }
 \value{
 A numeric matrix the same shape as \code{x}.

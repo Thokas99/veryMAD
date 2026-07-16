@@ -80,6 +80,18 @@ values are outlier directions (`"lower"`, `"upper"`, or `"both"`).
 It returns a tidy long data frame with one row per observation and metric:
 `id`, `metric`, `value`, `median`, `mad`, `lower`, `upper`, and `is_outlier`.
 
+## Verbose Output
+
+All exported functions are quiet by default. Set `verbose = TRUE` to get a
+short `cli` summary without changing the returned object.
+
+```r
+is_outlier(x, verbose = TRUE)
+mad_qc(qc, metrics = c(nCount_RNA = "both", percent_mt = "upper"), verbose = TRUE)
+```
+
+`mad_qc(verbose = TRUE)` also shows a progress bar while it checks metrics.
+
 ## API
 
 | Function | Purpose |

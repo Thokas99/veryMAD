@@ -9,7 +9,8 @@ select_variable_features(
   n = 2000,
   margin = 1,
   na_rm = FALSE,
-  constant = 1.4826
+  constant = 1.4826,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -23,6 +24,8 @@ or \code{2} to rank columns.}
 \item{na_rm}{Logical. Should missing values be removed?}
 
 \item{constant}{A positive scaling constant passed to \code{\link[=row_mad]{row_mad()}}.}
+
+\item{verbose}{Logical. If \code{TRUE}, report how many features were selected.}
 }
 \value{
 A character vector of the top \code{n} row (or column) names, ordered
