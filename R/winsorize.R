@@ -13,6 +13,8 @@
 #' @return A numeric vector the same length as `x`, with outliers capped.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' winsorize(c(1, 2, 2, 3, 100))
 winsorize <- function(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE) {

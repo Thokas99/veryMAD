@@ -39,3 +39,13 @@ m <- matrix(rnorm(50), nrow = 10)
 rownames(m) <- paste0("gene", 1:10)
 select_variable_features(m, n = 3)
 }
+\seealso{
+Other robust MAD helpers:
+\code{\link[=is_outlier]{is_outlier()}},
+\code{\link[=mad_qc]{mad_qc()}},
+\code{\link[=mad_score]{mad_score()}},
+\code{\link[=robust_scale]{robust_scale()}},
+\code{\link[=row_mad]{row_mad()}},
+\code{\link[=winsorize]{winsorize()}}
+}
+\concept{robust MAD helpers}

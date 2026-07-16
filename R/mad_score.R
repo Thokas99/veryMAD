@@ -10,6 +10,8 @@
 #' @return A numeric vector with one robust score per input value.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' mad_score(c(1, 2, 2, 3, 100))
 mad_score <- function(x, constant = 1.4826, na_rm = FALSE) {

@@ -16,6 +16,8 @@
 #'   named with the corresponding row (or column) names if present.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' m <- matrix(c(1, 2, 2, 3, 100, 10, 20, 20, 30, 40), nrow = 2, byrow = TRUE)
 #' row_mad(m)

@@ -41,3 +41,13 @@ columns are samples.
 m <- matrix(c(1, 2, 2, 3, 100, 10, 20, 20, 30, 40), nrow = 2, byrow = TRUE)
 robust_scale(m)
 }
+\seealso{
+Other robust MAD helpers:
+\code{\link[=is_outlier]{is_outlier()}},
+\code{\link[=mad_qc]{mad_qc()}},
+\code{\link[=mad_score]{mad_score()}},
+\code{\link[=row_mad]{row_mad()}},
+\code{\link[=select_variable_features]{select_variable_features()}},
+\code{\link[=winsorize]{winsorize()}}
+}
+\concept{robust MAD helpers}

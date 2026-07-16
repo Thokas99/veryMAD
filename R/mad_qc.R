@@ -28,6 +28,8 @@
 #'   `@meta.data` per metric, plus an overall `mad_qc_outlier` column.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' cell_metadata <- data.frame(
 #'   nCount_RNA = c(500, 600, 550, 20000, 580),

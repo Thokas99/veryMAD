@@ -26,3 +26,13 @@ value rather than removing them.
 \examples{
 winsorize(c(1, 2, 2, 3, 100))
 }
+\seealso{
+Other robust MAD helpers:
+\code{\link[=is_outlier]{is_outlier()}},
+\code{\link[=mad_qc]{mad_qc()}},
+\code{\link[=mad_score]{mad_score()}},
+\code{\link[=robust_scale]{robust_scale()}},
+\code{\link[=row_mad]{row_mad()}},
+\code{\link[=select_variable_features]{select_variable_features()}}
+}
+\concept{robust MAD helpers}

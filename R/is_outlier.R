@@ -14,6 +14,8 @@
 #'   missing.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' is_outlier(c(1, 2, 2, 3, 100))
 is_outlier <- function(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE) {

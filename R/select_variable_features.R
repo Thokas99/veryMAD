@@ -16,6 +16,8 @@
 #'   vector of indices is returned instead.
 #' @export
 #'
+#' @family robust MAD helpers
+#'
 #' @examples
 #' m <- matrix(rnorm(50), nrow = 10)
 #' rownames(m) <- paste0("gene", 1:10)
