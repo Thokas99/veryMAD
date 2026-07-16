@@ -1,0 +1,22 @@
+Package: veryMAD
+Title: Robust Outlier Detection and Scaling Using the Median Absolute
+    Deviation
+Version: 0.0.0.9000
+Authors@R: 
+    person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
+Description: Provides median absolute deviation (MAD) based tools for
+    robust outlier detection and scaling, including per-observation
+    robust scores, directional QC thresholds for tabular data (e.g. cell
+    or sample metadata), and row/column-wise MAD statistics and scaling
+    for omics matrices.
+License: `use_mit_license()`, `use_gpl3_license()` or friends to pick a
+    license
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 8.0.0
+Imports: 
+    cli,
+    matrixStats
+Suggests: 
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
