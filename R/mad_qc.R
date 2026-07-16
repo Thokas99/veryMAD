@@ -5,10 +5,12 @@
 #' groups (samples, batches), and returns a tidy audit table rather than
 #' silently dropping observations.
 #'
-#' @param data A data frame, one row per observation (e.g. cell or sample).
-#' @param metrics A named character vector. Names are columns in `data`;
-#'   values give the outlier direction for that metric, one of `"lower"`,
-#'   `"upper"`, or `"both"`.
+#' @param data A data frame (one row per observation, e.g. cell or sample)
+#'   or, if the Seurat package is installed, a `Seurat` object.
+#' @param metrics A named character vector. Names are columns in `data`
+#'   (or in `data@meta.data` for a `Seurat` object); values give the
+#'   outlier direction for that metric, one of `"lower"`, `"upper"`, or
+#'   `"both"`.
 #' @param nmads A positive number of MADs from the median beyond which an
 #'   observation is flagged.
 #' @param transform An optional named character vector giving a transform
@@ -16,11 +18,14 @@
 #'   `"identity"` (the default for any metric not listed) or `"log10"`.
 #' @param group_by An optional column name in `data` (e.g. sample or batch)
 #'   within which medians and MADs are computed separately.
+#' @param ... Passed to methods.
 #'
-#' @return A data frame with one row per observation-metric combination,
-#'   with columns `id` (the row name or index of `data`), `metric`,
-#'   `value` (possibly transformed), `median`, `mad`, `lower`, `upper`, and
-#'   `is_outlier`.
+#' @return For a data frame, a data frame with one row per
+#'   observation-metric combination, with columns `id` (the row name or
+#'   index of `data`), `metric`, `value` (possibly transformed), `median`,
+#'   `mad`, `lower`, `upper`, and `is_outlier`. For a `Seurat` object, the
+#'   input object with one `{metric}_outlier` logical column added to
+#'   `@meta.data` per metric, plus an overall `mad_qc_outlier` column.
 #' @export
 #'
 #' @examples
@@ -33,17 +38,35 @@
 #'   cell_metadata,
 #'   metrics = c(nCount_RNA = "lower", percent.mt = "upper")
 #' )
-mad_qc <- function(
+mad_qc <- S7::new_generic(
+  "mad_qc",
+  "data",
+  function(data, metrics, nmads = 3, transform = NULL, group_by = NULL, ...) {
+    S7::S7_dispatch()
+  }
+)
+
+S7::method(mad_qc, S7::class_any) <- function(
   data,
   metrics,
   nmads = 3,
   transform = NULL,
-  group_by = NULL
+  group_by = NULL,
+  ...
 ) {
-  if (!is.data.frame(data)) {
-    cli::cli_abort("{.arg data} must be a data frame.")
-  }
+  cli::cli_abort(
+    "{.arg data} must be a data frame{if (requireNamespace('Seurat', quietly = TRUE)) ' or a Seurat object'}."
+  )
+}
 
+S7::method(mad_qc, S7::new_S3_class("data.frame")) <- function(
+  data,
+  metrics,
+  nmads = 3,
+  transform = NULL,
+  group_by = NULL,
+  ...
+) {
   metric_names <- names(metrics)
   if (is.null(metric_names) || any(metric_names == "")) {
     cli::cli_abort("{.arg metrics} must be a named character vector.")
@@ -121,4 +144,37 @@ mad_qc <- function(
   out <- do.call(rbind, results)
   rownames(out) <- NULL
   out
+}
+
+# Registered dynamically for the Seurat S4 class in .onLoad(), since Seurat
+# is an optional (Suggests-only) dependency.
+mad_qc_seurat_method <- function(
+  data,
+  metrics,
+  nmads = 3,
+  transform = NULL,
+  group_by = NULL,
+  ...
+) {
+  meta <- data@meta.data
+  qc <- mad_qc(
+    meta,
+    metrics = metrics,
+    nmads = nmads,
+    transform = transform,
+    group_by = group_by
+  )
+
+  metric_names <- names(metrics)
+  outlier_cols <- lapply(metric_names, function(metric) {
+    qc$is_outlier[qc$metric == metric]
+  })
+  names(outlier_cols) <- paste0(metric_names, "_outlier")
+
+  for (col in names(outlier_cols)) {
+    data@meta.data[[col]] <- outlier_cols[[col]]
+  }
+  data@meta.data$mad_qc_outlier <- Reduce(`|`, outlier_cols)
+
+  data
 }

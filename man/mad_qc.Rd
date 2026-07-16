@@ -4,14 +4,16 @@
 \alias{mad_qc}
 \title{Flag QC outliers using directional MAD thresholds}
 \usage{
-mad_qc(data, metrics, nmads = 3, transform = NULL, group_by = NULL)
+mad_qc(data, metrics, nmads = 3, transform = NULL, group_by = NULL, ...)
 }
 \arguments{
-\item{data}{A data frame, one row per observation (e.g. cell or sample).}
+\item{data}{A data frame (one row per observation, e.g. cell or sample)
+or, if the Seurat package is installed, a \code{Seurat} object.}
 
-\item{metrics}{A named character vector. Names are columns in \code{data};
-values give the outlier direction for that metric, one of \code{"lower"},
-\code{"upper"}, or \code{"both"}.}
+\item{metrics}{A named character vector. Names are columns in \code{data}
+(or in \code{data@meta.data} for a \code{Seurat} object); values give the
+outlier direction for that metric, one of \code{"lower"}, \code{"upper"}, or
+\code{"both"}.}
 
 \item{nmads}{A positive number of MADs from the median beyond which an
 observation is flagged.}
@@ -22,12 +24,16 @@ to apply to specific metrics before computing thresholds, one of
 
 \item{group_by}{An optional column name in \code{data} (e.g. sample or batch)
 within which medians and MADs are computed separately.}
+
+\item{...}{Passed to methods.}
 }
 \value{
-A data frame with one row per observation-metric combination,
-with columns \code{id} (the row name or index of \code{data}), \code{metric},
-\code{value} (possibly transformed), \code{median}, \code{mad}, \code{lower}, \code{upper}, and
-\code{is_outlier}.
+For a data frame, a data frame with one row per
+observation-metric combination, with columns \code{id} (the row name or
+index of \code{data}), \code{metric}, \code{value} (possibly transformed), \code{median},
+\code{mad}, \code{lower}, \code{upper}, and \code{is_outlier}. For a \code{Seurat} object, the
+input object with one \verb{\{metric\}_outlier} logical column added to
+\verb{@meta.data} per metric, plus an overall \code{mad_qc_outlier} column.
 }
 \description{
 Applies a MAD-based threshold to one or more QC metrics (e.g. read
