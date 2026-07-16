@@ -23,7 +23,7 @@ threshold.
 \item \code{\link[=row_mad]{row_mad()}} computes row-wise or column-wise MAD values for numeric
 matrices.
 \item \code{\link[=robust_scale]{robust_scale()}} centers and scales numeric matrices with medians and MADs.
-\item \code{\link[=mad_qc]{mad_qc()}} adds MAD-based QC outlier flags to tabular QC metrics.
+\item \code{\link[=mad_qc]{mad_qc()}} returns tidy MAD-based QC thresholds and outlier flags.
 \item \code{\link[=select_variable_features]{select_variable_features()}} selects matrix rows or columns with the
 largest MAD values.
 }

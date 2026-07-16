@@ -64,11 +64,14 @@ qc <- data.frame(
   percent_mt = c(2, 3, 2.5, 3, 40)
 )
 
-mad_qc(qc, metrics = c("nCount_RNA", "percent_mt"))
+mad_qc(qc, metrics = c(nCount_RNA = "both", percent_mt = "upper"))
 ```
 
-`mad_qc()` appends one logical outlier column per metric plus a combined
-`mad_qc_outlier` flag.
+`mad_qc()` expects a named character vector: names are metric columns and
+values are outlier directions (`"lower"`, `"upper"`, or `"both"`).
+
+It returns a tidy long data frame with one row per observation and metric:
+`id`, `metric`, `value`, `median`, `mad`, `lower`, `upper`, and `is_outlier`.
 
 ## API
 
@@ -79,7 +82,7 @@ mad_qc(qc, metrics = c("nCount_RNA", "percent_mt"))
 | `winsorize()` | Cap values at MAD-threshold limits. |
 | `row_mad()` | Row-wise or column-wise MAD for numeric matrices. |
 | `robust_scale()` | Median-center and MAD-scale numeric matrices. |
-| `mad_qc()` | Add MAD-based QC flags to data frames or Seurat metadata. |
+| `mad_qc()` | Return tidy MAD-based QC thresholds and outlier flags. |
 | `select_variable_features()` | Select rows or columns with highest MAD. |
 
 ## Development

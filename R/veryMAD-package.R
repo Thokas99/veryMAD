@@ -14,7 +14,7 @@
 #' - [row_mad()] computes row-wise or column-wise MAD values for numeric
 #'   matrices.
 #' - [robust_scale()] centers and scales numeric matrices with medians and MADs.
-#' - [mad_qc()] adds MAD-based QC outlier flags to tabular QC metrics.
+#' - [mad_qc()] returns tidy MAD-based QC thresholds and outlier flags.
 #' - [select_variable_features()] selects matrix rows or columns with the
 #'   largest MAD values.
 #'

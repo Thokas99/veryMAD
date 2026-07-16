@@ -6,6 +6,7 @@ test_that("mad_qc dispatches on a Seurat object and writes @meta.data", {
     nrow = 4,
     dimnames = list(paste0("gene", 1:4), paste0("cell", 1:5))
   )
+  counts <- Matrix::Matrix(counts, sparse = TRUE)
   obj <- SeuratObject::CreateSeuratObject(counts = counts)
   obj$percent.mt <- c(2, 3, 2.5, 3, 40)
 
