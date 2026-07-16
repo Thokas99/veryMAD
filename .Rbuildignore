@@ -1,3 +1,6 @@
 ^LICENSE\.md$
+^\.\.Rcheck$
+^\.posit$
+^\.serena$
 ^veryMAD\.Rproj$
 ^\.Rproj\.user$
