@@ -23,5 +23,6 @@ Imports:
 Suggests: 
     Matrix,
     Seurat,
+    SeuratObject,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3

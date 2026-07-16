@@ -9,7 +9,7 @@ is_outlier(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE)
 \arguments{
 \item{x}{A numeric vector.}
 
-\item{threshold}{A positive number. Values with \code{abs(mad_score(x)) > threshold} are flagged as outliers. The default of 3.5 follows the
+\item{threshold}{A finite positive number. Values with \code{abs(mad_score(x)) > threshold} are flagged as outliers. The default of 3.5 follows the
 modified z-score convention of Iglewicz and Hoaglin (1993).}
 
 \item{constant}{A positive scaling constant passed to \code{\link[stats:mad]{stats::mad()}}.}

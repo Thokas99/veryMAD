@@ -4,7 +4,7 @@
       winsorize(1:5, threshold = -1)
     Condition
       Error in `winsorize()`:
-      ! `threshold` must be one positive number.
+      ! `threshold` must be one finite positive number.
 
 ---
 
@@ -12,5 +12,5 @@
       winsorize(1:5, threshold = c(1, 2))
     Condition
       Error in `winsorize()`:
-      ! `threshold` must be one positive number.
+      ! `threshold` must be one finite positive number.
 

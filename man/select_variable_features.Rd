@@ -15,7 +15,7 @@ select_variable_features(
 \arguments{
 \item{x}{A numeric matrix.}
 
-\item{n}{The number of features to select.}
+\item{n}{A finite positive whole number of features to select.}
 
 \item{margin}{\code{1} to rank rows (the default; e.g. one row per feature),
 or \code{2} to rank columns.}

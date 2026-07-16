@@ -85,6 +85,11 @@ It returns a tidy long data frame with one row per observation and metric:
 | `mad_qc()` | Return tidy MAD-based QC thresholds and outlier flags. |
 | `select_variable_features()` | Select rows or columns with highest MAD. |
 
+## Changelog
+
+Project changes are tracked in [CHANGELOG.md](CHANGELOG.md). The changelog
+format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
+
 ## Development
 
 ```r

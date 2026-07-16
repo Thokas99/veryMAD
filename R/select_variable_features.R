@@ -5,7 +5,7 @@
 #' [row_mad()].
 #'
 #' @param x A numeric matrix.
-#' @param n The number of features to select.
+#' @param n A finite positive whole number of features to select.
 #' @param margin `1` to rank rows (the default; e.g. one row per feature),
 #'   or `2` to rank columns.
 #' @param na_rm Logical. Should missing values be removed?
@@ -27,8 +27,8 @@ select_variable_features <- function(
   na_rm = FALSE,
   constant = 1.4826
 ) {
-  if (!is.numeric(n) || length(n) != 1L || n <= 0) {
-    cli::cli_abort("{.arg n} must be one positive number.")
+  if (!is.numeric(n) || length(n) != 1L || !is.finite(n) || n <= 0 || n != as.integer(n)) {
+    cli::cli_abort("{.arg n} must be one finite positive whole number.")
   }
 
   scores <- row_mad(x, margin = margin, na_rm = na_rm, constant = constant)

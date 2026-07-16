@@ -5,7 +5,7 @@
 #' value rather than removing them.
 #'
 #' @param x A numeric vector.
-#' @param threshold A positive number. Values with `abs(mad_score(x)) >
+#' @param threshold A finite positive number. Values with `abs(mad_score(x)) >
 #'   threshold` are capped at the corresponding boundary.
 #' @param constant A positive scaling constant passed to [stats::mad()].
 #' @param na_rm Logical. Should missing values be removed?
@@ -16,8 +16,8 @@
 #' @examples
 #' winsorize(c(1, 2, 2, 3, 100))
 winsorize <- function(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE) {
-  if (!is.numeric(threshold) || length(threshold) != 1L || threshold <= 0) {
-    cli::cli_abort("{.arg threshold} must be one positive number.")
+  if (!is.numeric(threshold) || length(threshold) != 1L || !is.finite(threshold) || threshold <= 0) {
+    cli::cli_abort("{.arg threshold} must be one finite positive number.")
   }
 
   centre <- stats::median(x, na.rm = na_rm)

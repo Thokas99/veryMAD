@@ -9,7 +9,7 @@ winsorize(x, threshold = 3.5, constant = 1.4826, na_rm = FALSE)
 \arguments{
 \item{x}{A numeric vector.}
 
-\item{threshold}{A positive number. Values with \code{abs(mad_score(x)) > threshold} are capped at the corresponding boundary.}
+\item{threshold}{A finite positive number. Values with \code{abs(mad_score(x)) > threshold} are capped at the corresponding boundary.}
 
 \item{constant}{A positive scaling constant passed to \code{\link[stats:mad]{stats::mad()}}.}
 

@@ -11,8 +11,8 @@
 #'   (or in `data@meta.data` for a `Seurat` object); values give the
 #'   outlier direction for that metric, one of `"lower"`, `"upper"`, or
 #'   `"both"`.
-#' @param nmads A positive number of MADs from the median beyond which an
-#'   observation is flagged.
+#' @param nmads A finite positive number of MADs from the median beyond which
+#'   an observation is flagged.
 #' @param transform An optional named character vector giving a transform
 #'   to apply to specific metrics before computing thresholds, one of
 #'   `"identity"` (the default for any metric not listed) or `"log10"`.
@@ -81,8 +81,8 @@ S7::method(mad_qc, S7::new_S3_class("data.frame")) <- function(
     cli::cli_abort("Column(s) {.val {missing_cols}} not found in {.arg data}.")
   }
 
-  if (!is.numeric(nmads) || length(nmads) != 1L || nmads <= 0) {
-    cli::cli_abort("{.arg nmads} must be one positive number.")
+  if (!is.numeric(nmads) || length(nmads) != 1L || !is.finite(nmads) || nmads <= 0) {
+    cli::cli_abort("{.arg nmads} must be one finite positive number.")
   }
 
   if (!is.null(transform)) {

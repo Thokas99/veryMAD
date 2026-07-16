@@ -15,8 +15,8 @@ or, if the Seurat package is installed, a \code{Seurat} object.}
 outlier direction for that metric, one of \code{"lower"}, \code{"upper"}, or
 \code{"both"}.}
 
-\item{nmads}{A positive number of MADs from the median beyond which an
-observation is flagged.}
+\item{nmads}{A finite positive number of MADs from the median beyond which
+an observation is flagged.}
 
 \item{transform}{An optional named character vector giving a transform
 to apply to specific metrics before computing thresholds, one of
