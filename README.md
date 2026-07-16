@@ -10,7 +10,14 @@ feature selection.
 
 ## Installation
 
-Install from a local checkout:
+Install the development version from GitHub with pak:
+
+```r
+install.packages("pak")
+pak::pak("Thokas99/veryMAD")
+```
+
+Or install from a local checkout:
 
 ```sh
 R CMD INSTALL .
