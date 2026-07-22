@@ -16,6 +16,7 @@ uses semantic version numbers for releases.
   scaling, QC summaries, and variable feature selection.
 
 ### Changed
+- Add practical README guidance for choosing helpers, QC directions, transforms, and zero-MAD behavior.
 - Keep README installation instructions to the `pak()` GitHub install path.
 
 [keep-a-changelog]: https://keepachangelog.com/en/1.1.0/

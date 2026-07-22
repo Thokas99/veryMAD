@@ -80,6 +80,14 @@ mad_qc(qc, metrics = c(nCount_RNA = "both", percent_mt = "upper"), verbose = TRU
 
 `mad_qc(verbose = TRUE)` also shows a progress bar while it checks metrics.
 
+## Practical Rules
+
+Use `mad_score()` when you want an interpretable robust distance from the median. Use `is_outlier()` when you only need a flag, and `winsorize()` when downstream code should keep every observation but limit extreme values.
+
+For QC tables, prefer `mad_qc()` over hand-written thresholds. Keep `metrics` named, use `"upper"` for metrics where only high values are suspicious, `"lower"` where only low values are suspicious, and `"both"` when either tail can fail QC. Use `transform = "log10"` for count-like metrics before thresholding.
+
+A zero MAD means the non-missing values are effectively tied. In that case, the vector helpers return neutral scores or unchanged values instead of manufacturing outliers.
+
 ## API
 
 | Function | Purpose |
