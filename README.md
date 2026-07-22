@@ -17,18 +17,6 @@ install.packages("pak")
 pak::pak("Thokas99/veryMAD")
 ```
 
-Or install from a local checkout:
-
-```sh
-R CMD INSTALL .
-```
-
-Or install a built source package:
-
-```r
-install.packages("veryMAD_0.0.0.9000.tar.gz", repos = NULL, type = "source")
-```
-
 ## Quick Start
 
 ```r
@@ -113,5 +101,5 @@ format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
 
 ```r
 R CMD build .
-R CMD check --no-manual --no-build-vignettes veryMAD_0.0.0.9000.tar.gz
+R CMD check --no-manual --no-build-vignettes veryMAD_*.tar.gz
 ```

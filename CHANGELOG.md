@@ -15,4 +15,7 @@ uses semantic version numbers for releases.
 - MAD-based helpers for scores, outlier detection, winsorization, matrix
   scaling, QC summaries, and variable feature selection.
 
+### Changed
+- Keep README installation instructions to the `pak()` GitHub install path.
+
 [keep-a-changelog]: https://keepachangelog.com/en/1.1.0/

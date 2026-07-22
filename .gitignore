@@ -1,5 +1,11 @@
-.Rproj.user
+.DS_Store
+.Rproj.user/
+*.Rproj
 .Rhistory
 .RData
 .Ruserdata
 .posit/
+.serena/
+..Rcheck/
+*.Rcheck/
+*.tar.gz
