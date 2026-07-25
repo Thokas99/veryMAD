@@ -4,3 +4,5 @@
 ^\.serena$
 ^veryMAD\.Rproj$
 ^\.Rproj\.user$
+^\.github$
+^CHANGELOG\.md$
