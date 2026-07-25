@@ -14,7 +14,7 @@
 #' @param constant Positive MAD consistency constant.
 #' @param na_rm Remove missing metric values for threshold calculation?
 #' @param zero_mad Behavior when a group has zero MAD.
-#' @return A long data frame in metric-major, original-observation order.
+#' @return A long `mad_qc` tibble in metric-major, original-observation order.
 #' @export
 #' @examples
 #' metadata <- data.frame(sample = c("a", "a", "b", "b"),
@@ -37,42 +37,53 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
   missing_metrics <- setdiff(metric_names, names(data))
   if (length(missing_metrics)) stop(sprintf("Missing metric column(s): %s.", paste(missing_metrics, collapse = ", ")), call. = FALSE)
   if (!all(vapply(data[metric_names], is.numeric, logical(1)))) stop("All QC metric columns must be numeric.", call. = FALSE)
-  if (!is.null(group_by) && (!is.character(group_by) || !length(group_by) || anyNA(group_by) || any(group_by == ""))) {
-    stop("`group_by` must be NULL or one or more column names.", call. = FALSE)
+  if (!is.null(group_by) && (!is.character(group_by) || !length(group_by) || anyNA(group_by) ||
+      any(group_by == "") || anyDuplicated(group_by))) {
+    stop("`group_by` must be NULL or one or more unique column names.", call. = FALSE)
   }
   missing_groups <- setdiff(group_by, names(data))
   if (length(missing_groups)) stop(sprintf("Missing grouping column(s): %s.", paste(missing_groups, collapse = ", ")), call. = FALSE)
   transform <- .validate_transforms(transform, metric_names)
   n <- nrow(data)
-  if (!n) return(.empty_qc(data, group_by, metric_names))
+  if (!n) return(.empty_qc(data, group_by, metric_names, transform, nmads, constant, zero_mad))
   group <- .group_index(data, group_by)
+  ids <- .observation_ids(data)
   pieces <- lapply(metric_names, function(metric) {
     raw <- data[[metric]]
     value <- .transform_metric(raw, transform[[metric]], metric)
-    threshold <- lapply(split(seq_len(n), group), function(i) {
-      lim <- mad_limits(value[i], nmads, metrics[[metric]], constant, na_rm, zero_mad)
-      data.frame(.obs = i, median = lim$median, mad = lim$mad,
-                 lower = lim$lower, upper = lim$upper)
-    })
-    threshold <- do.call(rbind, threshold)
-    threshold <- threshold[order(threshold$.obs), , drop = FALSE]
-    out <- data.frame(.obs = seq_len(n), id = rownames(data), metric = metric,
+    median <- mad <- lower <- upper <- rep(NA_real_, n)
+    is_outlier <- rep(NA, n)
+    for (i in split(seq_len(n), group)) {
+      stats <- .mad_stats(value[i], constant, na_rm, zero_mad)
+      limits <- .mad_limits_from_stats(stats, nmads, metrics[[metric]], zero_mad)
+      median[i] <- stats$median
+      mad[i] <- stats$mad
+      lower[i] <- limits[["lower"]]
+      upper[i] <- limits[["upper"]]
+      is_outlier[i] <- .mad_flags(value[i], stats, nmads, metrics[[metric]], zero_mad)
+    }
+    out <- data.frame(.obs = seq_len(n), id = ids, metric = metric,
                       raw_value = raw, value = value,
-                      median = threshold$median, mad = threshold$mad,
-                      lower = threshold$lower, upper = threshold$upper,
+                      median = median, mad = mad, lower = lower, upper = upper,
                       direction = unname(metrics[[metric]]),
-                      is_outlier = value < threshold$lower | value > threshold$upper,
+                      is_outlier = is_outlier,
                       stringsAsFactors = FALSE, check.names = FALSE)
     if (length(group_by)) out <- cbind(out[c(".obs", "id")], data[group_by], out[setdiff(names(out), c(".obs", "id"))])
     out
   })
-  out <- do.call(rbind, pieces)
-  rownames(out) <- NULL
-  class(out) <- c("mad_qc", "data.frame")
+  out <- .as_mad_qc(do.call(rbind, pieces))
   attr(out, "metrics") <- metric_names
   attr(out, "group_by") <- group_by
+  attr(out, "transform") <- transform
+  attr(out, "nmads") <- nmads
+  attr(out, "constant") <- constant
+  attr(out, "zero_mad") <- zero_mad
   attr(out, "observation_metadata") <- data[setdiff(names(data), metric_names)]
   out
+}
+
+.observation_ids <- function(data) {
+  if (.row_names_info(data, type = 1L) < 0L) as.character(seq_len(nrow(data))) else rownames(data)
 }
 
 .validate_transforms <- function(transform, metrics) {
@@ -105,15 +116,19 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
   match(do.call(paste, c(keys, sep = "\r")), unique(do.call(paste, c(keys, sep = "\r"))))
 }
 
-.empty_qc <- function(data, group_by, metrics) {
+.empty_qc <- function(data, group_by, metrics, transform, nmads, constant, zero_mad) {
   out <- data.frame(.obs = integer(), id = character(), stringsAsFactors = FALSE)
   if (length(group_by)) out <- cbind(out, data[group_by])
   out <- cbind(out, data.frame(metric = character(), raw_value = numeric(), value = numeric(),
     median = numeric(), mad = numeric(), lower = numeric(), upper = numeric(),
     direction = character(), is_outlier = logical(), stringsAsFactors = FALSE))
-  class(out) <- c("mad_qc", "data.frame")
+  out <- .as_mad_qc(out)
   attr(out, "metrics") <- metrics
   attr(out, "group_by") <- group_by
+  attr(out, "transform") <- transform
+  attr(out, "nmads") <- nmads
+  attr(out, "constant") <- constant
+  attr(out, "zero_mad") <- zero_mad
   attr(out, "observation_metadata") <- data[setdiff(names(data), metrics)]
   out
 }

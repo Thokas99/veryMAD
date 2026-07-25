@@ -4,7 +4,13 @@
 \alias{annotate_mad_qc}
 \title{Add MAD QC flags to a data frame}
 \usage{
-annotate_mad_qc(data, qc, suffix = "_mad_outlier", overall = "mad_qc_outlier")
+annotate_mad_qc(
+  data,
+  qc,
+  suffix = "_mad_outlier",
+  overall = "mad_qc_outlier",
+  overwrite = FALSE
+)
 }
 \arguments{
 \item{data}{Original data frame used by \code{\link[=mad_qc]{mad_qc()}}.}
@@ -14,6 +20,8 @@ annotate_mad_qc(data, qc, suffix = "_mad_outlier", overall = "mad_qc_outlier")
 \item{suffix}{Suffix for per-metric logical columns.}
 
 \item{overall}{Name of the overall logical flag.}
+
+\item{overwrite}{Replace only conflicting veryMAD flag columns?}
 }
 \value{
 \code{data} with aligned logical QC columns appended.

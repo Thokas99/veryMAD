@@ -39,7 +39,7 @@ to \code{"identity"}, \code{"log10"}, or \code{"log10p"}.}
 \item{zero_mad}{Behavior when a group has zero MAD.}
 }
 \value{
-A long data frame in metric-major, original-observation order.
+A long \code{mad_qc} tibble in metric-major, original-observation order.
 }
 \description{
 Tidy MAD-based quality control

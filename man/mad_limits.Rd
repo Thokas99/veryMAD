@@ -28,7 +28,7 @@ mad_limits(
 or an error.}
 }
 \value{
-A one-row data frame with \code{median}, \code{mad}, \code{lower}, and \code{upper}.
+A one-row tibble with \code{median}, \code{mad}, \code{lower}, and \code{upper}.
 }
 \description{
 Calculate MAD-based limits

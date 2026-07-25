@@ -20,18 +20,9 @@
   if (any(is.nan(x))) stop("`x` must not contain NaN.", call. = FALSE)
 }
 
-.numeric_matrix <- function(x, allow_sparse = FALSE) {
+.numeric_matrix <- function(x) {
   if (inherits(x, "sparseMatrix")) {
-    if (!allow_sparse) {
-      stop("Sparse matrices are not supported here because median centering can destroy sparsity; convert explicitly only if safe.", call. = FALSE)
-    }
-    if (!inherits(x, "dgCMatrix")) {
-      stop("Only Matrix::dgCMatrix sparse matrices are supported.", call. = FALSE)
-    }
-    values <- x@x
-    if (any(is.infinite(values), na.rm = TRUE)) stop("`x` must not contain Inf or -Inf.", call. = FALSE)
-    if (any(is.nan(values))) stop("`x` must not contain NaN.", call. = FALSE)
-    return(invisible(TRUE))
+    stop("`mad_scale()` supports ordinary dense numeric matrices only. Convert explicitly only when a dense representation is safe.", call. = FALSE)
   }
   if (!is.matrix(x) || !is.numeric(x)) {
     stop("`x` must be an ordinary numeric matrix.", call. = FALSE)
@@ -93,4 +84,41 @@
     stop("MAD is zero; choose `zero_mad = \"zero\"` or `\"na\"`.", call. = FALSE)
   }
   list(median = centre, mad = spread, zero = spread == 0, zero_mad = zero_mad)
+}
+
+.mad_flags <- function(x, stats, nmads, direction, zero_mad) {
+  out <- rep(NA, length(x))
+  names(out) <- names(x)
+  present <- !is.na(x)
+  if (is.na(stats$median) || is.na(stats$mad)) return(out)
+  if (isTRUE(stats$zero)) {
+    out[present] <- if (zero_mad == "zero") FALSE else NA
+    return(out)
+  }
+  lower <- stats$median - nmads * stats$mad
+  upper <- stats$median + nmads * stats$mad
+  out[present] <- switch(direction,
+    lower = x[present] < lower,
+    upper = x[present] > upper,
+    both = x[present] < lower | x[present] > upper
+  )
+  out
+}
+
+.mad_limits_from_stats <- function(stats, nmads, direction, zero_mad) {
+  lower <- if (direction %in% c("both", "lower")) stats$median - nmads * stats$mad else NA_real_
+  upper <- if (direction %in% c("both", "upper")) stats$median + nmads * stats$mad else NA_real_
+  if (isTRUE(stats$zero) && zero_mad == "na") lower <- upper <- NA_real_
+  c(lower = lower, upper = upper)
+}
+
+.overall_qc_flag <- function(flags) {
+  if (!length(flags) || !NROW(flags)) return(logical())
+  apply(flags, 1L, function(x) if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE)
+}
+
+.as_mad_qc <- function(x) {
+  x <- tibble::as_tibble(x)
+  class(x) <- c("mad_qc", class(x))
+  x
 }

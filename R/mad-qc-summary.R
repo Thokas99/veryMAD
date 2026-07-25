@@ -7,7 +7,7 @@
 #'   represented as an ordinary data frame with the required columns.
 #' @param level Summarize by metric or original observation.
 #' @param group_by `NULL` or one or more grouping column names in `qc`.
-#' @return An ordinary data frame with deterministic columns and first-seen
+#' @return A tibble with deterministic columns and first-seen
 #'   group, metric, or observation order.
 #' @export
 #' @examples
@@ -39,9 +39,7 @@ summarize_mad_qc <- function(qc, level = c("metric", "observation"), group_by = 
     out$direction <- directions
     out
   })
-  out <- do.call(rbind, pieces)
-  rownames(out) <- NULL
-  out
+  tibble::as_tibble(do.call(rbind, pieces))
 }
 
 .summarize_qc_observations <- function(qc, group_by) {
@@ -58,23 +56,21 @@ summarize_mad_qc <- function(qc, level = c("metric", "observation"), group_by = 
     out$n_missing <- sum(is.na(flags))
     out$n_outliers <- length(failed)
     out$failed_metrics <- paste(failed, collapse = ", ")
-    out$mad_qc_outlier <- length(failed) > 0L
+    out$mad_qc_outlier <- if (length(failed)) TRUE else if (anyNA(flags)) NA else FALSE
     out
   })
-  out <- do.call(rbind, pieces)
-  rownames(out) <- NULL
-  out
+  tibble::as_tibble(do.call(rbind, pieces))
 }
 
 .empty_qc_summary <- function(level, qc, group_by) {
   groups <- qc[group_by]
   if (level == "metric") {
-    return(cbind(groups, data.frame(metric = character(), n_observations = integer(),
+    return(tibble::as_tibble(cbind(groups, data.frame(metric = character(), n_observations = integer(),
       n_evaluated = integer(), n_missing = integer(), n_outliers = integer(),
-      outlier_proportion = numeric(), direction = character(), stringsAsFactors = FALSE)))
+      outlier_proportion = numeric(), direction = character(), stringsAsFactors = FALSE))))
   }
-  cbind(data.frame(.obs = numeric(), id = character(), stringsAsFactors = FALSE), groups,
+  tibble::as_tibble(cbind(data.frame(.obs = integer(), id = character(), stringsAsFactors = FALSE), groups,
     data.frame(n_metrics = integer(), n_evaluated = integer(), n_missing = integer(),
       n_outliers = integer(), failed_metrics = character(), mad_qc_outlier = logical(),
-      stringsAsFactors = FALSE))
+      stringsAsFactors = FALSE)))
 }

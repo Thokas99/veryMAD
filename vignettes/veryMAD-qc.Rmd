@@ -1,38 +1,32 @@
 ---
-title: "Assay-agnostic MAD quality control"
+title: "Auditable omics QC with veryMAD"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{Assay-agnostic MAD quality control}
+  %\VignetteIndexEntry{Auditable omics QC with veryMAD}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup}
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(veryMAD)
 ```
 
 ## 1. QC data model
 
-`mad_qc()` accepts observation-level QC metadata: rows are observations and
-columns are numeric QC metrics plus optional grouping variables. An observation
-is a bulk sample or library, a single cell, or a spatial spot or cell. A full
-gene-expression count matrix is not observation-level QC metadata.
-
-With the default `group_by = NULL`, all rows form one reference distribution
-for each metric. Supplying `group_by` changes the median, MAD, limits, and
-outlier calls. Small groups produce unstable MAD estimates; do not group merely
-because a metadata column exists.
+`mad_qc()` accepts observation-level metadata: one row is a bulk library,
+single cell, spatial spot, or other observation; columns contain numeric QC
+metrics and optional grouping variables. A gene-expression matrix is not QC
+metadata. `group_by = NULL` uses one reference distribution per metric.
 
 ## 2. Bulk RNA-seq sample QC
 
-The deterministic example contains 250 libraries with realistic passing,
-multi-metric failing, and missing observations. Before this step, sample-level
-metrics would be calculated from the count matrix or upstream alignment reports.
+The simulated ranges below are illustrative rather than acceptance cutoffs.
+Condition and batch remain metadata, not automatic calculation groups.
 
 ```{r bulk}
-bulk_metadata <- veryMAD:::.simulate_bulk_qc_metadata(n = 250, seed = 123)
-
-bulk_qc_report <- bulk_metadata |>
+bulk_metadata <- veryMAD:::.simulate_bulk_qc_metadata(n = 150, seed = 123)
+bulk_report <- bulk_metadata |>
   mad_qc(
     metrics = c(
       library_size = "lower",
@@ -41,28 +35,17 @@ bulk_qc_report <- bulk_metadata |>
       duplication_rate = "upper",
       percent_mitochondrial = "upper"
     ),
-    transform = c(
-      library_size = "log10p",
-      detected_genes = "log10p"
-    )
+    transform = c(library_size = "log10p", detected_genes = "log10p")
   )
-
-summarize_mad_qc(bulk_qc_report, level = "metric")
+head(bulk_report)
+summarize_mad_qc(bulk_report, level = "metric")
 ```
-
-The 250 libraries—not `condition`—define one global reference distribution per
-metric. Grouping by biological condition could hide condition-associated shifts
-and must be an explicit analytical decision.
 
 ## 3. Single-cell QC for an individual sample
 
-This distinct simulation contains 600 cells from one sample and no artificial
-sample grouping column.
-
-```{r single-cell}
-cell_metadata <- veryMAD:::.simulate_single_cell_qc_metadata(n = 600, seed = 123)
-
-cell_qc_report <- cell_metadata |>
+```{r cells}
+cell_metadata <- veryMAD:::.simulate_single_cell_qc_metadata(n = 1000, seed = 123)
+cell_report <- cell_metadata |>
   mad_qc(
     metrics = c(
       nCount_RNA = "lower",
@@ -70,38 +53,22 @@ cell_qc_report <- cell_metadata |>
       percent.mt = "upper",
       doublet_score = "upper"
     ),
-    transform = c(
-      nCount_RNA = "log10p",
-      nFeature_RNA = "log10p"
-    )
+    transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
   )
-
-summarize_mad_qc(cell_qc_report, level = "metric")
+head(cell_report)
 ```
 
-All cells form one reference distribution. The equivalent Seurat report also
-uses the ungrouped default:
-
-```{r single-seurat, eval=FALSE}
-cell_qc_report <- mad_qc_seurat(
-  sample_object,
-  metrics = c(
-    nCount_RNA = "lower",
-    nFeature_RNA = "lower",
-    percent.mt = "upper"
-  ),
-  transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p"),
-  action = "report"
-)
-```
+All cells form one reference distribution. No sample column is invented.
 
 ## 4. Grouped QC for merged single-cell data
 
-Grouping is optional and can help when independently processed samples have
-strong technical differences and enough cells for stable within-sample MADs.
+Grouping is optional and changes the statistical reference distribution. It can
+be reasonable for independently processed samples with enough cells and strong
+technical shifts, but can hide globally poor samples or important differences.
 
 ```{r merged-seurat, eval=FALSE}
-merged_qc_report <- mad_qc_seurat(
+# Schematic: given an existing merged Seurat object called `merged_object`.
+merged_report <- mad_qc_seurat(
   merged_object,
   metrics = c(
     nCount_RNA = "lower",
@@ -114,47 +81,44 @@ merged_qc_report <- mad_qc_seurat(
 )
 ```
 
-This may be appropriate when depth or mitochondrial distributions differ for
-technical reasons and global thresholds unfairly penalize one sample. It may be
-inappropriate when groups are small, differences are important QC signals,
-grouping hides a globally poor sample, or biological groups are mistaken for
-technical batches. Merged objects do not require grouping by default.
+Small groups produce unstable medians and MAD estimates. Do not group merely
+because a metadata column exists.
 
 ## 5. Inspecting summaries and plots
 
-Summaries consume the saved flags; plots consume the saved values, flags, and
-thresholds. Neither recalculates QC.
-
 ```{r summaries}
-bulk_metric_summary <- summarize_mad_qc(bulk_qc_report, level = "metric")
-bulk_sample_summary <- summarize_mad_qc(bulk_qc_report, level = "observation")
-
+bulk_metric_summary <- summarize_mad_qc(bulk_report, level = "metric")
+bulk_sample_summary <- summarize_mad_qc(bulk_report, level = "observation")
+bulk_metric_summary
 head(bulk_sample_summary)
 ```
 
-```{r plots, eval=requireNamespace("ggplot2", quietly = TRUE)}
-plot_mad_qc(bulk_qc_report, type = "distribution")
-plot_mad_qc(bulk_qc_report, type = "index")
-plot_mad_qc(bulk_qc_report, type = "index", facet_by = "condition")
+```{r plots, eval=FALSE}
+# Requires the optional ggplot2 package.
+plot_mad_qc(bulk_report, type = "distribution")
+plot_mad_qc(bulk_report, type = "index")
 ```
 
-Calculation grouping determines which rows share thresholds. `facet_by`
-changes only visual arrangement. The ungrouped bulk report remains globally
-thresholded even when the plot is faceted by condition.
+Blue triangles at the panel floor represent missing, not-evaluated values.
+`facet_by` changes layout only; it never changes QC thresholds.
 
 ## 6. Annotating without automatic filtering
 
-Only after inspection, align flags back to the original metadata.
-
 ```{r annotate}
-annotated_bulk_metadata <- annotate_mad_qc(bulk_metadata, bulk_qc_report)
-head(annotated_bulk_metadata)
+annotated_bulk <- annotate_mad_qc(bulk_metadata, bulk_report)
+head(annotated_bulk)
 ```
 
-For Seurat objects, annotation is equally explicit and reversible:
+Original rows and measurements are preserved. The overall flag is `TRUE` when
+any metric fails, `FALSE` only when all metrics pass, and `NA` when none fail but
+at least one is not evaluated. Existing flag columns require explicit
+`overwrite = TRUE`.
 
-```{r annotate-seurat, eval=FALSE}
-sample_object <- mad_qc_seurat(sample_object, action = "annotate")
+```{r seurat-annotation, eval=FALSE}
+# Schematic: given an existing Seurat object called `sample_object`.
+cell_report <- mad_qc_seurat(sample_object, action = "report")
+annotated_object <- mad_qc_seurat(sample_object, action = "annotate")
 ```
 
-No veryMAD function automatically filters samples, libraries, cells, or spots.
+Seurat annotation returns a modified object through R assignment semantics and
+adds only intended metadata flags. It never filters cells.

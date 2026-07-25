@@ -1,16 +1,13 @@
 Package: veryMAD
-Title: Robust Outlier Detection and Scaling Using the Median Absolute
-    Deviation
-Version: 0.3.0
+Title: Robust MAD Scaling and Auditable Omics Quality Control
+Version: 0.3.2
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
 Author: Thomas Sirchi
 Maintainer: Thomas Sirchi <thomasirchi@gmail.com>
-Description: Provides median absolute deviation (MAD) based tools for
-    robust outlier detection and scaling, including per-observation
-    robust scores, directional QC thresholds for tabular data (e.g. cell
-    or sample metadata), and row/column-wise MAD statistics and scaling
-    for omics matrices.
+Description: A lightweight R toolkit for robust MAD scores, dense
+    expression-matrix scaling and auditable quality-control flagging across
+    bulk, single-cell and other observation-level omics metadata.
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1.0)
@@ -18,14 +15,13 @@ Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
 Imports:
-    matrixStats
+    matrixStats,
+    tibble
 Suggests: 
     ggplot2,
     knitr,
-    Matrix,
     rmarkdown,
     SeuratObject,
-    sparseMatrixStats,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
