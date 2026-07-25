@@ -8,12 +8,12 @@ plot_fixture <- function() {
 test_that("plot_mad_qc returns plots for both views and metric selection", {
   skip_if_not_installed("ggplot2")
   qc <- plot_fixture(); original <- qc
-  distribution <- plot_mad_qc(qc, metrics = "x", group_by = "sample")
-  index <- plot_mad_qc(qc, type = "index", group_by = "sample")
+  distribution <- plot_mad_qc(qc, metrics = "x")
+  index <- plot_mad_qc(qc, type = "index", facet_by = "sample")
   expect_s3_class(distribution, "ggplot")
   expect_s3_class(index, "ggplot")
   expect_equal(unique(as.character(distribution$data$metric)), "x")
-  expect_equal(nlevels(distribution$data$plot_group), 2L)
+  expect_equal(nlevels(distribution$data$threshold_group), 2L)
   expect_equal(qc, original)
   expect_error(plot_mad_qc(qc, metrics = "missing"), "Unknown metric")
 })
@@ -23,7 +23,8 @@ test_that("plot thresholds omit infinite and missing limits", {
   qc <- plot_fixture()
   qc$lower[1] <- NA_real_
   qc$upper[2] <- Inf
-  qc$plot_group <- veryMAD:::.qc_plot_groups(qc, NULL)
+  qc$threshold_group <- veryMAD:::.qc_plot_labels(qc, attr(qc, "group_by"), "All observations")
+  qc$plot_facet <- veryMAD:::.qc_plot_labels(qc, NULL, "All observations")
   thresholds <- veryMAD:::.qc_plot_thresholds(qc, by_observation = TRUE)
   expect_true(all(is.finite(thresholds$threshold)))
   expect_s3_class(plot_mad_qc(qc, show_thresholds = FALSE, show_legend = FALSE), "ggplot")

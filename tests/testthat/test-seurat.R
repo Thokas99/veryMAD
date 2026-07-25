@@ -7,6 +7,7 @@ test_that("Seurat integration reports and annotates by cell name", {
   original <- object
   report <- mad_qc_seurat(object, metrics = c(nCount_RNA = "upper", percent.mt = "upper"), action = "report")
   expect_s3_class(report, "mad_qc")
+  expect_null(attr(report, "group_by"))
   expect_equal(report$id[report$metric == "percent.mt"], colnames(object))
   annotated <- mad_qc_seurat(object, metrics = c(percent.mt = "upper"), nmads = 1)
   expect_true(all(c("percent.mt_mad_outlier", "mad_qc_outlier") %in% colnames(annotated[[]])))

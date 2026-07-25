@@ -1,10 +1,14 @@
 #' Tidy MAD-based quality control
 #'
-#' @param data A data frame with one observation per row.
+#' @param data An observation-level QC data frame: one sample or library per row
+#'   for bulk RNA-seq, one cell per row for single-cell data, or one spot or cell
+#'   per row for spatial data. This is not a gene-expression count matrix.
 #' @param metrics A nonempty named character vector mapping numeric columns to
 #'   `"lower"`, `"upper"`, or `"both"`.
 #' @param nmads Number of MADs from the median.
-#' @param group_by `NULL` or character column names used to form QC groups.
+#' @param group_by `NULL` for one global reference distribution, or character
+#'   column names defining separate reference distributions. Grouping changes
+#'   the median, MAD, thresholds, and outlier calls; small groups are unstable.
 #' @param transform An optional named character vector mapping requested metrics
 #'   to `"identity"`, `"log10"`, or `"log10p"`.
 #' @param constant Positive MAD consistency constant.
@@ -66,6 +70,8 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
   rownames(out) <- NULL
   class(out) <- c("mad_qc", "data.frame")
   attr(out, "metrics") <- metric_names
+  attr(out, "group_by") <- group_by
+  attr(out, "observation_metadata") <- data[setdiff(names(data), metric_names)]
   out
 }
 
@@ -107,5 +113,7 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
     direction = character(), is_outlier = logical(), stringsAsFactors = FALSE))
   class(out) <- c("mad_qc", "data.frame")
   attr(out, "metrics") <- metrics
+  attr(out, "group_by") <- group_by
+  attr(out, "observation_metadata") <- data[setdiff(names(data), metrics)]
   out
 }

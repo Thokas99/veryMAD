@@ -8,27 +8,25 @@ plot_mad_qc(
   qc,
   metrics = NULL,
   type = c("distribution", "index"),
-  group_by = NULL,
+  facet_by = NULL,
   show_thresholds = TRUE,
   show_legend = TRUE
 )
 }
 \arguments{
-\item{qc}{A tidy report created by \code{\link[=mad_qc]{mad_qc()}}.}
+\item{qc}{A tidy report created by \code{\link[=mad_qc]{mad_qc()}}. Calculation groups are read
+from the report attributes so group-specific thresholds remain accurate.}
 
 \item{metrics}{\code{NULL} for all metrics or a character vector to plot.}
 
 \item{type}{A lightweight distribution or observation-index view.}
 
-\item{group_by}{\code{NULL} or one or more grouping column names in \code{qc}.}
+\item{facet_by}{\code{NULL} or metadata columns used only to arrange the plot.
+Faceting never changes MAD calculations or thresholds.}
 
 \item{show_thresholds}{Show finite, nonmissing lower and upper thresholds?}
 
-\item{show_legend}{Show the pass/outlier legend?
-Distribution views combine lightweight boxplots, observations, and finite
-group-specific thresholds. Index views show values and finite threshold
-trajectories against the stable observation index. Missing or infinite
-thresholds are omitted. No thresholds are recalculated.}
+\item{show_legend}{Show the pass/outlier legend?}
 }
 \value{
 A ggplot object. The plot is returned without being printed.
@@ -36,10 +34,18 @@ A ggplot object. The plot is returned without being printed.
 \description{
 Plot an existing MAD QC report
 }
+\details{
+Distribution views combine lightweight boxplots, observations, and finite
+calculation-group thresholds. Index views show values and finite threshold
+trajectories against the stable observation index. Missing or infinite
+thresholds are omitted. No thresholds are recalculated.
+}
 \examples{
 \dontshow{if (requireNamespace("ggplot2", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-d <- data.frame(x = c(1, 2, 3, 20))
-qc <- mad_qc(d, c(x = "upper"))
+d <- data.frame(sample = paste0("s", 1:20), batch = rep(c("a", "b"), 10),
+  library_size = c(rnorm(19, 1e6, 1e5), 1e5))
+qc <- mad_qc(d, c(library_size = "lower"))
 plot_mad_qc(qc)
+plot_mad_qc(qc, facet_by = "batch")
 \dontshow{\}) # examplesIf}
 }
