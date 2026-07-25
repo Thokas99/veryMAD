@@ -15,7 +15,9 @@ robust_scale(
 )
 }
 \arguments{
-\item{x}{An ordinary numeric matrix. Sparse matrices are rejected.}
+\item{x}{An ordinary numeric matrix. Sparse matrices are rejected because
+median centering can turn implicit zeros into nonzero values and destroy
+sparsity; no implicit dense conversion is performed.}
 
 \item{margin}{Scale across \code{"rows"} or \code{"columns"}.}
 

@@ -1,6 +1,8 @@
 #' Median-center and MAD-scale a matrix
 #'
-#' @param x An ordinary numeric matrix. Sparse matrices are rejected.
+#' @param x An ordinary numeric matrix. Sparse matrices are rejected because
+#'   median centering can turn implicit zeros into nonzero values and destroy
+#'   sparsity; no implicit dense conversion is performed.
 #' @param margin Scale across `"rows"` or `"columns"`.
 #' @param center Median-center each margin?
 #' @param scale MAD-scale each margin?

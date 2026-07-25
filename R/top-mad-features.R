@@ -3,7 +3,8 @@
 #' This is not mean-variance-aware and is not a replacement for Seurat or
 #' Scanpy highly variable feature selection. It may perform poorly on raw
 #' sparse counts.
-#' @param x An ordinary numeric matrix with features in rows.
+#' @param x An ordinary numeric matrix or `Matrix::dgCMatrix` with features in
+#'   rows. Sparse input is processed without densification.
 #' @param n Number of feature names or indices to return.
 #' @inheritParams row_mad
 #' @return Row names, or row indices, ordered by decreasing raw MAD.
@@ -16,7 +17,7 @@ top_mad_features <- function(x, n = 2000, na_rm = TRUE, constant = 1.4826) {
   }
   scores <- row_mad(x, na_rm, constant)
   labels <- rownames(x) %||% seq_along(scores)
-  order <- order(scores, decreasing = TRUE, na.last = TRUE)
+  order <- order(-scores, seq_along(scores), na.last = TRUE)
   labels[order[seq_len(min(n, length(scores)))]]
 }
 

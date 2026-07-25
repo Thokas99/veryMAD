@@ -93,7 +93,8 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
 .group_index <- function(data, group_by) {
   if (!length(group_by)) return(rep.int(1L, nrow(data)))
   keys <- lapply(data[group_by], function(x) {
-    x <- as.character(x); x[is.na(x)] <- "<NA>"; paste0(nchar(x), ":", x)
+    x <- as.character(x)
+    ifelse(is.na(x), "M", paste0("V", nchar(x), ":", x))
   })
   match(do.call(paste, c(keys, sep = "\r")), unique(do.call(paste, c(keys, sep = "\r"))))
 }

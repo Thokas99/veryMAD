@@ -6,8 +6,9 @@
 \alias{veryMAD-package}
 \title{veryMAD: lightweight MAD methods for omics QC}
 \description{
-Pipe-friendly vector, matrix, data-frame, and explicit SeuratObject helpers
-built around one consistent median absolute deviation policy.
+Pipe-friendly vector, dense and sparse matrix, data-frame, plotting, and
+explicit SeuratObject helpers built around one consistent median absolute
+deviation policy.
 }
 \author{
 \strong{Maintainer}: Thomas Sirchi \email{thomasirchi@gmail.com}

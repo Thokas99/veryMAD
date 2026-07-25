@@ -1,7 +1,7 @@
 Package: veryMAD
 Title: Robust Outlier Detection and Scaling Using the Median Absolute
     Deviation
-Version: 0.2.0
+Version: 0.3.0
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
 Author: Thomas Sirchi
@@ -20,9 +20,12 @@ RoxygenNote: 8.0.0
 Imports:
     matrixStats
 Suggests: 
+    ggplot2,
     knitr,
+    Matrix,
     rmarkdown,
     SeuratObject,
+    sparseMatrixStats,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
