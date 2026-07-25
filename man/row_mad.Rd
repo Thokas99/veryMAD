@@ -10,7 +10,8 @@ row_mad(x, na_rm = TRUE, constant = 1.4826)
 col_mad(x, na_rm = TRUE, constant = 1.4826)
 }
 \arguments{
-\item{x}{An ordinary numeric matrix. Sparse matrices are rejected.}
+\item{x}{An ordinary numeric matrix or a \code{Matrix::dgCMatrix}. Sparse input
+requires the optional sparseMatrixStats package and is never densified.}
 
 \item{na_rm}{Remove missing values?}
 

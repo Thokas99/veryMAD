@@ -1,5 +1,26 @@
 # Changelog
 
+## veryMAD 0.3.0
+
+### Added
+
+- `summarize_mad_qc()` for deterministic metric-level and observation-level
+  summaries of flags already present in a tidy QC report.
+- `plot_mad_qc()` for explicit distribution and observation-index views with
+  grouped, finite threshold indicators through optional ggplot2.
+- Safe `Matrix::dgCMatrix` support in `row_mad()`, `col_mad()`, and
+  `top_mad_features()` through optional sparseMatrixStats methods.
+
+### Changed
+
+- `top_mad_features()` now explicitly preserves original feature order when
+  MAD values are tied.
+- ggplot2, Matrix, and sparseMatrixStats are optional suggested dependencies;
+  dense workflows and package installation do not require them.
+- `robust_scale()` continues to reject sparse matrices with a clearer message:
+  median centering can destroy sparsity, and veryMAD never converts implicitly
+  to a dense matrix.
+
 ## veryMAD 0.2.0
 
 ### Added

@@ -7,7 +7,8 @@
 top_mad_features(x, n = 2000, na_rm = TRUE, constant = 1.4826)
 }
 \arguments{
-\item{x}{An ordinary numeric matrix with features in rows.}
+\item{x}{An ordinary numeric matrix or \code{Matrix::dgCMatrix} with features in
+rows. Sparse input is processed without densification.}
 
 \item{n}{Number of feature names or indices to return.}
 

@@ -1,6 +1,6 @@
 # veryMAD
 
-`veryMAD` 0.2.0 is a small, pipe-friendly R toolkit for median absolute
+`veryMAD` 0.3.0 is a small, pipe-friendly R toolkit for median absolute
 deviation (MAD) scores, thresholds, outliers, robust scaling, and auditable
 omics quality control. Its core result is an ordinary data frame: easy to
 inspect, save, join, and review.
@@ -59,6 +59,48 @@ observation-metric pair. `group_by` accepts one or several string column names;
 missing group labels form a group and never drop rows. Available transforms are
 `identity`, positive-only `log10`, and nonnegative `log10p` (`log10(x + 1)`).
 
+## Complete QC workflow
+
+Summaries and plots operate on the existing report: they never recalculate
+thresholds or filter observations.
+
+```r
+metric_summary <- qc |>
+  summarize_mad_qc(level = "metric", group_by = "sample_id")
+
+observation_summary <- qc |>
+  summarize_mad_qc(level = "observation")
+
+plot_mad_qc(qc, type = "distribution", group_by = "sample_id")
+plot_mad_qc(qc, type = "index")
+
+annotated <- annotate_mad_qc(metadata, qc)
+```
+
+The metric summary counts evaluated, missing, and failed flags. The observation
+summary lists failed metrics and provides one overall logical flag. Distribution
+plots show grouped values and finite thresholds; index plots expose isolated
+extremes, shifts, and threshold discontinuities. `ggplot2` is optional.
+
+## Sparse matrices
+
+```r
+sparse_counts <- Matrix::rsparsematrix(
+  nrow = 100,
+  ncol = 20,
+  density = 0.05
+)
+
+row_mad(sparse_counts)
+col_mad(sparse_counts)
+top_mad_features(sparse_counts, n = 10)
+```
+
+`Matrix::dgCMatrix` inputs use optional `sparseMatrixStats` methods without
+dense conversion. Sparse raw-MAD ranking is not equivalent to highly variable
+gene selection. `robust_scale()` still rejects sparse matrices because median
+centering can destroy sparsity.
+
 ## SeuratObject integration
 
 ```r
@@ -90,6 +132,8 @@ Missing input positions remain missing.
 | `robust_scale()` | Row- or column-wise robust scaling. |
 | `top_mad_features()` | Rank matrix rows by raw MAD. |
 | `mad_qc()` | Long data-frame QC report. |
+| `summarize_mad_qc()` | Metric- or observation-level report summaries. |
+| `plot_mad_qc()` | Distribution or observation-index QC plots. |
 | `annotate_mad_qc()` | Align report flags back to metadata. |
 | `mad_qc_seurat()` | Explicit Seurat report or annotation. |
 
@@ -100,8 +144,9 @@ Missing input positions remain missing.
 - Zero-MAD groups require an explicit policy choice.
 - Raw MAD feature ranking does not model mean-variance dependence and is not a
   replacement for Seurat or Scanpy highly variable feature selection.
-- Sparse matrices are rejected to avoid accidental dense conversion.
+- Sparse MADs support `Matrix::dgCMatrix` through optional `sparseMatrixStats`;
+  other sparse classes and sparse robust scaling remain unsupported.
 - Users should inspect QC distributions rather than blindly filtering cells.
 
-See `vignette("veryMAD-qc")` for the focused report-to-annotation workflow and
+See `vignette("veryMAD-qc")` for the complete focused QC workflow and
 [CHANGELOG.md](CHANGELOG.md) for breaking changes.

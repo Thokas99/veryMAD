@@ -11,7 +11,8 @@ vignette: >
 library(veryMAD)
 ```
 
-Start with metadata, produce a tidy report, inspect it, then add reversible flags.
+Calculate a tidy report, inspect it, summarize the existing flags, visualize the
+values and thresholds, then add reversible annotations.
 
 ```{r metadata}
 metadata <- data.frame(
@@ -28,6 +29,24 @@ qc <- metadata |>
   )
 
 qc
+```
+
+Summaries do not recalculate thresholds. They provide concise views of the same
+auditable flags.
+
+```{r summaries}
+summarize_mad_qc(qc, level = "metric", group_by = "sample")
+summarize_mad_qc(qc, level = "observation")
+```
+
+```{r plots, eval=requireNamespace("ggplot2", quietly = TRUE)}
+plot_mad_qc(qc, type = "distribution", group_by = "sample")
+plot_mad_qc(qc, type = "index")
+```
+
+Only after inspection, align the flags back to the original metadata.
+
+```{r annotate}
 annotate_mad_qc(metadata, qc)
 ```
 
