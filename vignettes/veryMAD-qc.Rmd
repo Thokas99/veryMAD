@@ -1,0 +1,43 @@
+---
+title: "Auditable MAD quality control"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Auditable MAD quality control}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r setup}
+library(veryMAD)
+```
+
+Start with metadata, produce a tidy report, inspect it, then add reversible flags.
+
+```{r metadata}
+metadata <- data.frame(
+  sample = rep(c("A", "B"), each = 4),
+  counts = c(100, 120, 130, 1000, 90, 110, 125, 900),
+  percent_mt = c(2, 3, 4, 30, 2, 3, 5, 25)
+)
+
+qc <- metadata |>
+  mad_qc(
+    c(counts = "lower", percent_mt = "upper"),
+    group_by = "sample",
+    transform = c(counts = "log10p")
+  )
+
+qc
+annotate_mad_qc(metadata, qc)
+```
+
+For Seurat objects, report first and annotate only after inspection.
+
+```{r seurat, eval=FALSE}
+report <- mad_qc_seurat(object, action = "report")
+report[report$is_outlier %in% TRUE, ]
+object <- mad_qc_seurat(object, action = "annotate")
+```
+
+No function filters cells automatically. Keep the report with the analysis so
+thresholds and exclusion decisions remain auditable.

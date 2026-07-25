@@ -1,22 +1,7 @@
-#' veryMAD: Robust MAD-based QC helpers
+#' veryMAD: lightweight MAD methods for omics QC
 #'
-#' veryMAD provides small helpers for robust outlier detection, scaling, and
-#' variable feature selection using the median absolute deviation (MAD).
-#'
-#' The package is designed for quality-control metrics and expression-like
-#' matrices where a few extreme values should not drive the center or scale.
-#'
-#' @section Main functions:
-#' - [mad_score()] returns robust z-like scores based on the median and MAD.
-#' - [is_outlier()] flags observations whose absolute MAD score exceeds a
-#'   threshold.
-#' - [winsorize()] caps outliers at MAD-based limits.
-#' - [row_mad()] computes row-wise or column-wise MAD values for numeric
-#'   matrices.
-#' - [robust_scale()] centers and scales numeric matrices with medians and MADs.
-#' - [mad_qc()] returns tidy MAD-based QC thresholds and outlier flags.
-#' - [select_variable_features()] selects matrix rows or columns with the
-#'   largest MAD values.
+#' Pipe-friendly vector, matrix, data-frame, and explicit SeuratObject helpers
+#' built around one consistent median absolute deviation policy.
 #'
 #' @keywords internal
 "_PACKAGE"

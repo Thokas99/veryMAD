@@ -1,0 +1,32 @@
+test_that("vector helpers share directional limits and preserve shape", {
+  x <- c(a = 0, b = 9, c = 10, d = 11, e = 20, missing = NA)
+  limits <- mad_limits(x, nmads = 1)
+  expect_named(limits, c("median", "mad", "lower", "upper"))
+  expect_named(mad_score(x), names(x))
+  expect_named(is_mad_outlier(x), names(x))
+  expect_named(winsorize_mad(x), names(x))
+  expect_true(is_mad_outlier(x, 0.5, "lower")[["a"]])
+  expect_false(is_mad_outlier(x, 0.5, "lower")[["e"]])
+  expect_true(is_mad_outlier(x, 0.5, "upper")[["e"]])
+  expect_equal(winsorize_mad(x, 0.5, "lower")[["e"]], 20)
+  expect_equal(winsorize_mad(x, 0.5, "upper")[["a"]], 0)
+  expect_true(is.na(mad_score(x)[["missing"]]))
+})
+
+test_that("zero MAD policy is consistent", {
+  x <- c(2, 2, NA)
+  expect_equal(mad_score(x), c(0, 0, NA))
+  expect_equal(is_mad_outlier(x), c(FALSE, FALSE, NA))
+  expect_equal(winsorize_mad(x), x)
+  expect_true(all(is.na(mad_score(x, zero_mad = "na"))))
+  expect_true(all(is.na(is_mad_outlier(x, zero_mad = "na"))))
+  expect_error(mad_limits(x, zero_mad = "error"), "MAD is zero")
+})
+
+test_that("vector validation rejects unsafe inputs", {
+  for (x in list("x", matrix(1:4, 2), c(1, Inf), c(1, -Inf))) expect_error(mad_score(x))
+  expect_error(mad_score(c(1, NaN), na_rm = FALSE))
+  expect_error(mad_limits(1:3, nmads = 0))
+  expect_error(mad_limits(1:3, constant = Inf))
+  expect_error(mad_limits(1:3, direction = "sideways"))
+})

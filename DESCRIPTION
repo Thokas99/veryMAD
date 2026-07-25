@@ -1,7 +1,7 @@
 Package: veryMAD
 Title: Robust Outlier Detection and Scaling Using the Median Absolute
     Deviation
-Version: 0.0.0.9001
+Version: 0.2.0
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
 Author: Thomas Sirchi
@@ -12,17 +12,17 @@ Description: Provides median absolute deviation (MAD) based tools for
     or sample metadata), and row/column-wise MAD statistics and scaling
     for omics matrices.
 License: MIT + file LICENSE
+Depends:
+    R (>= 4.1.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
 RoxygenNote: 8.0.0
-Imports: 
-    cli,
-    matrixStats,
-    methods,
-    S7
+Imports:
+    matrixStats
 Suggests: 
-    Matrix,
-    Seurat,
+    knitr,
+    rmarkdown,
     SeuratObject,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
+VignetteBuilder: knitr

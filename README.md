@@ -1,113 +1,107 @@
 # veryMAD
 
-Robust median absolute deviation (MAD) helpers for QC metrics and
-expression-like matrices in R.
-
-veryMAD is useful when a few extreme observations should not control the
-center, scale, or feature ranking. It provides small functions for MAD scores,
-outlier flags, winsorization, robust matrix scaling, QC flagging, and variable
-feature selection.
+`veryMAD` 0.2.0 is a small, pipe-friendly R toolkit for median absolute
+deviation (MAD) scores, thresholds, outliers, robust scaling, and auditable
+omics quality control. Its core result is an ordinary data frame: easy to
+inspect, save, join, and review.
 
 ## Installation
-
-Install the development version from GitHub with pak:
 
 ```r
 install.packages("pak")
 pak::pak("Thokas99/veryMAD")
 ```
 
-## Quick Start
+## Vector methods
 
 ```r
 library(veryMAD)
-
-x <- c(1, 2, 2, 3, 100)
+x <- c(sample_a = 10, sample_b = 11, sample_c = 12, sample_d = 80)
 
 mad_score(x)
-is_outlier(x)
-winsorize(x)
+mad_limits(x, nmads = 2, direction = "upper")
+is_mad_outlier(x, nmads = 2, direction = "upper")
+winsorize_mad(x, nmads = 2, direction = "upper")
 ```
 
-`mad_score()` returns robust z-like scores using the median and MAD.
-`is_outlier()` flags values whose absolute MAD score is above the threshold
-(`3.5` by default). `winsorize()` caps those values at the MAD-based limits.
+`direction = "lower"` checks only small values, `"upper"` only large values,
+and `"both"` both tails. Directional winsorization caps only the selected tail.
 
-## Matrix Helpers
-
-```r
-mat <- matrix(
-  c(1, 2, 2, 3, 100,
-    10, 20, 20, 30, 40),
-  nrow = 2,
-  byrow = TRUE
-)
-rownames(mat) <- c("gene_a", "gene_b")
-
-row_mad(mat)
-robust_scale(mat)
-select_variable_features(mat, n = 1)
-```
-
-Use `margin = 1` for rows and `margin = 2` for columns.
-
-## QC Tables
+## Tidy metadata QC
 
 ```r
-qc <- data.frame(
-  nCount_RNA = c(500, 600, 550, 20000, 580),
-  percent_mt = c(2, 3, 2.5, 3, 40)
+metadata <- data.frame(
+  sample_id = rep(c("S1", "S2"), each = 4),
+  nCount_RNA = c(800, 900, 1000, 9000, 700, 850, 950, 8000),
+  nFeature_RNA = c(400, 450, 500, 520, 350, 420, 480, 490),
+  percent.mt = c(2, 3, 4, 30, 2, 3, 5, 25)
 )
 
-mad_qc(qc, metrics = c(nCount_RNA = "both", percent_mt = "upper"))
+qc <- metadata |>
+  mad_qc(
+    metrics = c(
+      nCount_RNA = "lower",
+      nFeature_RNA = "lower",
+      percent.mt = "upper"
+    ),
+    nmads = 3,
+    group_by = "sample_id",
+    transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+  )
+
+qc
+annotated <- annotate_mad_qc(metadata, qc)
 ```
 
-`mad_qc()` expects a named character vector: names are metric columns and
-values are outlier directions (`"lower"`, `"upper"`, or `"both"`).
+The report keeps the raw and transformed values, thresholds, direction,
+grouping columns, stable internal observation index, and flag for every
+observation-metric pair. `group_by` accepts one or several string column names;
+missing group labels form a group and never drop rows. Available transforms are
+`identity`, positive-only `log10`, and nonnegative `log10p` (`log10(x + 1)`).
 
-It returns a tidy long data frame with one row per observation and metric:
-`id`, `metric`, `value`, `median`, `mad`, `lower`, `upper`, and `is_outlier`.
-
-## Verbose Output
-
-All exported functions are quiet by default. Set `verbose = TRUE` to get a
-short `cli` summary without changing the returned object.
+## SeuratObject integration
 
 ```r
-is_outlier(x, verbose = TRUE)
-mad_qc(qc, metrics = c(nCount_RNA = "both", percent_mt = "upper"), verbose = TRUE)
+report <- mad_qc_seurat(seurat_object, action = "report")
+seurat_object <- mad_qc_seurat(seurat_object, action = "annotate")
 ```
 
-`mad_qc(verbose = TRUE)` also shows a progress bar while it checks metrics.
+The explicit integration requires only the optional `SeuratObject` package.
+Report mode returns the same tidy table; annotation mode adds reversible logical
+metadata flags. It never filters cells automatically.
 
-## Practical Rules
+## Zero MAD
 
-Use `mad_score()` when you want an interpretable robust distance from the median. Use `is_outlier()` when you only need a flag, and `winsorize()` when downstream code should keep every observation but limit extreme values.
+All score and threshold functions use `zero_mad = "zero"` by default. A tied
+vector or group receives neutral zero scores, no outlier flags, unchanged
+winsorized values, and zero robust-scaled values. Use `"na"` when the result
+should be unknown or `"error"` when a tied margin must stop the analysis.
+Missing input positions remain missing.
 
-For QC tables, prefer `mad_qc()` over hand-written thresholds. Keep `metrics` named, use `"upper"` for metrics where only high values are suspicious, `"lower"` where only low values are suspicious, and `"both"` when either tail can fail QC. Use `transform = "log10"` for count-like metrics before thresholding.
-
-A zero MAD means the non-missing values are effectively tied. In that case, the vector helpers return neutral scores or unchanged values instead of manufacturing outliers.
-
-## API
+## Public API
 
 | Function | Purpose |
 | --- | --- |
-| `mad_score()` | Robust z-like score from median and MAD. |
-| `is_outlier()` | Logical MAD-threshold outlier flag. |
-| `winsorize()` | Cap values at MAD-threshold limits. |
-| `row_mad()` | Row-wise or column-wise MAD for numeric matrices. |
-| `robust_scale()` | Median-center and MAD-scale numeric matrices. |
-| `mad_qc()` | Return tidy MAD-based QC thresholds and outlier flags. |
-| `select_variable_features()` | Select rows or columns with highest MAD. |
+| `mad_score()` | Robust median/MAD scores. |
+| `mad_limits()` | Auditable lower and upper limits. |
+| `is_mad_outlier()` | Directional logical flags. |
+| `winsorize_mad()` | Directional capping. |
+| `row_mad()`, `col_mad()` | Matrix-margin MADs. |
+| `robust_scale()` | Row- or column-wise robust scaling. |
+| `top_mad_features()` | Rank matrix rows by raw MAD. |
+| `mad_qc()` | Long data-frame QC report. |
+| `annotate_mad_qc()` | Align report flags back to metadata. |
+| `mad_qc_seurat()` | Explicit Seurat report or annotation. |
 
-## Changelog
+## Limitations
 
-Project changes are tracked in [CHANGELOG.md](CHANGELOG.md). The changelog
-format follows [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/).
+- MAD thresholds are heuristic QC rules, not universal biological truths.
+- Small groups produce unstable thresholds; inspect distributions before filtering.
+- Zero-MAD groups require an explicit policy choice.
+- Raw MAD feature ranking does not model mean-variance dependence and is not a
+  replacement for Seurat or Scanpy highly variable feature selection.
+- Sparse matrices are rejected to avoid accidental dense conversion.
+- Users should inspect QC distributions rather than blindly filtering cells.
 
-## Development
-
-```r
-R CMD build .
-R CMD check --no-manual --no-build-vignettes veryMAD_*.tar.gz
-```
+See `vignette("veryMAD-qc")` for the focused report-to-annotation workflow and
+[CHANGELOG.md](CHANGELOG.md) for breaking changes.
