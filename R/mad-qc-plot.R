@@ -1,68 +1,73 @@
 #' Plot an existing MAD QC report
 #'
 #' @param qc A tidy report created by [mad_qc()]. Calculation groups are read
-#'   from the report attributes so group-specific thresholds remain accurate.
+#'   from report attributes when group-specific thresholds must be displayed.
 #' @param metrics `NULL` for all metrics or a character vector to plot.
-#' @param type A lightweight distribution or observation-index view.
+#' @param type A distribution or observation-index view.
 #' @param facet_by `NULL` or metadata columns used only to arrange the plot.
 #'   Faceting never changes MAD calculations or thresholds.
-#' @param show_thresholds Show finite, nonmissing lower and upper thresholds?
-#' @param show_legend Show the pass/outlier legend?
+#' @param show_thresholds Show active lower and upper thresholds?
+#' @param show_legend Show legends?
 #'
-#' @details Distribution views combine lightweight boxplots, observations, and finite
-#' calculation-group thresholds. Index views show values and finite threshold
-#' trajectories against the stable observation index. Missing or infinite
-#' thresholds are omitted. No thresholds are recalculated.
+#' @details Missing QC values are shown as blue triangles at an artificial
+#' panel floor. The report itself remains unchanged. Lower thresholds are
+#' dashed and upper thresholds are dot-dashed. No thresholds are recalculated.
 #'
 #' @return A ggplot object. The plot is returned without being printed.
 #' @export
 #' @examplesIf requireNamespace("ggplot2", quietly = TRUE)
-#' d <- data.frame(sample = paste0("s", 1:20), batch = rep(c("a", "b"), 10),
-#'   library_size = c(rnorm(19, 1e6, 1e5), 1e5))
+#' d <- data.frame(library_size = c(rnorm(19, 1e6, 1e5), NA))
 #' qc <- mad_qc(d, c(library_size = "lower"))
 #' plot_mad_qc(qc)
-#' plot_mad_qc(qc, facet_by = "batch")
 plot_mad_qc <- function(qc, metrics = NULL,
                         type = c("distribution", "index"), facet_by = NULL,
                         show_thresholds = TRUE, show_legend = TRUE) {
   .require_namespace("ggplot2", "`plot_mad_qc()`")
   type <- match.arg(type)
   .validate_qc_report(qc)
-  qc <- .add_qc_facet_columns(qc, facet_by)
   .arg_flag(show_thresholds, "show_thresholds")
   .arg_flag(show_legend, "show_legend")
   calculation_groups <- attr(qc, "group_by")
   if (is.null(calculation_groups)) calculation_groups <- character()
+  qc <- .add_qc_facet_columns(qc, facet_by)
   missing_groups <- setdiff(calculation_groups, names(qc))
   if (length(missing_groups)) stop("Stored QC calculation groups are missing from `qc`.", call. = FALSE)
   available <- unique(qc$metric)
   if (is.null(metrics)) metrics <- available
-  if (!is.character(metrics) || (nrow(qc) && !length(metrics)) || anyNA(metrics) || any(metrics == "") || anyDuplicated(metrics)) {
+  if (!is.character(metrics) || (nrow(qc) && !length(metrics)) || anyNA(metrics) ||
+      any(metrics == "") || anyDuplicated(metrics)) {
     stop("`metrics` must be NULL or a character vector of unique metric names.", call. = FALSE)
   }
   missing_metrics <- setdiff(metrics, available)
   if (length(missing_metrics)) stop(sprintf("Unknown metric(s): %s.", paste(missing_metrics, collapse = ", ")), call. = FALSE)
-  plot_data <- qc[qc$metric %in% metrics, , drop = FALSE]
-  plot_data$metric <- factor(plot_data$metric, levels = metrics)
-  plot_data$threshold_group <- .qc_plot_labels(plot_data, calculation_groups, "All observations")
-  plot_data$plot_facet <- .qc_plot_labels(plot_data, facet_by, "All observations")
-  plot_data$status <- factor(ifelse(is.na(plot_data$is_outlier), "Not evaluated",
-    ifelse(plot_data$is_outlier, "Outlier", "Pass")),
+  data <- qc[qc$metric %in% metrics, , drop = FALSE]
+  data$metric <- factor(data$metric, levels = metrics)
+  data$threshold_group <- .qc_plot_labels(data, calculation_groups, "All observations")
+  data$plot_facet <- .qc_plot_labels(data, facet_by, "All observations")
+  data$x_group <- as.integer(data$threshold_group)
+  data$status <- factor(ifelse(is.na(data$is_outlier), "Not evaluated",
+    ifelse(data$is_outlier, "Outlier", "Pass")),
     levels = c("Pass", "Not evaluated", "Outlier"))
-  if (!nrow(plot_data)) {
-    return(ggplot2::ggplot(plot_data) + ggplot2::theme_minimal() +
-      ggplot2::labs(x = NULL, y = "QC value"))
+  data$plot_floor <- .qc_plot_floor(data)
+  if (!nrow(data)) {
+    return(ggplot2::ggplot(data) + ggplot2::theme_minimal() + ggplot2::labs(x = NULL, y = "QC value"))
   }
-  if (type == "distribution") {
-    plot <- .plot_qc_distribution(plot_data, facet_by, show_thresholds)
+  plot <- if (type == "distribution") {
+    .plot_qc_distribution(data, facet_by, show_thresholds)
   } else {
-    plot <- .plot_qc_index(plot_data, facet_by, show_thresholds)
+    .plot_qc_index(data, facet_by, show_thresholds)
   }
-  plot +
-    ggplot2::scale_colour_manual(values = c(Pass = "#8C8C8C", `Not evaluated` = "#CCCCCC", Outlier = "#D55E00"), drop = FALSE) +
+  plot <- plot +
+    ggplot2::scale_colour_manual(values = c(Pass = "#009E73", `Not evaluated` = "#0072B2", Outlier = "#D55E00"), drop = FALSE) +
     ggplot2::theme_minimal() +
-    ggplot2::theme(panel.grid.minor = ggplot2::element_blank(), legend.position = if (show_legend) "right" else "none") +
-    ggplot2::labs(colour = "QC status", y = "QC value")
+    ggplot2::theme(panel.grid.minor = ggplot2::element_blank(),
+      legend.position = if (show_legend) "right" else "none") +
+    ggplot2::labs(colour = "QC status", linetype = "Threshold", y = "QC value")
+  if (anyNA(data$value)) {
+    plot <- plot + ggplot2::labs(caption = "Blue triangle at panel floor = missing/not evaluated")
+  }
+  plot$data <- data
+  plot
 }
 
 .add_qc_facet_columns <- function(qc, facet_by) {
@@ -92,36 +97,66 @@ plot_mad_qc <- function(qc, metrics = NULL,
   factor(labels, levels = unique(labels))
 }
 
+.qc_plot_floor <- function(data) {
+  if (!nrow(data)) return(numeric())
+  panels <- interaction(data$metric, data$plot_facet, drop = TRUE)
+  floors <- vapply(split(data$value, panels), function(x) {
+    x <- x[is.finite(x)]
+    if (!length(x)) return(0)
+    span <- diff(range(x))
+    min(x) - max(span * 0.08, max(abs(x)) * 0.05, 1e-8)
+  }, numeric(1))
+  unname(floors[as.character(panels)])
+}
+
 .plot_qc_distribution <- function(data, facet_by, show_thresholds) {
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = threshold_group, y = value)) +
-    ggplot2::geom_boxplot(width = 0.45, outlier.shape = NA, colour = "#555555", fill = NA) +
-    ggplot2::geom_jitter(ggplot2::aes(colour = status), width = 0.12, height = 0, alpha = 0.8) +
-    ggplot2::labs(x = if (nlevels(data$threshold_group) > 1L) "MAD reference group" else NULL)
+  finite <- data[!is.na(data$value), , drop = FALSE]
+  missing <- data[is.na(data$value), , drop = FALSE]
+  plot <- ggplot2::ggplot() +
+    ggplot2::geom_boxplot(data = finite, ggplot2::aes(x = x_group, y = value, group = x_group),
+      width = 0.45, outlier.shape = NA, colour = "#555555", fill = NA)
+  if (show_thresholds) plot <- .add_distribution_thresholds(plot, data)
+  plot <- plot + ggplot2::geom_jitter(data = finite,
+    ggplot2::aes(x = x_group, y = value, colour = status), width = 0.12, height = 0, alpha = 0.8)
+  if (nrow(missing)) plot <- plot + ggplot2::geom_point(data = missing,
+    ggplot2::aes(x = x_group, y = plot_floor, colour = status), shape = 17, size = 2.4)
   plot <- .facet_qc_plot(plot, facet_by)
-  if (show_thresholds) {
-    thresholds <- .qc_plot_thresholds(data, by_observation = FALSE)
-    if (nrow(thresholds)) {
-      plot <- plot + ggplot2::geom_point(data = thresholds,
-        ggplot2::aes(x = threshold_group, y = threshold), inherit.aes = FALSE,
-        shape = 95, size = 6, colour = "#333333")
-    }
-  }
-  plot
+  plot + ggplot2::scale_x_continuous(breaks = seq_along(levels(data$threshold_group)),
+    labels = levels(data$threshold_group)) +
+    ggplot2::labs(x = if (nlevels(data$threshold_group) > 1L) "MAD reference group" else NULL)
+}
+
+.add_distribution_thresholds <- function(plot, data) {
+  thresholds <- .qc_plot_thresholds(data, by_observation = FALSE)
+  if (!nrow(thresholds)) return(plot)
+  thresholds$x_group <- as.integer(thresholds$threshold_group)
+  plot + ggplot2::geom_segment(data = thresholds,
+    ggplot2::aes(x = x_group - 0.32, xend = x_group + 0.32,
+      y = threshold, yend = threshold, linetype = limit),
+    inherit.aes = FALSE, colour = "#333333", linewidth = 0.55) +
+    ggplot2::scale_linetype_manual(values = c(`Lower MAD threshold` = "dashed",
+      `Upper MAD threshold` = "dotdash"), drop = FALSE)
 }
 
 .plot_qc_index <- function(data, facet_by, show_thresholds) {
-  plot <- ggplot2::ggplot(data, ggplot2::aes(x = .obs, y = value, colour = status)) +
-    ggplot2::geom_point(alpha = 0.85) + ggplot2::labs(x = "Observation index")
-  plot <- .facet_qc_plot(plot, facet_by)
+  finite <- data[!is.na(data$value), , drop = FALSE]
+  missing <- data[is.na(data$value), , drop = FALSE]
+  plot <- ggplot2::ggplot()
   if (show_thresholds) {
     thresholds <- .qc_plot_thresholds(data, by_observation = TRUE)
     if (nrow(thresholds)) {
       plot <- plot + ggplot2::geom_step(data = thresholds,
-        ggplot2::aes(x = .obs, y = threshold, group = trajectory),
-        inherit.aes = FALSE, colour = "#333333", linewidth = 0.45, alpha = 0.8)
+        ggplot2::aes(x = .obs, y = threshold, group = trajectory, linetype = limit),
+        colour = "#333333", linewidth = 0.5) +
+        ggplot2::scale_linetype_manual(values = c(`Lower MAD threshold` = "dashed",
+          `Upper MAD threshold` = "dotdash"), drop = FALSE)
     }
   }
-  plot
+  plot <- plot + ggplot2::geom_point(data = finite,
+    ggplot2::aes(x = .obs, y = value, colour = status), alpha = 0.85)
+  if (nrow(missing)) plot <- plot + ggplot2::geom_point(data = missing,
+    ggplot2::aes(x = .obs, y = plot_floor, colour = status), shape = 17, size = 2.4)
+  .facet_qc_plot(plot, facet_by) + ggplot2::labs(x = "Observation index")
 }
 
 .facet_qc_plot <- function(plot, facet_by) {
@@ -134,12 +169,16 @@ plot_mad_qc <- function(qc, metrics = NULL,
 }
 
 .qc_plot_thresholds <- function(data, by_observation) {
-  id <- if (by_observation) seq_len(nrow(data)) else !duplicated(data[c("metric", "threshold_group", "plot_facet", "lower", "upper")])
+  id <- if (by_observation) seq_len(nrow(data)) else
+    !duplicated(data[c("metric", "threshold_group", "plot_facet", "lower", "upper")])
   base <- data[id, c(".obs", "metric", "threshold_group", "plot_facet", "lower", "upper"), drop = FALSE]
-  lower <- data.frame(base[c(".obs", "metric", "threshold_group", "plot_facet")], limit = "lower", threshold = base$lower)
-  upper <- data.frame(base[c(".obs", "metric", "threshold_group", "plot_facet")], limit = "upper", threshold = base$upper)
+  lower <- data.frame(base[c(".obs", "metric", "threshold_group", "plot_facet")],
+    limit = "Lower MAD threshold", threshold = base$lower)
+  upper <- data.frame(base[c(".obs", "metric", "threshold_group", "plot_facet")],
+    limit = "Upper MAD threshold", threshold = base$upper)
   out <- rbind(lower, upper)
   out <- out[is.finite(out$threshold), , drop = FALSE]
-  out$trajectory <- interaction(out$metric, out$threshold_group, out$limit, drop = TRUE)
+  out$limit <- factor(out$limit, levels = c("Lower MAD threshold", "Upper MAD threshold"))
+  out$trajectory <- interaction(out$metric, out$threshold_group, out$plot_facet, out$limit, drop = TRUE)
   out
 }

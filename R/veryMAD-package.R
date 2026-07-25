@@ -1,11 +1,11 @@
 #' veryMAD: lightweight MAD methods for omics QC
 #'
-#' Pipe-friendly vector, dense and sparse matrix, data-frame, plotting, and
-#' explicit SeuratObject helpers built around one consistent median absolute
-#' deviation policy.
+#' A lightweight R toolkit for robust MAD scores, dense expression-matrix
+#' scaling and auditable quality-control flagging across bulk, single-cell and
+#' other observation-level omics metadata.
 #'
 #' @keywords internal
 "_PACKAGE"
 
-utils::globalVariables(c(".obs", "metric", "plot_facet", "status", "threshold",
-  "threshold_group", "trajectory", "value"))
+utils::globalVariables(c(".obs", "limit", "metric", "plot_facet", "plot_floor",
+  "status", "threshold", "threshold_group", "trajectory", "value", "x_group"))

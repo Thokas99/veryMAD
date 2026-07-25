@@ -1,5 +1,38 @@
 # Changelog
 
+## veryMAD 0.3.2
+
+### Added
+
+- Added `mad_scale()` as the single focused dense-matrix operation, using
+  matrixStats row and column medians and MADs for expression heatmap scaling.
+- Added realistic deterministic bulk RNA-seq and single-cell metadata examples.
+
+### Changed
+
+- Reports from `mad_limits()`, `mad_qc()`, and `summarize_mad_qc()` are valid
+  tibbles; `mad_qc` reports retain calculation metadata for auditing.
+- Inactive directional limits are `NA_real_` rather than `Inf` or `-Inf`, and
+  outlier evaluation is explicitly direction-aware.
+- Observation summaries and annotations use three-valued overall logic:
+  `TRUE` for any failure, `FALSE` only when everything passed, and `NA` when
+  nothing failed but at least one metric was not evaluated.
+- `plot_mad_qc()` uses green, blue, and orange status colors; missing values are
+  visible as blue panel-floor triangles; threshold types use dark labeled lines.
+- `mad_qc_seurat()` defaults to report mode and both data-frame and Seurat
+  annotation protect existing flag columns unless `overwrite = TRUE`.
+- Documentation now presents one assay-agnostic metadata-table model with
+  ungrouped QC as the universal default and optional deliberate grouping.
+
+### Removed
+
+- Removed sparse-matrix support and the Matrix and sparseMatrixStats suggestions.
+- Removed `row_mad()`, `col_mad()`, and raw-MAD feature ranking through
+  `top_mad_features()`.
+- Replaced the broad `robust_scale()` API with focused `mad_scale()`.
+- Removed `winsorize_mad()`; veryMAD flags observations rather than modifying
+  measured values.
+
 ## veryMAD 0.3.0
 
 ### Added

@@ -11,7 +11,8 @@ mad_qc_seurat(
   transform = NULL,
   group_by = NULL,
   zero_mad = c("zero", "na", "error"),
-  action = c("annotate", "report")
+  action = c("report", "annotate"),
+  overwrite = FALSE
 )
 }
 \arguments{
@@ -30,7 +31,9 @@ the median, MAD, thresholds, and outlier calls; small groups are unstable.}
 
 \item{zero_mad}{Behavior when a group has zero MAD.}
 
-\item{action}{Return an annotated object or tidy report.}
+\item{action}{Return a tidy report or annotated object.}
+
+\item{overwrite}{Replace existing veryMAD flag columns when annotating?}
 }
 \value{
 A tidy report or annotated Seurat object.

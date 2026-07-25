@@ -15,7 +15,7 @@ represented as an ordinary data frame with the required columns.}
 \item{group_by}{\code{NULL} or one or more grouping column names in \code{qc}.}
 }
 \value{
-An ordinary data frame with deterministic columns and first-seen
+A tibble with deterministic columns and first-seen
 group, metric, or observation order.
 }
 \description{

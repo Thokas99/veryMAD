@@ -15,18 +15,18 @@ plot_mad_qc(
 }
 \arguments{
 \item{qc}{A tidy report created by \code{\link[=mad_qc]{mad_qc()}}. Calculation groups are read
-from the report attributes so group-specific thresholds remain accurate.}
+from report attributes when group-specific thresholds must be displayed.}
 
 \item{metrics}{\code{NULL} for all metrics or a character vector to plot.}
 
-\item{type}{A lightweight distribution or observation-index view.}
+\item{type}{A distribution or observation-index view.}
 
 \item{facet_by}{\code{NULL} or metadata columns used only to arrange the plot.
 Faceting never changes MAD calculations or thresholds.}
 
-\item{show_thresholds}{Show finite, nonmissing lower and upper thresholds?}
+\item{show_thresholds}{Show active lower and upper thresholds?}
 
-\item{show_legend}{Show the pass/outlier legend?}
+\item{show_legend}{Show legends?}
 }
 \value{
 A ggplot object. The plot is returned without being printed.
@@ -35,17 +35,14 @@ A ggplot object. The plot is returned without being printed.
 Plot an existing MAD QC report
 }
 \details{
-Distribution views combine lightweight boxplots, observations, and finite
-calculation-group thresholds. Index views show values and finite threshold
-trajectories against the stable observation index. Missing or infinite
-thresholds are omitted. No thresholds are recalculated.
+Missing QC values are shown as blue triangles at an artificial
+panel floor. The report itself remains unchanged. Lower thresholds are
+dashed and upper thresholds are dot-dashed. No thresholds are recalculated.
 }
 \examples{
 \dontshow{if (requireNamespace("ggplot2", quietly = TRUE)) withAutoprint(\{ # examplesIf}
-d <- data.frame(sample = paste0("s", 1:20), batch = rep(c("a", "b"), 10),
-  library_size = c(rnorm(19, 1e6, 1e5), 1e5))
+d <- data.frame(library_size = c(rnorm(19, 1e6, 1e5), NA))
 qc <- mad_qc(d, c(library_size = "lower"))
 plot_mad_qc(qc)
-plot_mad_qc(qc, facet_by = "batch")
 \dontshow{\}) # examplesIf}
 }
