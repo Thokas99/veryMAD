@@ -13,6 +13,13 @@
 
 ### Changed
 
+- Reframed `mad_qc()` documentation around assay-agnostic observation metadata:
+  bulk libraries, single cells, or spatial observations remain ungrouped by
+  default, while explicit `group_by` changes the statistical reference distribution.
+- `mad_qc()` reports now retain calculation-group and compact observation-metadata
+  attributes so plots can distinguish saved threshold groups from optional visual faceting.
+- `plot_mad_qc()` now uses `facet_by` only for layout and reads calculation groups
+  from the report; ungrouped reports never acquire sample or batch thresholds.
 - `top_mad_features()` now explicitly preserves original feature order when
   MAD values are tied.
 - ggplot2, Matrix, and sparseMatrixStats are optional suggested dependencies;

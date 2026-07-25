@@ -7,4 +7,5 @@
 #' @keywords internal
 "_PACKAGE"
 
-utils::globalVariables(c(".obs", "metric", "plot_group", "status", "threshold", "trajectory", "value"))
+utils::globalVariables(c(".obs", "metric", "plot_facet", "status", "threshold",
+  "threshold_group", "trajectory", "value"))

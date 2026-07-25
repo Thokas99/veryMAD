@@ -16,14 +16,18 @@ mad_qc(
 )
 }
 \arguments{
-\item{data}{A data frame with one observation per row.}
+\item{data}{An observation-level QC data frame: one sample or library per row
+for bulk RNA-seq, one cell per row for single-cell data, or one spot or cell
+per row for spatial data. This is not a gene-expression count matrix.}
 
 \item{metrics}{A nonempty named character vector mapping numeric columns to
 \code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
 \item{nmads}{Number of MADs from the median.}
 
-\item{group_by}{\code{NULL} or character column names used to form QC groups.}
+\item{group_by}{\code{NULL} for one global reference distribution, or character
+column names defining separate reference distributions. Grouping changes
+the median, MAD, thresholds, and outlier calls; small groups are unstable.}
 
 \item{transform}{An optional named character vector mapping requested metrics
 to \code{"identity"}, \code{"log10"}, or \code{"log10p"}.}

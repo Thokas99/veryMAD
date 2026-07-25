@@ -24,7 +24,9 @@ mad_qc_seurat(
 \item{transform}{An optional named character vector mapping requested metrics
 to \code{"identity"}, \code{"log10"}, or \code{"log10p"}.}
 
-\item{group_by}{\code{NULL} or character column names used to form QC groups.}
+\item{group_by}{\code{NULL} for one global reference distribution, or character
+column names defining separate reference distributions. Grouping changes
+the median, MAD, thresholds, and outlier calls; small groups are unstable.}
 
 \item{zero_mad}{Behavior when a group has zero MAD.}
 
