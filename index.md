@@ -1,0 +1,261 @@
+# veryMAD
+
+`veryMAD` is a small R package for transparent median absolute deviation
+(MAD) scaling and auditable quality-control flagging across bulk,
+single-cell, and other observation-level omics metadata.
+
+The package is intentionally lightweight and assay-agnostic. It does not
+filter observations for you, infer metric meanings from column names, or
+hide transformations. You provide the metrics, directions, and optional
+transformations explicitly, and the report keeps both the original
+measurement and the value used for threshold estimation.
+
+## Contents
+
+1.  [Core principles](#core-principles)
+2.  [Installation](#installation)
+3.  [Choosing transformations and
+    directions](#choosing-transformations-and-directions)
+4.  [Bulk RNA-seq sample QC](#bulk-rna-seq-sample-qc)
+5.  [Single-cell QC for one object](#single-cell-qc-for-one-object)
+6.  [Seurat metadata QC](#seurat-metadata-qc)
+7.  [Summaries, annotations, and
+    plots](#summaries-annotations-and-plots)
+8.  [Scientific references](#scientific-references)
+
+## Core principles
+
+[`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md)
+treats a metadata table as observations by metrics: one bulk library per
+row, one cell per row, one spatial spot per row, or another observation
+unit.
+
+- Strongly right-skewed count metrics such as library size, total RNA
+  counts, and detected-feature counts should generally be transformed
+  before MAD threshold estimation.
+- Bounded percentages, proportions, and rates normally remain on their
+  raw scale.
+- Transformations affect only threshold estimation and outlier calls.
+  They never replace or modify the original measurements.
+- The report always contains `raw_value` on the input scale and `value`
+  on the calculation scale.
+- MAD thresholds are adaptive heuristics, not universal biological
+  cutoffs.
+- An upper-tail count or feature flag means “unusually high relative to
+  the reference distribution.” It is not automatically a doublet or
+  low-quality call.
+- Doublet detection is outside `veryMAD`’s scope and should be performed
+  with a dedicated method.
+
+## Installation
+
+``` r
+
+# install.packages("remotes")
+remotes::install_github("Thokas99/veryMAD")
+```
+
+## Choosing transformations and directions
+
+The table below is a biologically grounded starting point for common
+RNA-seq QC metadata. It is not a rule that every dataset must use these
+settings.
+
+| Context | Metric | Recommended transformation | Direction | Interpretation |
+|----|----|----|----|----|
+| Single-cell RNA-seq | `nCount_RNA` | `log10p` | `both` | Low-depth cells or unusually high-RNA cells |
+| Single-cell RNA-seq | `nFeature_RNA` | `log10p` | `both` | Low-complexity cells or unusually complex cells |
+| Single-cell RNA-seq | `percent.mt` | identity/raw | `upper` | Elevated mitochondrial contribution |
+| Bulk RNA-seq | `library_size` | `log10p` | `lower` | Unusually shallow sequencing |
+| Bulk RNA-seq | `detected_genes` | `log10p` | `lower` | Low transcriptome complexity |
+| Bulk RNA-seq | `mapping_rate` | identity/raw | `lower` | Poor alignment |
+| Bulk RNA-seq | `assigned_rate` | identity/raw | `lower` | Few reads assigned to annotated features |
+| Bulk RNA-seq | `rrna_rate` | identity/raw | `upper` | Possible ribosomal RNA contamination |
+| Bulk RNA-seq, optional | `median_tin` | identity/raw | `lower` | Possible degradation or uneven transcript coverage |
+
+`log10p` means `log10(x + 1)` and is appropriate for nonnegative counts.
+The logarithm base is not the important biological decision; the
+important decision is whether thresholds should be calculated on a log
+or raw scale.
+
+`transform = NULL` is identity transformation. `veryMAD` never
+transforms a metric because its name looks like a count, rate,
+percentage, or feature metric. Users should be able to see from the
+function call exactly which transformations were applied.
+
+## Bulk RNA-seq sample QC
+
+The bulk example uses sample-level RNA-seq metrics that are commonly
+available from alignment and quantification summaries. The simulated
+values are illustrative: they create a mostly good population plus a
+small reproducible set of deliberately poor libraries for demonstration.
+They are not acceptance cutoffs.
+
+``` r
+
+library(veryMAD)
+
+bulk_metadata <- veryMAD:::.simulate_bulk_qc_metadata(n = 240, seed = 123)
+
+bulk_metrics <- c(
+  library_size = "lower",
+  detected_genes = "lower",
+  mapping_rate = "lower",
+  assigned_rate = "lower",
+  rrna_rate = "upper"
+)
+
+bulk_transform <- c(
+  library_size = "log10p",
+  detected_genes = "log10p"
+)
+
+bulk_qc <- mad_qc(
+  bulk_metadata,
+  metrics = bulk_metrics,
+  transform = bulk_transform,
+  nmads = 3
+)
+
+head(bulk_qc)
+summarize_mad_qc(bulk_qc, level = "metric")
+```
+
+`library_size` and `detected_genes` are count-like, right-skewed
+metrics, so this example estimates their MAD thresholds on
+`log10(x + 1)`. `mapping_rate`, `assigned_rate`, and `rrna_rate` are
+bounded rates, so their thresholds are estimated on the original scale.
+
+Duplication rate is protocol- and expression-dependent in RNA-seq, so it
+is not presented as a universal automatic failure metric here.
+Mitochondrial proportion can be useful in specific bulk workflows, but
+it is also not treated as a universal default sample-level RNA-seq
+metric.
+
+## Single-cell QC for one object
+
+The single-cell example follows the same explicit-transform rule. Count
+depth and detected-feature counts are right-skewed, so their thresholds
+are estimated on a log scale. Mitochondrial percentage is bounded and
+stays raw.
+
+The canonical Bioconductor single-cell workflow commonly applies
+lower-tail filtering to library size and detected features. `veryMAD`
+demonstrates two-sided flagging here to expose unusually high cells as
+well, without asserting that those cells must be removed.
+
+``` r
+
+cell_metadata <- veryMAD:::.simulate_single_cell_qc_metadata(n = 1200, seed = 123)
+
+sc_metrics <- c(
+  nCount_RNA = "both",
+  nFeature_RNA = "both",
+  percent.mt = "upper"
+)
+
+sc_transform <- c(
+  nCount_RNA = "log10p",
+  nFeature_RNA = "log10p"
+)
+
+sc_qc <- mad_qc(
+  cell_metadata,
+  metrics = sc_metrics,
+  transform = sc_transform,
+  nmads = 3
+)
+
+head(sc_qc)
+summarize_mad_qc(sc_qc, level = "metric")
+```
+
+Upper-tail `nCount_RNA` or `nFeature_RNA` flags are warnings for
+inspection. They mean unusually high RNA content or detected-feature
+complexity relative to this reference distribution, not confirmed
+doublets. Use a dedicated doublet detector when doublet calls are
+needed.
+
+## Seurat metadata QC
+
+[`mad_qc_seurat()`](https://thokas99.github.io/veryMAD/reference/mad_qc_seurat.md)
+reads Seurat cell metadata and either returns a long QC report or
+annotates metadata columns. It does not filter cells or change
+expression data.
+
+Use the same single-cell metric configuration as above.
+
+``` r
+
+sc_metrics <- c(
+  nCount_RNA = "both",
+  nFeature_RNA = "both",
+  percent.mt = "upper"
+)
+
+sc_transform <- c(
+  nCount_RNA = "log10p",
+  nFeature_RNA = "log10p"
+)
+
+seurat_report <- mad_qc_seurat(
+  seurat_object,
+  metrics = sc_metrics,
+  transform = sc_transform,
+  action = "report"
+)
+
+seurat_object <- mad_qc_seurat(
+  seurat_object,
+  metrics = sc_metrics,
+  transform = sc_transform,
+  action = "annotate"
+)
+```
+
+## Summaries, annotations, and plots
+
+``` r
+
+annotated_bulk <- annotate_mad_qc(bulk_metadata, bulk_qc)
+head(annotated_bulk)
+
+summarize_mad_qc(bulk_qc, level = "observation")
+plot_mad_qc(bulk_qc, metric = "library_size")
+```
+
+The annotation helpers add flags to metadata. They do not remove rows.
+This keeps QC decisions explicit and reviewable.
+
+## Scientific references
+
+- The Bioconductor book [Orchestrating Single-Cell Analysis with
+  Bioconductor, quality-control
+  chapter](https://bioconductor.org/books/release/OSCA.basic/quality-control.html)
+  describes adaptive QC thresholds, including log-transformed
+  library-size and feature-count filters and raw-scale proportion
+  metrics.
+- Amezquita et al., [“Orchestrating single-cell analysis with
+  Bioconductor”](https://www.nature.com/articles/s41592-019-0654-x),
+  Nature Methods, 2020, describes the Bioconductor single-cell analysis
+  ecosystem that motivates transparent, modular QC workflows.
+- McCarthy et al., [“Scater: pre-processing, quality control,
+  normalization and visualization of single-cell RNA-seq data in
+  R”](https://pubmed.ncbi.nlm.nih.gov/28088763/), Bioinformatics, 2017,
+  supports the use of explicit single-cell QC metrics and visual review
+  of cell-level quality summaries.
+- Wang et al., [“RSeQC: quality control of RNA-seq
+  experiments”](https://academic.oup.com/bioinformatics/article/28/16/2184/325191),
+  Bioinformatics, 2012, supports RNA-seq sample-level QC metrics such as
+  mapping, assignment, transcript coverage, and ribosomal RNA
+  assessment.
+- Luecken and Theis, [Single-cell best practices: quality
+  control](https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html),
+  summarizes common single-cell QC metrics and practical filtering
+  concerns.
+- ScLinear, 2024, is a recent example that applies three-MAD QC with
+  two-sided count/feature thresholds and an upper mitochondrial
+  threshold: <https://www.nature.com/articles/s42003-024-05958-4>.
+- ddqc, 2022, is an example of biology-aware adaptive MAD-based
+  single-cell QC:
+  <https://link.springer.com/article/10.1186/s13059-022-02820-w>.
