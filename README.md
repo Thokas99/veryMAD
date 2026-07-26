@@ -77,7 +77,8 @@ metadata. It is not a rule that every dataset must use these settings.
 | Bulk RNA-seq | `rrna_rate` | raw | `upper` | Possible ribosomal RNA contamination |
 | Bulk RNA-seq, optional | `median_tin` | raw | `lower` | Possible degradation or uneven transcript coverage |
 
-`log1p` means `log(1 + x)`. `transform = NULL` is identity transformation. 
+`log1p` means `log(1 + x)`. 
+`transform = NULL` is identity transformation. 
 
 ## Bulk RNA-seq sample QC
 
