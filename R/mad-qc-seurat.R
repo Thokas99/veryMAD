@@ -6,7 +6,7 @@
 #'
 #' Use explicit transformations for count-like cell metrics when needed. For
 #' example, `nCount_RNA` and `nFeature_RNA` are commonly right-skewed and can be
-#' thresholded on `log10p`, while bounded percentages such as `percent.mt` usually
+#' thresholded on `log1p`, while bounded percentages such as `percent.mt` usually
 #' remain on the raw scale. Upper-tail count or feature flags are inspection
 #' warnings, not doublet calls.
 #'
@@ -34,8 +34,8 @@
 #'   percent.mt = "upper"
 #' )
 #' transform <- c(
-#'   nCount_RNA = "log10p",
-#'   nFeature_RNA = "log10p"
+#'   nCount_RNA = "log1p",
+#'   nFeature_RNA = "log1p"
 #' )
 #' # report <- mad_qc_seurat(seurat_object, metrics, transform = transform)
 #' # seurat_object <- mad_qc_seurat(

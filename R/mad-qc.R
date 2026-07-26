@@ -7,7 +7,7 @@
 #'
 #' Count-like QC metrics such as library size, total RNA counts, and detected
 #' features are often strongly right-skewed. In those cases, estimating MAD
-#' thresholds after an explicit log transformation such as `log10p` can give a
+#' thresholds after an explicit log transformation such as `log1p` can give a
 #' more useful reference distribution. Bounded percentages, proportions, and rates
 #' are usually kept on their original scale because a log transform changes the
 #' interpretation of already bounded measurements.
@@ -30,7 +30,7 @@
 #' @param group_by Optional column name used to estimate thresholds within groups.
 #' @param transform Optional named character vector mapping metrics to explicit
 #'   transformations. Supported values are `"identity"`, `"log10"`, and
-#'   `"log10p"`. Metrics absent from this vector use identity transformation.
+#'   `"log1p"`. Metrics absent from this vector use identity transformation.
 #' @param constant Consistency constant passed to MAD calculation.
 #' @param na_rm Logical; remove missing values before threshold estimation.
 #' @param zero_mad How to handle groups with zero MAD: `"zero"`, `"na"`, or
@@ -50,7 +50,7 @@
 #' mad_qc(
 #'   bulk_metadata,
 #'   metrics = c(library_size = "lower", mapping_rate = "lower"),
-#'   transform = c(library_size = "log10p")
+#'   transform = c(library_size = "log1p")
 #' )
 #' cell_metadata <- data.frame(
 #'   cell_id = paste0("cell_", 1:8),
@@ -61,7 +61,7 @@
 #' mad_qc(
 #'   cell_metadata,
 #'   metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
-#'   transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+#'   transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
 #' )
 mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
                    constant = 1.4826, na_rm = TRUE,
@@ -137,7 +137,7 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
     stop("`transform` must be a named character vector.", call. = FALSE)
   }
   if (!all(names(transform) %in% metrics)) stop("`transform` names must reference requested metrics.", call. = FALSE)
-  if (!all(transform %in% c("identity", "log10", "log10p"))) stop("Unsupported transformation.", call. = FALSE)
+  if (!all(transform %in% c("identity", "log10", "log1p"))) stop("Unsupported transformation.", call. = FALSE)
   out[names(transform)] <- transform
   out
 }
@@ -146,8 +146,8 @@ mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
   finite <- x[!is.na(x)]
   if (any(!is.finite(finite))) stop(sprintf("Metric `%s` contains non-finite values.", metric), call. = FALSE)
   if (method == "log10" && any(finite <= 0)) stop(sprintf("`log10` requires positive values in `%s`.", metric), call. = FALSE)
-  if (method == "log10p" && any(finite < 0)) stop(sprintf("`log10p` requires nonnegative values in `%s`.", metric), call. = FALSE)
-  switch(method, identity = x, log10 = log10(x), log10p = log10(x + 1))
+  if (method == "log1p" && any(finite < 0)) stop(sprintf("`log1p` requires nonnegative values in `%s`.", metric), call. = FALSE)
+  switch(method, identity = x, log10 = log10(x), log1p = log1p(x))
 }
 
 .group_index <- function(data, group_by) {

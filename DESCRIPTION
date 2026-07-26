@@ -25,4 +25,6 @@ Suggests:
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
 VignetteBuilder: knitr
-URL: https://thokas99.github.io/veryMAD/
+URL: https://github.com/Thokas99/veryMAD,
+    https://thokas99.github.io/veryMAD/
+BugReports: https://github.com/Thokas99/veryMAD/issues
