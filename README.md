@@ -2,7 +2,7 @@
   <img
     src="man/figures/veryMAD-logo.svg"
     alt="veryMAD R package logo"
-    width="220"
+    width="250"
   >
 </p>
 
