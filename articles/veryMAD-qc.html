@@ -41,6 +41,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/Thokas99/veryMAD/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -57,7 +58,7 @@
       <h1>veryMAD quality-control examples</h1>
             
       
-
+      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/vignettes/veryMAD-qc.Rmd" class="external-link"><code>vignettes/veryMAD-qc.Rmd</code></a></small>
       <div class="d-none name"><code>veryMAD-qc.Rmd</code></div>
     </div>
 
@@ -91,8 +92,8 @@ names: the transformation must be visible in the function call.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bulk_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  library_size <span class="op">=</span> <span class="st">"log10p"</span>,</span>
-<span>  detected_genes <span class="op">=</span> <span class="st">"log10p"</span></span>
+<span>  library_size <span class="op">=</span> <span class="st">"log1p"</span>,</span>
+<span>  detected_genes <span class="op">=</span> <span class="st">"log1p"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bulk_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
@@ -106,12 +107,12 @@ names: the transformation must be visible in the function call.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 11</span></span></span>
 <span><span class="co">#&gt;    .obs id    metric       raw_value value median   mad lower upper direction</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 1     library_size   3<span style="text-decoration: underline;">000</span>000  6.48   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2 2     library_size   4<span style="text-decoration: underline;">285</span>714  6.63   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3 3     library_size   5<span style="text-decoration: underline;">571</span>429  6.75   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     4 4     library_size   6<span style="text-decoration: underline;">857</span>143  6.84   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     5 5     library_size   8<span style="text-decoration: underline;">142</span>857  6.91   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     6 6     library_size   9<span style="text-decoration: underline;">428</span>571  6.97   7.63 0.128  7.24    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 1     library_size   3<span style="text-decoration: underline;">000</span>000  14.9   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2 2     library_size   4<span style="text-decoration: underline;">285</span>714  15.3   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3 3     library_size   5<span style="text-decoration: underline;">571</span>429  15.5   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     4 4     library_size   6<span style="text-decoration: underline;">857</span>143  15.7   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     5 5     library_size   8<span style="text-decoration: underline;">142</span>857  15.9   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     6 6     library_size   9<span style="text-decoration: underline;">428</span>571  16.1   17.6 0.295  16.7    <span style="color: #BB0000;">NA</span> lower    </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: is_outlier &lt;lgl&gt;</span></span></span>
 <span><span class="fu"><a href="../reference/summarize_mad_qc.html">summarize_mad_qc</a></span><span class="op">(</span><span class="va">bulk_qc</span>, level <span class="op">=</span> <span class="st">"metric"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 5 × 7</span></span></span>
@@ -141,8 +142,8 @@ their interpretation depends on protocol and biology.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  nCount_RNA <span class="op">=</span> <span class="st">"log10p"</span>,</span>
-<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log10p"</span></span>
+<span>  nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>,</span>
+<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
@@ -156,12 +157,12 @@ their interpretation depends on protocol and biology.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 11</span></span></span>
 <span><span class="co">#&gt;    .obs id    metric     raw_value value median   mad lower upper direction</span></span>
 <span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;int&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>          <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>  <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>    </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 1     nCount_RNA       150  2.18   3.95 0.237  3.24  4.67 both     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2 2     nCount_RNA       189  2.28   3.95 0.237  3.24  4.67 both     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3 3     nCount_RNA       229  2.36   3.95 0.237  3.24  4.67 both     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     4 4     nCount_RNA       268  2.43   3.95 0.237  3.24  4.67 both     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     5 5     nCount_RNA       308  2.49   3.95 0.237  3.24  4.67 both     </span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     6 6     nCount_RNA       347  2.54   3.95 0.237  3.24  4.67 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     1 1     nCount_RNA       150  5.02   9.11 0.546  7.47  10.7 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     2 2     nCount_RNA       189  5.25   9.11 0.546  7.47  10.7 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     3 3     nCount_RNA       229  5.44   9.11 0.546  7.47  10.7 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     4 4     nCount_RNA       268  5.59   9.11 0.546  7.47  10.7 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     5 5     nCount_RNA       308  5.73   9.11 0.546  7.47  10.7 both     </span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     6 6     nCount_RNA       347  5.85   9.11 0.546  7.47  10.7 both     </span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 1 more variable: is_outlier &lt;lgl&gt;</span></span></span>
 <span><span class="fu"><a href="../reference/summarize_mad_qc.html">summarize_mad_qc</a></span><span class="op">(</span><span class="va">sc_qc</span>, level <span class="op">=</span> <span class="st">"metric"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 3 × 7</span></span></span>

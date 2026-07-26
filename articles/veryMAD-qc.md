@@ -27,8 +27,8 @@ bulk_metrics <- c(
 )
 
 bulk_transform <- c(
-  library_size = "log10p",
-  detected_genes = "log10p"
+  library_size = "log1p",
+  detected_genes = "log1p"
 )
 
 bulk_qc <- mad_qc(
@@ -42,12 +42,12 @@ head(bulk_qc)
 #> # A tibble: 6 × 11
 #>    .obs id    metric       raw_value value median   mad lower upper direction
 #>   <int> <chr> <chr>            <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <chr>    
-#> 1     1 1     library_size   3000000  6.48   7.63 0.128  7.24    NA lower    
-#> 2     2 2     library_size   4285714  6.63   7.63 0.128  7.24    NA lower    
-#> 3     3 3     library_size   5571429  6.75   7.63 0.128  7.24    NA lower    
-#> 4     4 4     library_size   6857143  6.84   7.63 0.128  7.24    NA lower    
-#> 5     5 5     library_size   8142857  6.91   7.63 0.128  7.24    NA lower    
-#> 6     6 6     library_size   9428571  6.97   7.63 0.128  7.24    NA lower    
+#> 1     1 1     library_size   3000000  14.9   17.6 0.295  16.7    NA lower    
+#> 2     2 2     library_size   4285714  15.3   17.6 0.295  16.7    NA lower    
+#> 3     3 3     library_size   5571429  15.5   17.6 0.295  16.7    NA lower    
+#> 4     4 4     library_size   6857143  15.7   17.6 0.295  16.7    NA lower    
+#> 5     5 5     library_size   8142857  15.9   17.6 0.295  16.7    NA lower    
+#> 6     6 6     library_size   9428571  16.1   17.6 0.295  16.7    NA lower    
 #> # ℹ 1 more variable: is_outlier <lgl>
 summarize_mad_qc(bulk_qc, level = "metric")
 #> # A tibble: 5 × 7
@@ -79,8 +79,8 @@ sc_metrics <- c(
 )
 
 sc_transform <- c(
-  nCount_RNA = "log10p",
-  nFeature_RNA = "log10p"
+  nCount_RNA = "log1p",
+  nFeature_RNA = "log1p"
 )
 
 sc_qc <- mad_qc(
@@ -94,12 +94,12 @@ head(sc_qc)
 #> # A tibble: 6 × 11
 #>    .obs id    metric     raw_value value median   mad lower upper direction
 #>   <int> <chr> <chr>          <dbl> <dbl>  <dbl> <dbl> <dbl> <dbl> <chr>    
-#> 1     1 1     nCount_RNA       150  2.18   3.95 0.237  3.24  4.67 both     
-#> 2     2 2     nCount_RNA       189  2.28   3.95 0.237  3.24  4.67 both     
-#> 3     3 3     nCount_RNA       229  2.36   3.95 0.237  3.24  4.67 both     
-#> 4     4 4     nCount_RNA       268  2.43   3.95 0.237  3.24  4.67 both     
-#> 5     5 5     nCount_RNA       308  2.49   3.95 0.237  3.24  4.67 both     
-#> 6     6 6     nCount_RNA       347  2.54   3.95 0.237  3.24  4.67 both     
+#> 1     1 1     nCount_RNA       150  5.02   9.11 0.546  7.47  10.7 both     
+#> 2     2 2     nCount_RNA       189  5.25   9.11 0.546  7.47  10.7 both     
+#> 3     3 3     nCount_RNA       229  5.44   9.11 0.546  7.47  10.7 both     
+#> 4     4 4     nCount_RNA       268  5.59   9.11 0.546  7.47  10.7 both     
+#> 5     5 5     nCount_RNA       308  5.73   9.11 0.546  7.47  10.7 both     
+#> 6     6 6     nCount_RNA       347  5.85   9.11 0.546  7.47  10.7 both     
 #> # ℹ 1 more variable: is_outlier <lgl>
 summarize_mad_qc(sc_qc, level = "metric")
 #> # A tibble: 3 × 7

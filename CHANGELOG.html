@@ -22,6 +22,7 @@
   </ul></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/Thokas99/veryMAD/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul></div>
 
 
@@ -31,7 +32,7 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-
+      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/CHANGELOG.md" class="external-link"><code>CHANGELOG.md</code></a></small>
     </div>
 
 <div id="changelog" class="section level1">
@@ -107,7 +108,7 @@
 <ul><li>
 <code><a href="reference/mad_qc.html">mad_qc()</a></code> is now an ordinary data-frame function with long, stable, group-auditable results; multiple grouping columns and missing group labels are supported without dropping observations.</li>
 <li>Scores, thresholds, outliers, winsorization, robust scaling, and grouped QC now share <code>zero_mad = "zero"</code>, <code>"na"</code>, or <code>"error"</code> behavior.</li>
-<li>Transformations are validated: <code>log10</code> requires positive values and <code>log10p</code> requires nonnegative values.</li>
+<li>Transformations are validated: <code>log10</code> requires positive values and <code>log1p</code> requires nonnegative values.</li>
 <li>
 <code>row_mad()</code> is row-only, <code>col_mad()</code> is column-only, and <code>robust_scale()</code> uses <code>margin = "rows"</code> or <code>"columns"</code>.</li>
 <li>Runtime dependencies were reduced to <code>matrixStats</code>; SeuratObject is optional.</li>

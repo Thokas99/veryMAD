@@ -43,6 +43,7 @@
 <li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json">
 </form></li>
+<li class="nav-item"><a class="external-link nav-link" href="https://github.com/Thokas99/veryMAD/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
       </ul>
 </div>
 
@@ -50,7 +51,9 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><div class="section level1">
+  <main id="main" class="col-md-9"><p align="center">
+<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD R package logo" width="220"></p>
+<div class="section level1">
 <div class="page-header"><h1 id="verymad">veryMAD<a class="anchor" aria-label="anchor" href="#verymad"></a>
 </h1></div>
 <p><code>veryMAD</code> is a small R package for transparent median absolute deviation (MAD) scaling and auditable quality-control flagging across bulk, single-cell, and other observation-level omics metadata.</p>
@@ -92,6 +95,7 @@
 <span></span>
 <span><span class="co"># install.packages("pak")</span></span>
 <span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
+<p><strong>Documentation:</strong> <a href="https://thokas99.github.io/veryMAD/">thokas99.github.io/veryMAD</a></p>
 </div>
 <div class="section level2">
 <h2 id="choosing-transformations-and-directions">Choosing transformations and directions<a class="anchor" aria-label="anchor" href="#choosing-transformations-and-directions"></a>
@@ -116,14 +120,14 @@
 <tr>
 <td>Single-cell RNA-seq</td>
 <td><code>nCount_RNA</code></td>
-<td><code>log10p</code></td>
+<td><code>log1p</code></td>
 <td><code>both</code></td>
 <td>Low-depth cells or unusually high-RNA cells</td>
 </tr>
 <tr>
 <td>Single-cell RNA-seq</td>
 <td><code>nFeature_RNA</code></td>
-<td><code>log10p</code></td>
+<td><code>log1p</code></td>
 <td><code>both</code></td>
 <td>Low-complexity cells or unusually complex cells</td>
 </tr>
@@ -137,14 +141,14 @@
 <tr>
 <td>Bulk RNA-seq</td>
 <td><code>library_size</code></td>
-<td><code>log10p</code></td>
+<td><code>log1p</code></td>
 <td><code>lower</code></td>
 <td>Unusually shallow sequencing</td>
 </tr>
 <tr>
 <td>Bulk RNA-seq</td>
 <td><code>detected_genes</code></td>
-<td><code>log10p</code></td>
+<td><code>log1p</code></td>
 <td><code>lower</code></td>
 <td>Low transcriptome complexity</td>
 </tr>
@@ -178,7 +182,7 @@
 </tr>
 </tbody>
 </table>
-<p><code>log10p</code> means <code>log10(x + 1)</code> and is appropriate for nonnegative counts. The logarithm base is not the important biological decision; the important decision is whether thresholds should be calculated on a log or raw scale.</p>
+<p><code>log1p</code> means <code>log1p(x)</code> and is appropriate for nonnegative counts. The logarithm base is not the important biological decision; the important decision is whether thresholds should be calculated on a log or raw scale.</p>
 <p><code>transform = NULL</code> is identity transformation. <code>veryMAD</code> never transforms a metric because its name looks like a count, rate, percentage, or feature metric. Users should be able to see from the function call exactly which transformations were applied.</p>
 </div>
 <div class="section level2">
@@ -186,7 +190,7 @@
 </h2>
 <p>The bulk example uses sample-level RNA-seq metrics that are commonly available from alignment and quantification summaries. The simulated values are illustrative: they create a mostly good population plus a small reproducible set of deliberately poor libraries for demonstration. They are not acceptance cutoffs.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://thokas99.github.io/veryMAD/">veryMAD</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bulk_metadata</span> <span class="op">&lt;-</span> <span class="fu">veryMAD</span><span class="fu">:::</span><span class="fu">.simulate_bulk_qc_metadata</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">240</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
 <span></span>
@@ -199,8 +203,8 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bulk_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  library_size <span class="op">=</span> <span class="st">"log10p"</span>,</span>
-<span>  detected_genes <span class="op">=</span> <span class="st">"log10p"</span></span>
+<span>  library_size <span class="op">=</span> <span class="st">"log1p"</span>,</span>
+<span>  detected_genes <span class="op">=</span> <span class="st">"log1p"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">bulk_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
@@ -212,7 +216,7 @@
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bulk_qc</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/summarize_mad_qc.html">summarize_mad_qc</a></span><span class="op">(</span><span class="va">bulk_qc</span>, level <span class="op">=</span> <span class="st">"metric"</span><span class="op">)</span></span></code></pre></div>
-<p><code>library_size</code> and <code>detected_genes</code> are count-like, right-skewed metrics, so this example estimates their MAD thresholds on <code>log10(x + 1)</code>. <code>mapping_rate</code>, <code>assigned_rate</code>, and <code>rrna_rate</code> are bounded rates, so their thresholds are estimated on the original scale.</p>
+<p><code>library_size</code> and <code>detected_genes</code> are count-like, right-skewed metrics, so this example estimates their MAD thresholds on <code>log1p(x)</code>. <code>mapping_rate</code>, <code>assigned_rate</code>, and <code>rrna_rate</code> are bounded rates, so their thresholds are estimated on the original scale.</p>
 <p>Duplication rate is protocol- and expression-dependent in RNA-seq, so it is not presented as a universal automatic failure metric here. Mitochondrial proportion can be useful in specific bulk workflows, but it is also not treated as a universal default sample-level RNA-seq metric.</p>
 </div>
 <div class="section level2">
@@ -230,8 +234,8 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  nCount_RNA <span class="op">=</span> <span class="st">"log10p"</span>,</span>
-<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log10p"</span></span>
+<span>  nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>,</span>
+<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
@@ -258,8 +262,8 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  nCount_RNA <span class="op">=</span> <span class="st">"log10p"</span>,</span>
-<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log10p"</span></span>
+<span>  nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>,</span>
+<span>  nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">seurat_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc_seurat.html">mad_qc_seurat</a></span><span class="op">(</span></span>
@@ -301,7 +305,16 @@
 </ul>
 </div>
 </div>
-  </main><aside class="col-md-3"><div class="license">
+
+  </main><aside class="col-md-3"><div class="links">
+<h2 data-toc-skip>Links</h2>
+<ul class="list-unstyled">
+<li><a href="https://github.com/Thokas99/veryMAD/" class="external-link">Browse source code</a></li>
+<li><a href="https://github.com/Thokas99/veryMAD/issues" class="external-link">Report a bug</a></li>
+</ul>
+</div>
+
+<div class="license">
 <h2 data-toc-skip>License</h2>
 <ul class="list-unstyled">
 <li>

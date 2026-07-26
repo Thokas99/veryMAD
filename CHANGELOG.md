@@ -109,7 +109,7 @@
   grouped QC now share `zero_mad = "zero"`, `"na"`, or `"error"`
   behavior.
 - Transformations are validated: `log10` requires positive values and
-  `log10p` requires nonnegative values.
+  `log1p` requires nonnegative values.
 - `row_mad()` is row-only, `col_mad()` is column-only, and
   `robust_scale()` uses `margin = "rows"` or `"columns"`.
 - Runtime dependencies were reduced to `matrixStats`; SeuratObject is
