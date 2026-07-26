@@ -18,7 +18,7 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">veryMAD</a>
 
@@ -52,7 +52,7 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><p align="center">
-<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD R package logo" width="220"></p>
+<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD R package logo" width="250"></p>
 <div class="section level1">
 <div class="page-header"><h1 id="verymad">veryMAD<a class="anchor" aria-label="anchor" href="#verymad"></a>
 </h1></div>
@@ -134,7 +134,7 @@
 <tr>
 <td>Single-cell RNA-seq</td>
 <td><code>percent.mt</code></td>
-<td>identity/raw</td>
+<td>raw</td>
 <td><code>upper</code></td>
 <td>Elevated mitochondrial contribution</td>
 </tr>
@@ -155,35 +155,34 @@
 <tr>
 <td>Bulk RNA-seq</td>
 <td><code>mapping_rate</code></td>
-<td>identity/raw</td>
+<td>raw</td>
 <td><code>lower</code></td>
 <td>Poor alignment</td>
 </tr>
 <tr>
 <td>Bulk RNA-seq</td>
 <td><code>assigned_rate</code></td>
-<td>identity/raw</td>
+<td>raw</td>
 <td><code>lower</code></td>
 <td>Few reads assigned to annotated features</td>
 </tr>
 <tr>
 <td>Bulk RNA-seq</td>
 <td><code>rrna_rate</code></td>
-<td>identity/raw</td>
+<td>raw</td>
 <td><code>upper</code></td>
 <td>Possible ribosomal RNA contamination</td>
 </tr>
 <tr>
 <td>Bulk RNA-seq, optional</td>
 <td><code>median_tin</code></td>
-<td>identity/raw</td>
+<td>raw</td>
 <td><code>lower</code></td>
 <td>Possible degradation or uneven transcript coverage</td>
 </tr>
 </tbody>
 </table>
-<p><code>log1p</code> means <code>log1p(x)</code> and is appropriate for nonnegative counts. The logarithm base is not the important biological decision; the important decision is whether thresholds should be calculated on a log or raw scale.</p>
-<p><code>transform = NULL</code> is identity transformation. <code>veryMAD</code> never transforms a metric because its name looks like a count, rate, percentage, or feature metric. Users should be able to see from the function call exactly which transformations were applied.</p>
+<p><code>log1p</code> means <code>log(1 + x)</code>. <code>transform = NULL</code> is identity transformation.</p>
 </div>
 <div class="section level2">
 <h2 id="bulk-rna-seq-sample-qc">Bulk RNA-seq sample QC<a class="anchor" aria-label="anchor" href="#bulk-rna-seq-sample-qc"></a>
@@ -217,13 +216,12 @@
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bulk_qc</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/summarize_mad_qc.html">summarize_mad_qc</a></span><span class="op">(</span><span class="va">bulk_qc</span>, level <span class="op">=</span> <span class="st">"metric"</span><span class="op">)</span></span></code></pre></div>
 <p><code>library_size</code> and <code>detected_genes</code> are count-like, right-skewed metrics, so this example estimates their MAD thresholds on <code>log1p(x)</code>. <code>mapping_rate</code>, <code>assigned_rate</code>, and <code>rrna_rate</code> are bounded rates, so their thresholds are estimated on the original scale.</p>
-<p>Duplication rate is protocol- and expression-dependent in RNA-seq, so it is not presented as a universal automatic failure metric here. Mitochondrial proportion can be useful in specific bulk workflows, but it is also not treated as a universal default sample-level RNA-seq metric.</p>
 </div>
 <div class="section level2">
 <h2 id="single-cell-qc-for-one-object">Single-cell QC for one object<a class="anchor" aria-label="anchor" href="#single-cell-qc-for-one-object"></a>
 </h2>
-<p>The single-cell example follows the same explicit-transform rule. Count depth and detected-feature counts are right-skewed, so their thresholds are estimated on a log scale. Mitochondrial percentage is bounded and stays raw.</p>
-<p>The canonical Bioconductor single-cell workflow commonly applies lower-tail filtering to library size and detected features. <code>veryMAD</code> demonstrates two-sided flagging here to expose unusually high cells as well, without asserting that those cells must be removed.</p>
+<p>The single-cell example follows the same explicit-transform rule. Count depth and detected-feature counts are right-skewed, so their thresholds are estimated on a log scale. Mitochondrial percentage is bounded and stays in the original scale.</p>
+<p>The canonical Bioconductor single-cell workflow commonly applies lower-tail filtering to library size and detected features. <code>veryMAD</code> uses two-sided flagging here to expose unusually high cells as well.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">cell_metadata</span> <span class="op">&lt;-</span> <span class="fu">veryMAD</span><span class="fu">:::</span><span class="fu">.simulate_single_cell_qc_metadata</span><span class="op">(</span>n <span class="op">=</span> <span class="fl">1200</span>, seed <span class="op">=</span> <span class="fl">123</span><span class="op">)</span></span>
 <span></span>
@@ -252,7 +250,7 @@
 <div class="section level2">
 <h2 id="seurat-metadata-qc">Seurat metadata QC<a class="anchor" aria-label="anchor" href="#seurat-metadata-qc"></a>
 </h2>
-<p><code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> reads Seurat cell metadata and either returns a long QC report or annotates metadata columns. It does not filter cells or change expression data.</p>
+<p><code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> reads Seurat cell metadata and either returns a QC report or annotates metadata columns. It does not filter cells or change expression data.</p>
 <p>Use the same single-cell metric configuration as above.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>

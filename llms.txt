@@ -73,23 +73,16 @@ settings.
 |----|----|----|----|----|
 | Single-cell RNA-seq | `nCount_RNA` | `log1p` | `both` | Low-depth cells or unusually high-RNA cells |
 | Single-cell RNA-seq | `nFeature_RNA` | `log1p` | `both` | Low-complexity cells or unusually complex cells |
-| Single-cell RNA-seq | `percent.mt` | identity/raw | `upper` | Elevated mitochondrial contribution |
+| Single-cell RNA-seq | `percent.mt` | raw | `upper` | Elevated mitochondrial contribution |
 | Bulk RNA-seq | `library_size` | `log1p` | `lower` | Unusually shallow sequencing |
 | Bulk RNA-seq | `detected_genes` | `log1p` | `lower` | Low transcriptome complexity |
-| Bulk RNA-seq | `mapping_rate` | identity/raw | `lower` | Poor alignment |
-| Bulk RNA-seq | `assigned_rate` | identity/raw | `lower` | Few reads assigned to annotated features |
-| Bulk RNA-seq | `rrna_rate` | identity/raw | `upper` | Possible ribosomal RNA contamination |
-| Bulk RNA-seq, optional | `median_tin` | identity/raw | `lower` | Possible degradation or uneven transcript coverage |
+| Bulk RNA-seq | `mapping_rate` | raw | `lower` | Poor alignment |
+| Bulk RNA-seq | `assigned_rate` | raw | `lower` | Few reads assigned to annotated features |
+| Bulk RNA-seq | `rrna_rate` | raw | `upper` | Possible ribosomal RNA contamination |
+| Bulk RNA-seq, optional | `median_tin` | raw | `lower` | Possible degradation or uneven transcript coverage |
 
-`log1p` means `log1p(x)` and is appropriate for nonnegative counts. The
-logarithm base is not the important biological decision; the important
-decision is whether thresholds should be calculated on a log or raw
-scale.
-
-`transform = NULL` is identity transformation. `veryMAD` never
-transforms a metric because its name looks like a count, rate,
-percentage, or feature metric. Users should be able to see from the
-function call exactly which transformations were applied.
+`log1p` means `log(1 + x)`. `transform = NULL` is identity
+transformation.
 
 ## Bulk RNA-seq sample QC
 
@@ -134,23 +127,16 @@ metrics, so this example estimates their MAD thresholds on `log1p(x)`.
 `mapping_rate`, `assigned_rate`, and `rrna_rate` are bounded rates, so
 their thresholds are estimated on the original scale.
 
-Duplication rate is protocol- and expression-dependent in RNA-seq, so it
-is not presented as a universal automatic failure metric here.
-Mitochondrial proportion can be useful in specific bulk workflows, but
-it is also not treated as a universal default sample-level RNA-seq
-metric.
-
 ## Single-cell QC for one object
 
 The single-cell example follows the same explicit-transform rule. Count
 depth and detected-feature counts are right-skewed, so their thresholds
 are estimated on a log scale. Mitochondrial percentage is bounded and
-stays raw.
+stays in the original scale.
 
 The canonical Bioconductor single-cell workflow commonly applies
 lower-tail filtering to library size and detected features. `veryMAD`
-demonstrates two-sided flagging here to expose unusually high cells as
-well, without asserting that those cells must be removed.
+uses two-sided flagging here to expose unusually high cells as well.
 
 ``` r
 
@@ -187,9 +173,8 @@ needed.
 ## Seurat metadata QC
 
 [`mad_qc_seurat()`](https://thokas99.github.io/veryMAD/reference/mad_qc_seurat.md)
-reads Seurat cell metadata and either returns a long QC report or
-annotates metadata columns. It does not filter cells or change
-expression data.
+reads Seurat cell metadata and either returns a QC report or annotates
+metadata columns. It does not filter cells or change expression data.
 
 Use the same single-cell metric configuration as above.
 
