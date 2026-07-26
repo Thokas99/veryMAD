@@ -9,3 +9,4 @@
 ..Rcheck/
 *.Rcheck/
 *.tar.gz
+docs

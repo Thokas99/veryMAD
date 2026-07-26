@@ -10,6 +10,13 @@ A lightweight R toolkit for robust MAD scores, dense expression-matrix
 scaling and auditable quality-control flagging across bulk, single-cell and
 other observation-level omics metadata.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://thokas99.github.io/veryMAD/}
+}
+
+}
 \author{
 \strong{Maintainer}: Thomas Sirchi \email{thomasirchi@gmail.com}
 
