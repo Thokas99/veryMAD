@@ -53,6 +53,9 @@ unit.
 
 # install.packages("remotes")
 remotes::install_github("Thokas99/veryMAD")
+
+# install.packages("pak")
+pak::pak("Thokas99/veryMAD")
 ```
 
 ## Choosing transformations and directions
