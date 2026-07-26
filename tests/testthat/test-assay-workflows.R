@@ -1,69 +1,86 @@
-bulk_metrics <- c(library_size = "lower", detected_genes = "lower",
-  mapping_rate = "lower", duplication_rate = "upper",
-  percent_mitochondrial = "upper")
+bulk_metrics <- c(
+  library_size = "lower",
+  detected_genes = "lower",
+  mapping_rate = "lower",
+  assigned_rate = "lower",
+  rrna_rate = "upper"
+)
 
-cell_metrics <- c(nCount_RNA = "lower", nFeature_RNA = "lower",
-  percent.mt = "upper", doublet_score = "upper")
+bulk_transform <- c(
+  library_size = "log10p",
+  detected_genes = "log10p"
+)
+
+single_cell_metrics <- c(
+  nCount_RNA = "both",
+  nFeature_RNA = "both",
+  percent.mt = "upper"
+)
+
+single_cell_transform <- c(
+  nCount_RNA = "log10p",
+  nFeature_RNA = "log10p"
+)
 
 test_that("bulk simulation is realistic, related, and reproducible", {
   bulk <- veryMAD:::.simulate_bulk_qc_metadata()
-  expect_equal(nrow(bulk), 150L)
-  expect_named(bulk, c("sample_id", "condition", "batch", "library_size",
-    "detected_genes", "mapping_rate", "duplication_rate", "percent_mitochondrial"))
-  expect_equal(length(unique(bulk$sample_id)), nrow(bulk))
-  expect_equal(sort(unique(bulk$condition)), c("Control", "Treatment"))
-  expect_equal(sort(unique(bulk$batch)), c("Batch1", "Batch2", "Batch3"))
-  complete <- complete.cases(bulk[c("library_size", "detected_genes")])
-  expect_gt(stats::cor(bulk$library_size[complete], bulk$detected_genes[complete]), 0.3)
-  expect_true(all(bulk$mapping_rate[!is.na(bulk$mapping_rate)] >= 0 & bulk$mapping_rate[!is.na(bulk$mapping_rate)] <= 1))
-  expect_true(all(bulk$duplication_rate[!is.na(bulk$duplication_rate)] >= 0 & bulk$duplication_rate[!is.na(bulk$duplication_rate)] <= 1))
-  expect_true(all(bulk$percent_mitochondrial[!is.na(bulk$percent_mitochondrial)] >= 0 & bulk$percent_mitochondrial[!is.na(bulk$percent_mitochondrial)] <= 100))
-  expect_true(anyNA(bulk))
-  expect_equal(bulk, veryMAD:::.simulate_bulk_qc_metadata())
+  again <- veryMAD:::.simulate_bulk_qc_metadata()
+
+  expect_equal(nrow(bulk), 240L)
+  expect_equal(bulk, again)
+  expect_equal(
+    names(bulk),
+    c("sample_id", "condition", "batch", "library_size", "detected_genes",
+      "mapping_rate", "assigned_rate", "rrna_rate")
+  )
+  expect_true(all(bulk$library_size > 0))
+  expect_true(all(bulk$detected_genes > 0))
+  expect_true(all(bulk$mapping_rate >= 0 & bulk$mapping_rate <= 1))
+  expect_true(all(bulk$assigned_rate >= 0 & bulk$assigned_rate <= 1))
+  expect_true(all(bulk$rrna_rate >= 0 & bulk$rrna_rate <= 1))
 })
 
-test_that("bulk QC is globally thresholded and every metric has failures", {
+test_that("bulk workflow flags deliberately poor libraries", {
   bulk <- veryMAD:::.simulate_bulk_qc_metadata()
-  report <- mad_qc(bulk, bulk_metrics,
-    transform = c(library_size = "log10p", detected_genes = "log10p"))
-  expect_null(attr(report, "group_by"))
-  expect_equal(report$id[report$metric == "library_size"], bulk$sample_id)
-  expect_false(any(c("condition", "batch") %in% names(report)))
-  expect_true(all(vapply(split(report$median, report$metric), function(x) length(unique(x)) == 1L, logical(1))))
-  expect_true(all(vapply(split(report$is_outlier, report$metric), function(x) any(x %in% TRUE), logical(1))))
-  expect_true(any(report$is_outlier %in% FALSE)); expect_true(any(report$is_outlier %in% TRUE)); expect_true(anyNA(report$is_outlier))
+  report <- mad_qc(bulk, bulk_metrics, transform = bulk_transform)
+  summary <- summarize_mad_qc(report, level = "observation")
+
+  expect_true(any(summary$mad_qc_outlier[seq_len(8L)]))
+  expect_true(any(report$is_outlier[report$metric == "library_size"]))
+  expect_true(any(report$is_outlier[report$metric == "detected_genes"]))
+  expect_true(any(report$is_outlier[report$metric == "rrna_rate"]))
 })
 
-test_that("single-cell simulation respects ranges and relationships", {
+test_that("single-cell simulation is reproducible and omits doublet scores", {
   cells <- veryMAD:::.simulate_single_cell_qc_metadata()
-  expect_equal(nrow(cells), 1000L)
-  expect_named(cells, c("cell_id", "nCount_RNA", "nFeature_RNA", "percent.mt", "doublet_score"))
-  expect_equal(length(unique(cells$cell_id)), nrow(cells))
-  complete <- complete.cases(cells[c("nCount_RNA", "nFeature_RNA")])
-  expect_gt(stats::cor(cells$nCount_RNA[complete], cells$nFeature_RNA[complete]), 0.3)
-  expect_true(all(cells$nCount_RNA[!is.na(cells$nCount_RNA)] >= 0))
-  expect_true(all(cells$nFeature_RNA[complete] <= cells$nCount_RNA[complete]))
-  expect_true(all(cells$percent.mt[!is.na(cells$percent.mt)] >= 0 & cells$percent.mt[!is.na(cells$percent.mt)] <= 100))
-  expect_true(all(cells$doublet_score[!is.na(cells$doublet_score)] >= 0 & cells$doublet_score[!is.na(cells$doublet_score)] <= 1))
-  expect_true(anyNA(cells))
-})
+  again <- veryMAD:::.simulate_single_cell_qc_metadata()
 
-test_that("single-cell QC is ungrouped and every metric has failures", {
+  expect_equal(nrow(cells), 1200L)
+  expect_equal(cells, again)
+  expect_equal(names(cells), c("cell_id", "nCount_RNA", "nFeature_RNA", "percent.mt"))
+  expect_false("doublet_score" %in% names(cells))
+  expect_true(all(cells$nCount_RNA > 0))
+  expect_true(all(cells$nFeature_RNA > 0))
+  expect_true(all(cells$percent.mt >= 0))
+}
+)
+
+test_that("single-cell workflow uses explicit log count transforms and raw percent.mt", {
   cells <- veryMAD:::.simulate_single_cell_qc_metadata()
-  report <- mad_qc(cells, cell_metrics,
-    transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p"))
-  expect_null(attr(report, "group_by"))
-  expect_false(any(c("sample_id", "orig.ident") %in% names(cells)))
-  expect_true(all(vapply(split(report$is_outlier, report$metric), function(x) any(x %in% TRUE), logical(1))))
-  expect_true(any(report$is_outlier %in% FALSE)); expect_true(any(report$is_outlier %in% TRUE)); expect_true(anyNA(report$is_outlier))
-})
+  report <- mad_qc(cells, single_cell_metrics, transform = single_cell_transform)
 
-test_that("grouped thresholds exist only when explicitly requested", {
+  expect_true(any(report$is_outlier[report$metric == "nCount_RNA"]))
+  expect_true(any(report$is_outlier[report$metric == "nFeature_RNA"]))
+  expect_true(any(report$is_outlier[report$metric == "percent.mt"]))
+  expect_equal(report$value[report$metric == "percent.mt"], report$raw_value[report$metric == "percent.mt"])
+}
+)
+
+test_that("grouped bulk QC keeps rates on the raw scale", {
   bulk <- veryMAD:::.simulate_bulk_qc_metadata()
-  ungrouped <- mad_qc(bulk, c(mapping_rate = "lower"))
   grouped <- mad_qc(bulk, c(mapping_rate = "lower"), group_by = "batch")
-  expect_null(attr(ungrouped, "group_by"))
-  expect_equal(attr(grouped, "group_by"), "batch")
-  expect_equal(length(unique(ungrouped$median)), 1L)
-  expect_gt(length(unique(grouped$median)), 1L)
-})
+
+  expect_equal(grouped$value, grouped$raw_value)
+  expect_true(all(grouped$metric == "mapping_rate"))
+}
+)

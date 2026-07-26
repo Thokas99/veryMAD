@@ -2,7 +2,7 @@
 % Please edit documentation in R/mad-qc-seurat.R
 \name{mad_qc_seurat}
 \alias{mad_qc_seurat}
-\title{Apply MAD QC to Seurat cell metadata}
+\title{Run explicit MAD QC on Seurat cell metadata}
 \usage{
 mad_qc_seurat(
   object,
@@ -16,28 +16,54 @@ mad_qc_seurat(
 )
 }
 \arguments{
-\item{object}{A \code{Seurat} object.}
+\item{object}{A Seurat object.}
 
-\item{metrics}{Named QC metrics and directions.}
+\item{metrics}{A named character vector mapping metadata columns to
+\code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
-\item{nmads}{Number of MADs from the median.}
+\item{nmads}{Number of MADs from the median used to define thresholds.}
 
-\item{transform}{An optional named character vector mapping requested metrics
-to \code{"identity"}, \code{"log10"}, or \code{"log10p"}.}
+\item{transform}{Optional named character vector of explicit per-metric
+transformations passed to \code{\link[=mad_qc]{mad_qc()}}.}
 
-\item{group_by}{\code{NULL} for one global reference distribution, or character
-column names defining separate reference distributions. Grouping changes
-the median, MAD, thresholds, and outlier calls; small groups are unstable.}
+\item{group_by}{Optional metadata column used to estimate thresholds within
+groups.}
 
-\item{zero_mad}{Behavior when a group has zero MAD.}
+\item{zero_mad}{How to handle groups with zero MAD.}
 
-\item{action}{Return a tidy report or annotated object.}
+\item{action}{Return a QC \code{"report"} or \code{"annotate"} the object metadata.}
 
-\item{overwrite}{Replace existing veryMAD flag columns when annotating?}
+\item{overwrite}{Allow annotation columns to replace existing columns.}
 }
 \value{
-A tidy report or annotated Seurat object.
+For \code{action = "report"}, a \code{mad_qc} data frame. For
+\code{action = "annotate"}, the input Seurat object with metadata flag columns
+added.
 }
 \description{
-Apply MAD QC to Seurat cell metadata
+\code{mad_qc_seurat()} applies \code{\link[=mad_qc]{mad_qc()}} to \code{object[[]]} and either returns the
+long QC report or annotates Seurat metadata with outlier flags. It does not
+filter cells and does not alter expression data.
+}
+\details{
+Use explicit transformations for count-like cell metrics when needed. For
+example, \code{nCount_RNA} and \code{nFeature_RNA} are commonly right-skewed and can be
+thresholded on \code{log10p}, while bounded percentages such as \code{percent.mt} usually
+remain on the raw scale. Upper-tail count or feature flags are inspection
+warnings, not doublet calls.
+}
+\examples{
+metrics <- c(
+  nCount_RNA = "both",
+  nFeature_RNA = "both",
+  percent.mt = "upper"
+)
+transform <- c(
+  nCount_RNA = "log10p",
+  nFeature_RNA = "log10p"
+)
+# report <- mad_qc_seurat(seurat_object, metrics, transform = transform)
+# seurat_object <- mad_qc_seurat(
+#   seurat_object, metrics, transform = transform, action = "annotate"
+# )
 }

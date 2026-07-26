@@ -1,25 +1,68 @@
-#' Tidy MAD-based quality control
+#' Flag observations with explicit MAD thresholds
 #'
-#' @param data An observation-level QC data frame: one sample or library per row
-#'   for bulk RNA-seq, one cell per row for single-cell data, or one spot or cell
-#'   per row for spatial data. This is not a gene-expression count matrix.
-#' @param metrics A nonempty named character vector mapping numeric columns to
-#'   `"lower"`, `"upper"`, or `"both"`.
-#' @param nmads Number of MADs from the median.
-#' @param group_by `NULL` for one global reference distribution, or character
-#'   column names defining separate reference distributions. Grouping changes
-#'   the median, MAD, thresholds, and outlier calls; small groups are unstable.
-#' @param transform An optional named character vector mapping requested metrics
-#'   to `"identity"`, `"log10"`, or `"log10p"`.
-#' @param constant Positive MAD consistency constant.
-#' @param na_rm Remove missing metric values for threshold calculation?
-#' @param zero_mad Behavior when a group has zero MAD.
-#' @return A long `mad_qc` tibble in metric-major, original-observation order.
+#' `mad_qc()` calculates median absolute deviation (MAD) thresholds for selected
+#' numeric metadata columns and returns a long, auditable report. Rows in `data`
+#' are observations: bulk RNA-seq libraries, single cells, spatial spots, or any
+#' other assay-level unit with observation metadata.
+#'
+#' Count-like QC metrics such as library size, total RNA counts, and detected
+#' features are often strongly right-skewed. In those cases, estimating MAD
+#' thresholds after an explicit log transformation such as `log10p` can give a
+#' more useful reference distribution. Bounded percentages, proportions, and rates
+#' are usually kept on their original scale because a log transform changes the
+#' interpretation of already bounded measurements.
+#'
+#' Transformations are explicit and per metric. `transform = NULL` is equivalent
+#' to identity transformation for every metric, and `mad_qc()` never infers a
+#' transformation from a metric name. Thresholds, medians, MADs, and the `value`
+#' column are expressed on the calculation scale. The `raw_value` column always
+#' preserves the exact input measurement scale.
+#'
+#' `direction = "both"` flags both tails of the selected metric, but it does
+#' not assign a biological cause. For example, an upper-tail count or feature flag
+#' means unusually high relative to the reference distribution; it is not a
+#' doublet call or an automatic filtering decision.
+#'
+#' @param data A data frame containing one observation per row.
+#' @param metrics A named character vector mapping metric names in `data` to one
+#'   of `"lower"`, `"upper"`, or `"both"`.
+#' @param nmads Number of MADs from the median used to define thresholds.
+#' @param group_by Optional column name used to estimate thresholds within groups.
+#' @param transform Optional named character vector mapping metrics to explicit
+#'   transformations. Supported values are `"identity"`, `"log10"`, and
+#'   `"log10p"`. Metrics absent from this vector use identity transformation.
+#' @param constant Consistency constant passed to MAD calculation.
+#' @param na_rm Logical; remove missing values before threshold estimation.
+#' @param zero_mad How to handle groups with zero MAD: `"zero"`, `"na"`, or
+#'   `"error"`.
+#'
+#' @return A `mad_qc` data frame with one row per observation-metric pair. It
+#'   includes `raw_value`, transformed `value`, threshold columns, `direction`, and
+#'   `is_outlier`.
 #' @export
+#'
 #' @examples
-#' metadata <- data.frame(sample = c("a", "a", "b", "b"),
-#'   counts = c(100, 1000, 200, 2000), mt = c(2, 20, 3, 30))
-#' metadata |> mad_qc(c(counts = "lower", mt = "upper"), group_by = "sample")
+#' bulk_metadata <- data.frame(
+#'   sample_id = paste0("sample_", 1:8),
+#'   library_size = c(2e6, 3e7, 3.2e7, 3.4e7, 3.1e7, 3.3e7, 3.5e7, 3.6e7),
+#'   mapping_rate = c(0.55, 0.92, 0.94, 0.93, 0.95, 0.94, 0.93, 0.92)
+#' )
+#' mad_qc(
+#'   bulk_metadata,
+#'   metrics = c(library_size = "lower", mapping_rate = "lower"),
+#'   transform = c(library_size = "log10p")
+#' )
+#' cell_metadata <- data.frame(
+#'   cell_id = paste0("cell_", 1:8),
+#'   nCount_RNA = c(200, 8000, 8500, 9000, 8700, 9200, 9500, 70000),
+#'   nFeature_RNA = c(150, 2800, 3000, 3100, 2950, 3200, 3300, 8000),
+#'   percent.mt = c(3, 4, 5, 4, 6, 5, 4, 18)
+#' )
+#' mad_qc(
+#'   cell_metadata,
+#'   metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
+#'   transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+#' )
 mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
                    constant = 1.4826, na_rm = TRUE,
                    zero_mad = c("zero", "na", "error")) {
