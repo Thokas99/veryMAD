@@ -45,6 +45,9 @@ per row, one cell per row, one spatial spot per row, or another observation unit
 ```r
 # install.packages("remotes")
 remotes::install_github("Thokas99/veryMAD")
+
+# install.packages("pak")
+pak::pak("Thokas99/veryMAD")
 ```
 
 ## Choosing transformations and directions
