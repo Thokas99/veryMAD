@@ -27,7 +27,7 @@ of \code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
 \item{transform}{Optional named character vector mapping metrics to explicit
 transformations. Supported values are \code{"identity"}, \code{"log10"}, and
-\code{"log10p"}. Metrics absent from this vector use identity transformation.}
+\code{"log1p"}. Metrics absent from this vector use identity transformation.}
 
 \item{constant}{Consistency constant passed to MAD calculation.}
 
@@ -50,7 +50,7 @@ other assay-level unit with observation metadata.
 \details{
 Count-like QC metrics such as library size, total RNA counts, and detected
 features are often strongly right-skewed. In those cases, estimating MAD
-thresholds after an explicit log transformation such as \code{log10p} can give a
+thresholds after an explicit log transformation such as \code{log1p} can give a
 more useful reference distribution. Bounded percentages, proportions, and rates
 are usually kept on their original scale because a log transform changes the
 interpretation of already bounded measurements.
@@ -75,7 +75,7 @@ bulk_metadata <- data.frame(
 mad_qc(
   bulk_metadata,
   metrics = c(library_size = "lower", mapping_rate = "lower"),
-  transform = c(library_size = "log10p")
+  transform = c(library_size = "log1p")
 )
 cell_metadata <- data.frame(
   cell_id = paste0("cell_", 1:8),
@@ -86,6 +86,6 @@ cell_metadata <- data.frame(
 mad_qc(
   cell_metadata,
   metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
-  transform = c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
 )
 }

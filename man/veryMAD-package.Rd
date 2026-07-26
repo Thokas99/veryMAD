@@ -13,7 +13,9 @@ other observation-level omics metadata.
 \seealso{
 Useful links:
 \itemize{
+  \item \url{https://github.com/Thokas99/veryMAD}
   \item \url{https://thokas99.github.io/veryMAD/}
+  \item Report bugs at \url{https://github.com/Thokas99/veryMAD/issues}
 }
 
 }

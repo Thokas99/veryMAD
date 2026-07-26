@@ -1,7 +1,7 @@
 test_that("single-cell count metrics are transformed while percent.mt stays raw", {
   cells <- veryMAD:::.simulate_single_cell_qc_metadata()
   metrics <- c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper")
-  transform <- c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+  transform <- c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
 
   report <- mad_qc(cells, metrics = metrics, transform = transform)
 
@@ -9,8 +9,8 @@ test_that("single-cell count metrics are transformed while percent.mt stays raw"
   feature_row <- report[report$metric == "nFeature_RNA", ][1, ]
   mito_row <- report[report$metric == "percent.mt", ][1, ]
 
-  expect_equal(count_row$value, log10(count_row$raw_value + 1))
-  expect_equal(feature_row$value, log10(feature_row$raw_value + 1))
+  expect_equal(count_row$value, log1p(count_row$raw_value))
+  expect_equal(feature_row$value, log1p(feature_row$raw_value))
   expect_equal(mito_row$value, mito_row$raw_value)
   expect_true(any(report$is_outlier[report$metric == "nCount_RNA" & report$direction == "both"]))
   expect_true(any(report$is_outlier[report$metric == "nFeature_RNA" & report$direction == "both"]))
@@ -26,7 +26,7 @@ test_that("bulk count metrics are transformed while rates stay raw", {
     assigned_rate = "lower",
     rrna_rate = "upper"
   )
-  transform <- c(library_size = "log10p", detected_genes = "log10p")
+  transform <- c(library_size = "log1p", detected_genes = "log1p")
 
   report <- mad_qc(bulk, metrics = metrics, transform = transform)
 
@@ -36,8 +36,8 @@ test_that("bulk count metrics are transformed while rates stay raw", {
   assigned_row <- report[report$metric == "assigned_rate", ][1, ]
   rrna_row <- report[report$metric == "rrna_rate", ][1, ]
 
-  expect_equal(lib_row$value, log10(lib_row$raw_value + 1))
-  expect_equal(gene_row$value, log10(gene_row$raw_value + 1))
+  expect_equal(lib_row$value, log1p(lib_row$raw_value))
+  expect_equal(gene_row$value, log1p(gene_row$raw_value))
   expect_equal(mapping_row$value, mapping_row$raw_value)
   expect_equal(assigned_row$value, assigned_row$raw_value)
   expect_equal(rrna_row$value, rrna_row$raw_value)
@@ -82,7 +82,7 @@ test_that("Seurat report and annotation preserve explicit flags without filterin
   object[["percent.mt"]] <- seq(1, 25, length.out = ncol(object))
 
   metrics <- c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper")
-  transform <- c(nCount_RNA = "log10p", nFeature_RNA = "log10p")
+  transform <- c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
 
   report <- mad_qc_seurat(object, metrics = metrics, transform = transform, action = "report")
   annotated <- mad_qc_seurat(object, metrics = metrics, transform = transform, action = "annotate")

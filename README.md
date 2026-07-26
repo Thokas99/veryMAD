@@ -1,3 +1,11 @@
+<p align="center">
+  <img
+    src="man/figures/veryMAD-logo.svg"
+    alt="veryMAD R package logo"
+    width="220"
+  >
+</p>
+
 # veryMAD
 
 `veryMAD` is a small R package for transparent median absolute deviation (MAD)
@@ -50,6 +58,8 @@ remotes::install_github("Thokas99/veryMAD")
 pak::pak("Thokas99/veryMAD")
 ```
 
+**Documentation:** [thokas99.github.io/veryMAD](https://thokas99.github.io/veryMAD/)
+
 ## Choosing transformations and directions
 
 The table below is a biologically grounded starting point for common RNA-seq QC
@@ -57,17 +67,17 @@ metadata. It is not a rule that every dataset must use these settings.
 
 | Context | Metric | Recommended transformation | Direction | Interpretation |
 |---|---|---|---|---|
-| Single-cell RNA-seq | `nCount_RNA` | `log10p` | `both` | Low-depth cells or unusually high-RNA cells |
-| Single-cell RNA-seq | `nFeature_RNA` | `log10p` | `both` | Low-complexity cells or unusually complex cells |
+| Single-cell RNA-seq | `nCount_RNA` | `log1p` | `both` | Low-depth cells or unusually high-RNA cells |
+| Single-cell RNA-seq | `nFeature_RNA` | `log1p` | `both` | Low-complexity cells or unusually complex cells |
 | Single-cell RNA-seq | `percent.mt` | identity/raw | `upper` | Elevated mitochondrial contribution |
-| Bulk RNA-seq | `library_size` | `log10p` | `lower` | Unusually shallow sequencing |
-| Bulk RNA-seq | `detected_genes` | `log10p` | `lower` | Low transcriptome complexity |
+| Bulk RNA-seq | `library_size` | `log1p` | `lower` | Unusually shallow sequencing |
+| Bulk RNA-seq | `detected_genes` | `log1p` | `lower` | Low transcriptome complexity |
 | Bulk RNA-seq | `mapping_rate` | identity/raw | `lower` | Poor alignment |
 | Bulk RNA-seq | `assigned_rate` | identity/raw | `lower` | Few reads assigned to annotated features |
 | Bulk RNA-seq | `rrna_rate` | identity/raw | `upper` | Possible ribosomal RNA contamination |
 | Bulk RNA-seq, optional | `median_tin` | identity/raw | `lower` | Possible degradation or uneven transcript coverage |
 
-`log10p` means `log10(x + 1)` and is appropriate for nonnegative counts. The
+`log1p` means `log1p(x)` and is appropriate for nonnegative counts. The
 logarithm base is not the important biological decision; the important decision
 is whether thresholds should be calculated on a log or raw scale.
 
@@ -98,8 +108,8 @@ bulk_metrics <- c(
 )
 
 bulk_transform <- c(
-  library_size = "log10p",
-  detected_genes = "log10p"
+  library_size = "log1p",
+  detected_genes = "log1p"
 )
 
 bulk_qc <- mad_qc(
@@ -114,7 +124,7 @@ summarize_mad_qc(bulk_qc, level = "metric")
 ```
 
 `library_size` and `detected_genes` are count-like, right-skewed metrics, so this
-example estimates their MAD thresholds on `log10(x + 1)`. `mapping_rate`,
+example estimates their MAD thresholds on `log1p(x)`. `mapping_rate`,
 `assigned_rate`, and `rrna_rate` are bounded rates, so their thresholds are
 estimated on the original scale.
 
@@ -144,8 +154,8 @@ sc_metrics <- c(
 )
 
 sc_transform <- c(
-  nCount_RNA = "log10p",
-  nFeature_RNA = "log10p"
+  nCount_RNA = "log1p",
+  nFeature_RNA = "log1p"
 )
 
 sc_qc <- mad_qc(
@@ -180,8 +190,8 @@ sc_metrics <- c(
 )
 
 sc_transform <- c(
-  nCount_RNA = "log10p",
-  nFeature_RNA = "log10p"
+  nCount_RNA = "log1p",
+  nFeature_RNA = "log1p"
 )
 
 seurat_report <- mad_qc_seurat(

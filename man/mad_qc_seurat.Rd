@@ -48,7 +48,7 @@ filter cells and does not alter expression data.
 \details{
 Use explicit transformations for count-like cell metrics when needed. For
 example, \code{nCount_RNA} and \code{nFeature_RNA} are commonly right-skewed and can be
-thresholded on \code{log10p}, while bounded percentages such as \code{percent.mt} usually
+thresholded on \code{log1p}, while bounded percentages such as \code{percent.mt} usually
 remain on the raw scale. Upper-tail count or feature flags are inspection
 warnings, not doublet calls.
 }
@@ -59,8 +59,8 @@ metrics <- c(
   percent.mt = "upper"
 )
 transform <- c(
-  nCount_RNA = "log10p",
-  nFeature_RNA = "log10p"
+  nCount_RNA = "log1p",
+  nFeature_RNA = "log1p"
 )
 # report <- mad_qc_seurat(seurat_object, metrics, transform = transform)
 # seurat_object <- mad_qc_seurat(

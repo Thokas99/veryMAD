@@ -3,18 +3,18 @@ test_that("mad_qc is tidy, grouped, transformed, and stable", {
                   counts = c(0, 9, 10, 99), mt = c(1, 2, 3, 40),
                   row.names = c("cell", "cell.1", "cell.2", "cell.3"))
   q <- mad_qc(d, c(counts = "both", mt = "upper"), nmads = 1,
-              group_by = c("batch", "lane"), transform = c(counts = "log10p"))
+              group_by = c("batch", "lane"), transform = c(counts = "log1p"))
   expect_equal(nrow(q), 8)
   expect_equal(q$.obs, rep(1:4, 2))
   expect_equal(q$batch[1:4], d$batch)
-  expect_equal(q$value[1:4], log10(d$counts + 1))
+  expect_equal(q$value[1:4], log1p(d$counts))
   expect_equal(unique(q$direction[q$metric == "mt"]), "upper")
   expect_equal(length(unique(q$.obs[q$metric == "counts"])), 4)
   expect_s3_class(q, "tbl_df")
   expect_equal(class(q)[1:4], c("mad_qc", "tbl_df", "tbl", "data.frame"))
   expect_equal(attr(q, "metrics"), c("counts", "mt"))
   expect_equal(attr(q, "group_by"), c("batch", "lane"))
-  expect_equal(attr(q, "transform")[["counts"]], "log10p")
+  expect_equal(attr(q, "transform")[["counts"]], "log1p")
   expect_equal(attr(q, "nmads"), 1)
   expect_equal(attr(q, "constant"), 1.4826)
   expect_equal(attr(q, "zero_mad"), "zero")
@@ -44,7 +44,7 @@ test_that("mad_qc validates metrics, groups, and transforms", {
   expect_error(mad_qc(d, c(x = "both"), transform = c(nope = "log10")), "requested")
   expect_error(mad_qc(d, c(x = "both"), transform = c(x = "sqrt")), "Unsupported")
   expect_error(mad_qc(d, c(x = "both"), transform = c(x = "log10")), "positive")
-  expect_equal(mad_qc(d, c(x = "both"), transform = c(x = "log10p"))$value, log10(d$x + 1))
+  expect_equal(mad_qc(d, c(x = "both"), transform = c(x = "log1p"))$value, log1p(d$x))
 })
 
 test_that("mad_qc identifiers do not guess from metadata columns", {

@@ -7,8 +7,8 @@ bulk_metrics <- c(
 )
 
 bulk_transform <- c(
-  library_size = "log10p",
-  detected_genes = "log10p"
+  library_size = "log1p",
+  detected_genes = "log1p"
 )
 
 single_cell_metrics <- c(
@@ -18,8 +18,8 @@ single_cell_metrics <- c(
 )
 
 single_cell_transform <- c(
-  nCount_RNA = "log10p",
-  nFeature_RNA = "log10p"
+  nCount_RNA = "log1p",
+  nFeature_RNA = "log1p"
 )
 
 test_that("bulk simulation is realistic, related, and reproducible", {
