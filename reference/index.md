@@ -10,6 +10,10 @@
   : Calculate MAD-based limits
 - [`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md) :
   Flag observations with explicit MAD thresholds
+- [`mad_qc_bulk()`](https://thokas99.github.io/veryMAD/reference/mad_qc_bulk.md)
+  : Bulk observation-level MAD quality control
+- [`mad_qc_sc()`](https://thokas99.github.io/veryMAD/reference/mad_qc_sc.md)
+  : Single-cell observation-level MAD quality control
 - [`mad_qc_seurat()`](https://thokas99.github.io/veryMAD/reference/mad_qc_seurat.md)
   : Run explicit MAD QC on Seurat cell metadata
 - [`mad_scale()`](https://thokas99.github.io/veryMAD/reference/mad_scale.md)

@@ -1,5 +1,36 @@
 # Changelog
 
+## veryMAD 0.4.0
+
+### Added
+
+- Added
+  [`mad_qc_bulk()`](https://thokas99.github.io/veryMAD/reference/mad_qc_bulk.md)
+  and
+  [`mad_qc_sc()`](https://thokas99.github.io/veryMAD/reference/mad_qc_sc.md)
+  as explicit bulk and single-cell observation-level wrappers backed by
+  compact `flags`, `thresholds`, and `settings` results.
+- Added default `log1p` calculation, partial `"none"` overrides,
+  raw-scale inverse thresholds, concise `cli` summaries, deterministic
+  playful grades, and an optional interactive ASCII startup banner.
+- Added coverage for invalid metrics, transformations, matrices, grouped
+  and zero-MAD calculations, three-valued flags, collisions, Seurat
+  preservation, CLI output, and the banner helper.
+
+### Changed
+
+- Bumped the package version to 0.4.0 and added `cli` to Imports.
+- All wrapper metrics are mandatory and explicit; no input class, column
+  name, regular expression, or numeric type triggers metric selection.
+- Single-cell annotation adds only `mad_qc_outlier`; metric flags remain
+  in the compact report. Neither wrapper filters observations.
+- [`mad_qc_seurat()`](https://thokas99.github.io/veryMAD/reference/mad_qc_seurat.md)
+  now requires explicit metrics and remains as a documented
+  compatibility path for the v0.3.2 long-report/per-metric annotation
+  behavior.
+- Rewrote the README and vignette around the two-wrapper interface and
+  explicit scientific interpretation.
+
 ## veryMAD 0.3.2
 
 ### Added

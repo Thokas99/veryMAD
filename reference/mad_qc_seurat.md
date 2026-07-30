@@ -1,23 +1,24 @@
 # Run explicit MAD QC on Seurat cell metadata
 
-`mad_qc_seurat()` applies
-[`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md) to
-`object[[]]` and either returns the long QC report or annotates Seurat
-metadata with outlier flags. It does not filter cells and does not alter
-expression data.
+`mad_qc_seurat()` preserves the v0.3.2 long report and per-metric
+annotation contract. New code should use
+[`mad_qc_sc()`](https://thokas99.github.io/veryMAD/reference/mad_qc_sc.md)
+for compact reports and one-column annotation. Neither function filters
+cells.
 
 ## Usage
 
 ``` r
 mad_qc_seurat(
   object,
-  metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower", percent.mt = "upper"),
+  metrics = NULL,
   nmads = 3,
   transform = NULL,
   group_by = NULL,
   zero_mad = c("zero", "na", "error"),
   action = c("report", "annotate"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = FALSE
 )
 ```
 
@@ -48,7 +49,8 @@ mad_qc_seurat(
 
 - zero_mad:
 
-  How to handle groups with zero MAD.
+  Compatibility policy for groups with zero MAD: `"zero"`, `"na"`, or
+  `"error"`.
 
 - action:
 
@@ -57,6 +59,10 @@ mad_qc_seurat(
 - overwrite:
 
   Allow annotation columns to replace existing columns.
+
+- verbose:
+
+  Print the concise QC summary?
 
 ## Value
 
