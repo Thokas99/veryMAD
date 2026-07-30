@@ -1,100 +1,94 @@
 ---
-title: "veryMAD quality-control examples"
+title: "Explicit observation-level QC with veryMAD"
 output: rmarkdown::html_vignette
 vignette: >
-  %\VignetteIndexEntry{veryMAD quality-control examples}
+  %\VignetteIndexEntry{Explicit observation-level QC with veryMAD}
   %\VignetteEngine{knitr::rmarkdown}
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
 library(veryMAD)
 ```
 
-`veryMAD` calculates explicit MAD-based QC flags on observation-level metadata.
-The input measurements are preserved as `raw_value`; optional transformations
-only define the calculation scale stored in `value`.
+## Data model
 
-## Choosing a calculation scale
+Rows are observations and columns are metadata or candidate QC metrics. Every
+metric and direction is user-selected; veryMAD never selects numeric columns,
+recognizes naming conventions, or filters observations. The compact report is a
+list containing `flags`, `thresholds`, and `settings`.
 
-Strongly right-skewed counts, such as library size and detected-feature counts,
-are often easier to threshold on a log scale. Bounded percentages, proportions,
-and rates usually stay on their original scale. `veryMAD` never infers this from
-column names: the transformation must be visible in the function call.
+## Bulk observations
 
-## Bulk RNA-seq sample QC
-
-```{r bulk}
-bulk_metadata <- veryMAD:::.simulate_bulk_qc_metadata(n = 240, seed = 123)
-
-bulk_metrics <- c(
-  library_size = "lower",
-  detected_genes = "lower",
-  mapping_rate = "lower",
-  assigned_rate = "lower",
-  rrna_rate = "upper"
+```{r}
+bulk <- data.frame(
+  library_size = c(1e6, 30e6, 32e6, 31e6, 33e6),
+  mapping_rate = c(.50, .92, .94, .93, .95),
+  batch = c("a", "a", "a", "b", "b"),
+  row.names = paste0("sample", 1:5)
 )
-
-bulk_transform <- c(
-  library_size = "log1p",
-  detected_genes = "log1p"
-)
-
-bulk_qc <- mad_qc(
-  bulk_metadata,
-  metrics = bulk_metrics,
-  transform = bulk_transform,
-  nmads = 3
-)
-
-head(bulk_qc)
-summarize_mad_qc(bulk_qc, level = "metric")
+metrics <- c(library_size = "lower", mapping_rate = "lower")
+flagged <- mad_qc_bulk(bulk, metrics,
+  transform = c(mapping_rate = "none"), verbose = FALSE)
+report <- attr(flagged, "mad_qc")
+report$thresholds
 ```
 
-The simulated ranges are illustrative and are not acceptance cutoffs. Duplication
-rate and mitochondrial proportion are not used as universal bulk defaults here:
-both can be informative in specific workflows, but their interpretation depends
-on protocol and biology.
+The same call accepts a matrix whose rows are observations. A gene-by-sample
+expression matrix is not automatically a QC table.
 
-## Single-cell metadata QC
-
-```{r single-cell}
-cell_metadata <- veryMAD:::.simulate_single_cell_qc_metadata(n = 1200, seed = 123)
-
-sc_metrics <- c(
-  nCount_RNA = "both",
-  nFeature_RNA = "both",
-  percent.mt = "upper"
-)
-
-sc_transform <- c(
-  nCount_RNA = "log1p",
-  nFeature_RNA = "log1p"
-)
-
-sc_qc <- mad_qc(
-  cell_metadata,
-  metrics = sc_metrics,
-  transform = sc_transform,
-  nmads = 3
-)
-
-head(sc_qc)
-summarize_mad_qc(sc_qc, level = "metric")
+```{r}
+mad_qc_bulk(as.matrix(bulk[c("library_size", "mapping_rate")]), metrics,
+  transform = c(mapping_rate = "none"), verbose = FALSE)
 ```
 
-The Bioconductor single-cell workflow commonly uses lower-tail filtering for
-library size and detected features. The example uses two-sided count and feature
-flags so unusually high cells are visible for inspection. Those flags are not
-doublet calls; doublet detection should use a dedicated method.
+## Single-cell metadata
 
-## Annotation
-
-```{r annotation}
-annotated_bulk <- annotate_mad_qc(bulk_metadata, bulk_qc)
-head(annotated_bulk)
+```{r}
+cells <- data.frame(
+  nCount_RNA = c(NA, 500, 520, 540, 5000),
+  nFeature_RNA = c(NA, 200, 210, 220, 1000),
+  percent.mt = c(NA, 3, 4, 5, 30),
+  row.names = paste0("cell", 1:5)
+)
+cell_metrics <- c(nCount_RNA = "lower", nFeature_RNA = "lower", percent.mt = "upper")
+sc_report <- mad_qc_sc(cells, cell_metrics,
+  transform = c(percent.mt = "none"), action = "report", verbose = FALSE)
+annotated <- mad_qc_sc(cells, cell_metrics,
+  transform = c(percent.mt = "none"), verbose = FALSE)
+annotated$mad_qc_outlier
 ```
 
-Annotation adds flag columns. It does not filter rows or change the original QC
-measurements.
+`TRUE` means any evaluated metric failed; `FALSE` means all were evaluated and
+passed; `NA` means none failed but at least one was unavailable. Individual
+flags stay in `sc_report$flags`. With a Seurat object, the same annotation call
+adds only `mad_qc_outlier` through optional `SeuratObject` and changes no cells,
+assays, reductions, or identities.
+
+## Transformations and groups
+
+The wrapper default is `log1p` for every selected metric. Named values are
+partial overrides, so bounded rates can remain on their original scale without
+repeating every count metric. Scalar `"none"` disables all transforms;
+`"identity"` is its compatibility alias. Original measurements are never
+modified.
+
+```{r}
+grouped <- mad_qc_bulk(bulk, metrics, transform = c(mapping_rate = "none"),
+  group_by = "batch", verbose = FALSE)
+attr(grouped, "mad_qc")$thresholds
+```
+
+## Inspect before filtering
+
+```{r}
+flagged[flagged$library_size_mad_outlier %in% TRUE, ]
+```
+
+This is inspection, not an automatic filtering recommendation. MAD thresholds
+are adaptive heuristics rather than universal biological cutoffs. Upper RNA
+count flags are not doublet calls, and doublet detection is outside package
+scope. The playful console grade is presentation only, never evidence of a
+biological conclusion or laboratory failure. For scientific context, see the
+[scrapper manual](https://bioconductor.org/packages/release/bioc/manuals/scrapper/man/scrapper.pdf).

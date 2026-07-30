@@ -6,13 +6,14 @@
 \usage{
 mad_qc_seurat(
   object,
-  metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower", percent.mt = "upper"),
+  metrics = NULL,
   nmads = 3,
   transform = NULL,
   group_by = NULL,
   zero_mad = c("zero", "na", "error"),
   action = c("report", "annotate"),
-  overwrite = FALSE
+  overwrite = FALSE,
+  verbose = FALSE
 )
 }
 \arguments{
@@ -29,11 +30,14 @@ transformations passed to \code{\link[=mad_qc]{mad_qc()}}.}
 \item{group_by}{Optional metadata column used to estimate thresholds within
 groups.}
 
-\item{zero_mad}{How to handle groups with zero MAD.}
+\item{zero_mad}{Compatibility policy for groups with zero MAD: \code{"zero"},
+\code{"na"}, or \code{"error"}.}
 
 \item{action}{Return a QC \code{"report"} or \code{"annotate"} the object metadata.}
 
 \item{overwrite}{Allow annotation columns to replace existing columns.}
+
+\item{verbose}{Print the concise QC summary?}
 }
 \value{
 For \code{action = "report"}, a \code{mad_qc} data frame. For
@@ -41,9 +45,9 @@ For \code{action = "report"}, a \code{mad_qc} data frame. For
 added.
 }
 \description{
-\code{mad_qc_seurat()} applies \code{\link[=mad_qc]{mad_qc()}} to \code{object[[]]} and either returns the
-long QC report or annotates Seurat metadata with outlier flags. It does not
-filter cells and does not alter expression data.
+\code{mad_qc_seurat()} preserves the v0.3.2 long report and per-metric annotation
+contract. New code should use \code{\link[=mad_qc_sc]{mad_qc_sc()}} for compact reports and one-column
+annotation. Neither function filters cells.
 }
 \details{
 Use explicit transformations for count-like cell metrics when needed. For
