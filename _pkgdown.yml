@@ -1,5 +1,8 @@
 url: https://thokas99.github.io/veryMAD/
 template:
   bootstrap: 5
+<<<<<<< HEAD
   bootswatch: quartz
+=======
+>>>>>>> 6b7d1c0 (fixed website)
 
