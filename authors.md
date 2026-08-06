@@ -9,14 +9,14 @@
 Source:
 [`DESCRIPTION`](https://github.com/Thokas99/veryMAD/blob/main/DESCRIPTION)
 
-Sirchi T (2026). *veryMAD: Robust MAD Scaling and Auditable Omics
-Quality Control*. R package version 0.4.0,
+Sirchi T (2026). *veryMAD: Explicit MAD Quality Control and Robust
+Scaling*. R package version 0.5.0,
 <https://github.com/Thokas99/veryMAD>.
 
     @Manual{,
-      title = {veryMAD: Robust MAD Scaling and Auditable Omics Quality Control},
+      title = {veryMAD: Explicit MAD Quality Control and Robust Scaling},
       author = {Thomas Sirchi},
       year = {2026},
-      note = {R package version 0.4.0},
+      note = {R package version 0.5.0},
       url = {https://github.com/Thokas99/veryMAD},
     }

@@ -3,11 +3,11 @@
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top bg-primary" data-bs-theme="dark" aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.4.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -18,8 +18,13 @@
       <ul class="navbar-nav me-auto"><li class="nav-item"><a class="nav-link" href="reference/index.html">Reference</a></li>
 <li class="nav-item dropdown">
   <button class="nav-link dropdown-toggle" type="button" id="dropdown-articles" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true">Articles</button>
-  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><a class="dropdown-item" href="articles/veryMAD-qc.html">Explicit observation-level QC with veryMAD</a></li>
+  <ul class="dropdown-menu" aria-labelledby="dropdown-articles"><li><hr class="dropdown-divider"></li>
+    <li><h6 class="dropdown-header" data-toc-skip>Guides</h6></li>
+    <li><a class="dropdown-item" href="articles/getting-started.html">Getting started with veryMAD</a></li>
+    <li><a class="dropdown-item" href="articles/qc-interpretation.html">Interpreting MAD QC flags</a></li>
+    <li><a class="dropdown-item" href="articles/mad-scaling.html">Robust MAD scaling</a></li>
   </ul></li>
+<li class="nav-item"><a class="nav-link" href="news/index.html">Changelog</a></li>
       </ul><ul class="navbar-nav"><li class="nav-item"><form class="form-inline" role="search">
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="search.json"></form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/Thokas99/veryMAD/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
@@ -37,117 +42,11 @@
 
 <div id="changelog" class="section level1">
 
-<div class="section level2">
-<h2 id="verymad-040">veryMAD 0.4.0<a class="anchor" aria-label="anchor" href="#verymad-040"></a></h2>
-<div class="section level3">
-<h3 id="added">Added<a class="anchor" aria-label="anchor" href="#added"></a></h3>
-<ul><li>Added <code><a href="reference/mad_qc_bulk.html">mad_qc_bulk()</a></code> and <code><a href="reference/mad_qc_sc.html">mad_qc_sc()</a></code> as explicit bulk and single-cell observation-level wrappers backed by compact <code>flags</code>, <code>thresholds</code>, and <code>settings</code> results.</li>
-<li>Added default <code>log1p</code> calculation, partial <code>"none"</code> overrides, raw-scale inverse thresholds, concise <code>cli</code> summaries, deterministic playful grades, and an optional interactive ASCII startup banner.</li>
-<li>Added coverage for invalid metrics, transformations, matrices, grouped and zero-MAD calculations, three-valued flags, collisions, Seurat preservation, CLI output, and the banner helper.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed">Changed<a class="anchor" aria-label="anchor" href="#changed"></a></h3>
-<ul><li>Bumped the package version to 0.4.0 and added <code>cli</code> to Imports.</li>
-<li>All wrapper metrics are mandatory and explicit; no input class, column name, regular expression, or numeric type triggers metric selection.</li>
-<li>Single-cell annotation adds only <code>mad_qc_outlier</code>; metric flags remain in the compact report. Neither wrapper filters observations.</li>
-<li>
-<code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> now requires explicit metrics and remains as a documented compatibility path for the v0.3.2 long-report/per-metric annotation behavior.</li>
-<li>Rewrote the README and vignette around the two-wrapper interface and explicit scientific interpretation.</li>
-</ul></div>
-</div>
-<div class="section level2">
-<h2 id="verymad-032">veryMAD 0.3.2<a class="anchor" aria-label="anchor" href="#verymad-032"></a></h2>
-<div class="section level3">
-<h3 id="added-1">Added<a class="anchor" aria-label="anchor" href="#added-1"></a></h3>
-<ul><li>Added <code><a href="reference/mad_scale.html">mad_scale()</a></code> as the single focused dense-matrix operation, using matrixStats row and column medians and MADs for expression heatmap scaling.</li>
-<li>Added realistic deterministic bulk RNA-seq and single-cell metadata examples.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-1">Changed<a class="anchor" aria-label="anchor" href="#changed-1"></a></h3>
-<ul><li>Reports from <code><a href="reference/mad_limits.html">mad_limits()</a></code>, <code><a href="reference/mad_qc.html">mad_qc()</a></code>, and <code><a href="reference/summarize_mad_qc.html">summarize_mad_qc()</a></code> are valid tibbles; <code>mad_qc</code> reports retain calculation metadata for auditing.</li>
-<li>Inactive directional limits are <code>NA_real_</code> rather than <code>Inf</code> or <code>-Inf</code>, and outlier evaluation is explicitly direction-aware.</li>
-<li>Observation summaries and annotations use three-valued overall logic: <code>TRUE</code> for any failure, <code>FALSE</code> only when everything passed, and <code>NA</code> when nothing failed but at least one metric was not evaluated.</li>
-<li>
-<code><a href="reference/plot_mad_qc.html">plot_mad_qc()</a></code> uses green, blue, and orange status colors; missing values are visible as blue panel-floor triangles; threshold types use dark labeled lines.</li>
-<li>
-<code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> defaults to report mode and both data-frame and Seurat annotation protect existing flag columns unless <code>overwrite = TRUE</code>.</li>
-<li>Documentation now presents one assay-agnostic metadata-table model with ungrouped QC as the universal default and optional deliberate grouping.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="removed">Removed<a class="anchor" aria-label="anchor" href="#removed"></a></h3>
-<ul><li>Removed sparse-matrix support and the Matrix and sparseMatrixStats suggestions.</li>
-<li>Removed <code>row_mad()</code>, <code>col_mad()</code>, and raw-MAD feature ranking through <code>top_mad_features()</code>.</li>
-<li>Replaced the broad <code>robust_scale()</code> API with focused <code><a href="reference/mad_scale.html">mad_scale()</a></code>.</li>
-<li>Removed <code>winsorize_mad()</code>; veryMAD flags observations rather than modifying measured values.</li>
-</ul></div>
-</div>
-<div class="section level2">
-<h2 id="verymad-030">veryMAD 0.3.0<a class="anchor" aria-label="anchor" href="#verymad-030"></a></h2>
-<div class="section level3">
-<h3 id="added-2">Added<a class="anchor" aria-label="anchor" href="#added-2"></a></h3>
-<ul><li>
-<code><a href="reference/summarize_mad_qc.html">summarize_mad_qc()</a></code> for deterministic metric-level and observation-level summaries of flags already present in a tidy QC report.</li>
-<li>
-<code><a href="reference/plot_mad_qc.html">plot_mad_qc()</a></code> for explicit distribution and observation-index views with grouped, finite threshold indicators through optional ggplot2.</li>
-<li>Safe <code>Matrix::dgCMatrix</code> support in <code>row_mad()</code>, <code>col_mad()</code>, and <code>top_mad_features()</code> through optional sparseMatrixStats methods.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-2">Changed<a class="anchor" aria-label="anchor" href="#changed-2"></a></h3>
-<ul><li>Reframed <code><a href="reference/mad_qc.html">mad_qc()</a></code> documentation around assay-agnostic observation metadata: bulk libraries, single cells, or spatial observations remain ungrouped by default, while explicit <code>group_by</code> changes the statistical reference distribution.</li>
-<li>
-<code><a href="reference/mad_qc.html">mad_qc()</a></code> reports now retain calculation-group and compact observation-metadata attributes so plots can distinguish saved threshold groups from optional visual faceting.</li>
-<li>
-<code><a href="reference/plot_mad_qc.html">plot_mad_qc()</a></code> now uses <code>facet_by</code> only for layout and reads calculation groups from the report; ungrouped reports never acquire sample or batch thresholds.</li>
-<li>
-<code>top_mad_features()</code> now explicitly preserves original feature order when MAD values are tied.</li>
-<li>ggplot2, Matrix, and sparseMatrixStats are optional suggested dependencies; dense workflows and package installation do not require them.</li>
-<li>
-<code>robust_scale()</code> continues to reject sparse matrices with a clearer message: median centering can destroy sparsity, and veryMAD never converts implicitly to a dense matrix.</li>
-</ul></div>
-</div>
-<div class="section level2">
-<h2 id="verymad-020">veryMAD 0.2.0<a class="anchor" aria-label="anchor" href="#verymad-020"></a></h2>
-<div class="section level3">
-<h3 id="added-3">Added<a class="anchor" aria-label="anchor" href="#added-3"></a></h3>
-<ul><li>
-<code><a href="reference/mad_limits.html">mad_limits()</a></code> as the shared, auditable threshold foundation.</li>
-<li>
-<code>col_mad()</code> for strictly column-oriented matrix MADs.</li>
-<li>
-<code><a href="reference/annotate_mad_qc.html">annotate_mad_qc()</a></code> for index-safe metadata annotation.</li>
-<li>
-<code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> for explicit SeuratObject reporting and annotation.</li>
-<li>
-<code>top_mad_features()</code> for deliberately limited raw marginal MAD ranking.</li>
-<li>A focused QC vignette and Linux R-release package-check workflow.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="changed-3">Changed<a class="anchor" aria-label="anchor" href="#changed-3"></a></h3>
-<ul><li>
-<code><a href="reference/mad_qc.html">mad_qc()</a></code> is now an ordinary data-frame function with long, stable, group-auditable results; multiple grouping columns and missing group labels are supported without dropping observations.</li>
-<li>Scores, thresholds, outliers, winsorization, robust scaling, and grouped QC now share <code>zero_mad = "zero"</code>, <code>"na"</code>, or <code>"error"</code> behavior.</li>
-<li>Transformations are validated: <code>log10</code> requires positive values and <code>log1p</code> requires nonnegative values.</li>
-<li>
-<code>row_mad()</code> is row-only, <code>col_mad()</code> is column-only, and <code>robust_scale()</code> uses <code>margin = "rows"</code> or <code>"columns"</code>.</li>
-<li>Runtime dependencies were reduced to <code>matrixStats</code>; SeuratObject is optional.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="breaking-changes">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes"></a></h3>
-<ul><li>
-<code>is_outlier()</code> was removed; use <code><a href="reference/is_mad_outlier.html">is_mad_outlier()</a></code> with <code>nmads</code> and <code>direction</code>.</li>
-<li>
-<code>winsorize()</code> was removed; use <code>winsorize_mad()</code>.</li>
-<li>
-<code>select_variable_features()</code> was replaced by <code>top_mad_features()</code>, which ranks rows only and documents that raw MAD is not mean-variance-aware.</li>
-<li>
-<code>mad_qc(Seurat object)</code> was removed; use <code><a href="reference/mad_qc_seurat.html">mad_qc_seurat()</a></code> explicitly.</li>
-<li>S7 dispatch, dynamic method registration, <code>.onLoad()</code> hooks, progress bars, <code>verbose</code>, numeric matrix margins, and direct Seurat slot manipulation were removed.</li>
-</ul></div>
-</div>
+<p>The canonical release history is maintained in <a href="NEWS.html">NEWS.md</a>.</p>
+<p>See <a href="NEWS.html">veryMAD 0.5.0</a> for the breaking two-function API release.</p>
 </div>
 
-  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
-    </nav></aside></div>
+  </main></div>
 
 
     <footer><div class="pkgdown-footer-left">

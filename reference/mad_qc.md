@@ -1,9 +1,8 @@
-# Flag observations with explicit MAD thresholds
+# Explicit MAD quality-control annotation
 
-`mad_qc()` calculates median absolute deviation (MAD) thresholds for
-selected numeric metadata columns and returns a long, auditable report.
-Rows in `data` are observations: bulk RNA-seq libraries, single cells,
-spatial spots, or any other assay-level unit with observation metadata.
+Rows are observations and `metrics` explicitly selects numeric QC
+columns. One reference distribution is calculated per metric across all
+observations; observations are never filtered automatically.
 
 ## Usage
 
@@ -12,11 +11,13 @@ mad_qc(
   data,
   metrics,
   nmads = 3,
-  group_by = NULL,
-  transform = NULL,
-  constant = 1.4826,
-  na_rm = TRUE,
-  zero_mad = c("zero", "na", "error")
+  transform = "none",
+  output = c("annotate", "report"),
+  combine = TRUE,
+  min_n = 5,
+  zero_mad = c("na", "zero", "error"),
+  overwrite = FALSE,
+  verbose = TRUE
 )
 ```
 
@@ -24,125 +25,60 @@ mad_qc(
 
 - data:
 
-  A data frame containing one observation per row.
+  A data frame, tibble, numeric matrix, or Seurat object.
 
 - metrics:
 
-  A named character vector mapping metric names in `data` to one of
-  `"lower"`, `"upper"`, or `"both"`.
+  A non-empty named character vector mapping columns to `"lower"`,
+  `"upper"`, or `"both"`.
 
 - nmads:
 
-  Number of MADs from the median used to define thresholds.
-
-- group_by:
-
-  Optional column name used to estimate thresholds within groups.
+  Positive number of MADs from the median for the limits.
 
 - transform:
 
-  Optional named character vector mapping metrics to explicit
-  transformations. Supported values are `"identity"`, `"log10"`, and
-  `"log1p"`. Metrics absent from this vector use identity
-  transformation.
+  A scalar transformation or named partial overrides. Supported values
+  are `"none"`, `"log1p"`, and `"log10"`.
 
-- constant:
+- output:
 
-  Consistency constant passed to MAD calculation.
+  Return annotated data (`"annotate"`) or a compact report (`"report"`).
 
-- na_rm:
+- combine:
 
-  Logical; remove missing values before threshold estimation.
+  Add the combined `mad_qc_outlier` flag?
+
+- min_n:
+
+  Minimum number of finite, non-missing observations required.
 
 - zero_mad:
 
-  How to handle groups with zero MAD: `"zero"`, `"na"`, or `"error"`.
+  Handling of a zero MAD: `"na"`, `"zero"`, or `"error"`.
+
+- overwrite:
+
+  Replace existing generated flag columns?
+
+- verbose:
+
+  Print a concise neutral summary?
 
 ## Value
 
-A `mad_qc` data frame with one row per observation-metric pair. It
-includes `raw_value`, transformed `value`, threshold columns,
-`direction`, and `is_outlier`.
-
-## Details
-
-Count-like QC metrics such as library size, total RNA counts, and
-detected features are often strongly right-skewed. In those cases,
-estimating MAD thresholds after an explicit log transformation such as
-`log1p` can give a more useful reference distribution. Bounded
-percentages, proportions, and rates are usually kept on their original
-scale because a log transform changes the interpretation of already
-bounded measurements.
-
-Transformations are explicit and per metric. `transform = NULL` is
-equivalent to identity transformation for every metric, and `mad_qc()`
-never infers a transformation from a metric name. Thresholds, medians,
-MADs, and the `value` column are expressed on the calculation scale. The
-`raw_value` column always preserves the exact input measurement scale.
-
-`direction = "both"` flags both tails of the selected metric, but it
-does not assign a biological cause. For example, an upper-tail count or
-feature flag means unusually high relative to the reference
-distribution; it is not a doublet call or an automatic filtering
-decision.
+Annotated input or a `verymad_qc` list with `flags`, `thresholds`, and
+`settings`.
 
 ## Examples
 
 ``` r
-bulk_metadata <- data.frame(
-  sample_id = paste0("sample_", 1:8),
-  library_size = c(2e6, 3e7, 3.2e7, 3.4e7, 3.1e7, 3.3e7, 3.5e7, 3.6e7),
-  mapping_rate = c(0.55, 0.92, 0.94, 0.93, 0.95, 0.94, 0.93, 0.92)
-)
-mad_qc(
-  bulk_metadata,
-  metrics = c(library_size = "lower", mapping_rate = "lower"),
-  transform = c(library_size = "log1p")
-)
-#> # A tibble: 16 × 11
-#>     .obs id    metric       raw_value value median    mad  lower upper direction
-#>    <int> <chr> <chr>            <dbl> <dbl>  <dbl>  <dbl>  <dbl> <dbl> <chr>    
-#>  1     1 1     library_size   2   e+6 14.5   17.3  0.0900 17.0      NA lower    
-#>  2     2 2     library_size   3   e+7 17.2   17.3  0.0900 17.0      NA lower    
-#>  3     3 3     library_size   3.20e+7 17.3   17.3  0.0900 17.0      NA lower    
-#>  4     4 4     library_size   3.4 e+7 17.3   17.3  0.0900 17.0      NA lower    
-#>  5     5 5     library_size   3.10e+7 17.2   17.3  0.0900 17.0      NA lower    
-#>  6     6 6     library_size   3.30e+7 17.3   17.3  0.0900 17.0      NA lower    
-#>  7     7 7     library_size   3.5 e+7 17.4   17.3  0.0900 17.0      NA lower    
-#>  8     8 8     library_size   3.60e+7 17.4   17.3  0.0900 17.0      NA lower    
-#>  9     1 1     mapping_rate   5.5 e-1  0.55   0.93 0.0148  0.886    NA lower    
-#> 10     2 2     mapping_rate   9.2 e-1  0.92   0.93 0.0148  0.886    NA lower    
-#> 11     3 3     mapping_rate   9.4 e-1  0.94   0.93 0.0148  0.886    NA lower    
-#> 12     4 4     mapping_rate   9.3 e-1  0.93   0.93 0.0148  0.886    NA lower    
-#> 13     5 5     mapping_rate   9.5 e-1  0.95   0.93 0.0148  0.886    NA lower    
-#> 14     6 6     mapping_rate   9.4 e-1  0.94   0.93 0.0148  0.886    NA lower    
-#> 15     7 7     mapping_rate   9.3 e-1  0.93   0.93 0.0148  0.886    NA lower    
-#> 16     8 8     mapping_rate   9.2 e-1  0.92   0.93 0.0148  0.886    NA lower    
-#> # ℹ 1 more variable: is_outlier <lgl>
-cell_metadata <- data.frame(
-  cell_id = paste0("cell_", 1:8),
-  nCount_RNA = c(200, 8000, 8500, 9000, 8700, 9200, 9500, 70000),
-  nFeature_RNA = c(150, 2800, 3000, 3100, 2950, 3200, 3300, 8000),
-  percent.mt = c(3, 4, 5, 4, 6, 5, 4, 18)
-)
-mad_qc(
-  cell_metadata,
-  metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
-  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
-)
-#> # A tibble: 24 × 11
-#>     .obs id    metric       raw_value value median    mad lower upper direction
-#>    <int> <chr> <chr>            <dbl> <dbl>  <dbl>  <dbl> <dbl> <dbl> <chr>    
-#>  1     1 1     nCount_RNA         200  5.30   9.09 0.0824  8.84  9.34 both     
-#>  2     2 2     nCount_RNA        8000  8.99   9.09 0.0824  8.84  9.34 both     
-#>  3     3 3     nCount_RNA        8500  9.05   9.09 0.0824  8.84  9.34 both     
-#>  4     4 4     nCount_RNA        9000  9.11   9.09 0.0824  8.84  9.34 both     
-#>  5     5 5     nCount_RNA        8700  9.07   9.09 0.0824  8.84  9.34 both     
-#>  6     6 6     nCount_RNA        9200  9.13   9.09 0.0824  8.84  9.34 both     
-#>  7     7 7     nCount_RNA        9500  9.16   9.09 0.0824  8.84  9.34 both     
-#>  8     8 8     nCount_RNA       70000 11.2    9.09 0.0824  8.84  9.34 both     
-#>  9     1 1     nFeature_RNA       150  5.02   8.02 0.0942  7.74  8.31 both     
-#> 10     2 2     nFeature_RNA      2800  7.94   8.02 0.0942  7.74  8.31 both     
-#> # ℹ 14 more rows
-#> # ℹ 1 more variable: is_outlier <lgl>
+x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
+mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
+#>   low high low_mad_outlier high_mad_outlier mad_qc_outlier
+#> 1   1    1            TRUE            FALSE           TRUE
+#> 2  10    2           FALSE            FALSE          FALSE
+#> 3  11    3           FALSE            FALSE          FALSE
+#> 4  12    4           FALSE            FALSE          FALSE
+#> 5  13   20           FALSE             TRUE           TRUE
 ```
