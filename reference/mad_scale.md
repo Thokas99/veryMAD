@@ -2,7 +2,7 @@
 
 Scale a numeric vector, matrix, or numeric data frame by its median and
 median absolute deviation. For matrices, `margin = 1` scales rows and
-`margin = 2` scales columns. `mad_z_score()` is an alias.
+`margin = 2` scales columns.
 
 ## Usage
 
@@ -16,8 +16,6 @@ mad_scale(
   zero_mad = c("zero", "na", "error"),
   margin = 2
 )
-
-mad_z_score(...)
 ```
 
 ## Arguments
@@ -50,10 +48,6 @@ mad_z_score(...)
 
   Matrix margin, `1` for rows or `2` for columns. Names `"rows"` and
   `"columns"` are also accepted.
-
-- ...:
-
-  Additional arguments are passed to `mad_scale()`.
 
 ## Value
 

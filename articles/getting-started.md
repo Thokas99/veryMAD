@@ -27,5 +27,6 @@ mad_qc(metadata, c(library_size = "lower", mapping_rate = "lower"),
 ```
 
 Use `output = "report"` to inspect one threshold row per metric and one
-flag row per observation. Missing values remain `NA`; no observations
-are removed.
+flag row per observation. The report always includes `mad_qc_outlier`,
+the compact any-selected-metric flag. Missing values remain `NA`; no
+observations are removed.

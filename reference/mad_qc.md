@@ -13,7 +13,6 @@ mad_qc(
   nmads = 3,
   transform = "none",
   output = c("annotate", "report"),
-  combine = TRUE,
   min_n = 5,
   zero_mad = c("na", "zero", "error"),
   overwrite = FALSE,
@@ -44,10 +43,6 @@ mad_qc(
 - output:
 
   Return annotated data (`"annotate"`) or a compact report (`"report"`).
-
-- combine:
-
-  Add the combined `mad_qc_outlier` flag?
 
 - min_n:
 

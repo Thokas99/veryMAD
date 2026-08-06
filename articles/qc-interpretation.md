@@ -8,7 +8,9 @@ raw scale.
 `min_n` is a computational safeguard. A zero MAD is reported explicitly
 and can be handled as `"na"`, `"zero"`, or `"error"`. These flags are
 statistical heuristics, not biological diagnoses or automatic filtering
-decisions.
+decisions. The overall `mad_qc_outlier` flag is always returned as a
+compact any-selected- metric summary; it is `NA` when no metric is
+flagged but at least one metric could not be evaluated.
 
 For stratified analyses, split the metadata explicitly and call
 [`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md) on

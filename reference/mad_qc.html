@@ -11,7 +11,7 @@ observations are never filtered automatically."></head><body>
 
     <a class="navbar-brand me-2" href="../index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -59,7 +59,6 @@ observations are never filtered automatically.</p>
 <span>  nmads <span class="op">=</span> <span class="fl">3</span>,</span>
 <span>  transform <span class="op">=</span> <span class="st">"none"</span>,</span>
 <span>  output <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"annotate"</span>, <span class="st">"report"</span><span class="op">)</span>,</span>
-<span>  combine <span class="op">=</span> <span class="cn">TRUE</span>,</span>
 <span>  min_n <span class="op">=</span> <span class="fl">5</span>,</span>
 <span>  zero_mad <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"na"</span>, <span class="st">"zero"</span>, <span class="st">"error"</span><span class="op">)</span>,</span>
 <span>  overwrite <span class="op">=</span> <span class="cn">FALSE</span>,</span>
@@ -92,10 +91,6 @@ Supported values are <code>"none"</code>, <code>"log1p"</code>, and <code>"log10
 <dt id="arg-output">output<a class="anchor" aria-label="anchor" href="#arg-output"></a></dt>
 <dd><p>Return annotated data (<code>"annotate"</code>) or a compact report
 (<code>"report"</code>).</p></dd>
-
-
-<dt id="arg-combine">combine<a class="anchor" aria-label="anchor" href="#arg-combine"></a></dt>
-<dd><p>Add the combined <code>mad_qc_outlier</code> flag?</p></dd>
 
 
 <dt id="arg-min-n">min_n<a class="anchor" aria-label="anchor" href="#arg-min-n"></a></dt>

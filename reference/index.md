@@ -8,5 +8,4 @@
 ## Robust scaling
 
 - [`mad_scale()`](https://thokas99.github.io/veryMAD/reference/mad_scale.md)
-  [`mad_z_score()`](https://thokas99.github.io/veryMAD/reference/mad_scale.md)
   : Robust MAD scaling

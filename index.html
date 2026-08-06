@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -95,12 +95,6 @@ veryMAD
 <td><code><a href="reference/mad_scale.html">mad_scale()</a></code></td>
 <td>MAD-scaled vectors and matrices</td>
 </tr>
-<tr>
-<td>Familiar alias</td>
-<td><code><a href="reference/mad_scale.html">mad_z_score()</a></code></td>
-<td>Alias of <code><a href="reference/mad_scale.html">mad_scale()</a></code>
-</td>
-</tr>
 </tbody>
 </table>
 <p>Rows are observations. Columns are QC metrics selected by you. Directions and transformations are explicit, deterministic, and auditable.</p>
@@ -108,7 +102,7 @@ veryMAD
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
-<p>Install the released version from GitHub with <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>:</p>
+<p>Install veryMAD from GitHub with <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
 </div>
@@ -174,8 +168,7 @@ veryMAD
 <span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">matrix_data</span>, margin <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># scale rows</span></span>
-<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">matrix_data</span>, margin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="co"># scale columns</span></span>
-<span><span class="fu"><a href="reference/mad_scale.html">mad_z_score</a></span><span class="op">(</span><span class="va">matrix_data</span>, margin <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># same implementation</span></span></code></pre></div>
+<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">matrix_data</span>, margin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="co"># scale columns</span></span></code></pre></div>
 <p><code>margin = 1</code> scales rows; <code>margin = 2</code> scales columns. Matrix dimensions and dimnames are preserved. Numeric data frames are returned as matrices.</p>
 </div>
 <div class="section level2">
@@ -208,9 +201,9 @@ veryMAD
 </ul>
 </div>
 <div class="section level2">
-<h2 id="scope-of-the-050-release">Scope of the 0.5.0 release<a class="anchor" aria-label="anchor" href="#scope-of-the-050-release"></a>
+<h2 id="scope-of-the-051-release">Scope of the 0.5.1 release<a class="anchor" aria-label="anchor" href="#scope-of-the-051-release"></a>
 </h2>
-<p>Version 0.5.0 is a deliberate breaking simplification. The public API is now small enough to audit: <code><a href="reference/mad_qc.html">mad_qc()</a></code> for observation-level QC and <code><a href="reference/mad_scale.html">mad_scale()</a></code> for robust scaling. Legacy grouped, modality-specific, plotting, grading, and low-level statistical entry points are no longer public functions.</p>
+<p>Version 0.5.1 is a focused API and reliability polish release. The public API contains exactly <code><a href="reference/mad_qc.html">mad_qc()</a></code> for observation-level QC and <code><a href="reference/mad_scale.html">mad_scale()</a></code> for robust scaling. The overall <code>mad_qc_outlier</code> flag is always returned.</p>
 </div>
 <div class="section level2">
 <h2 id="bioconductor-and-single-cell-qc-guidance">Bioconductor and single-cell QC guidance<a class="anchor" aria-label="anchor" href="#bioconductor-and-single-cell-qc-guidance"></a>

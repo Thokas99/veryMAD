@@ -20,7 +20,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.0</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -92,8 +92,9 @@ to select numeric metrics and directions explicitly.</p>
 <span><span class="co">#&gt; sample4                    FALSE          FALSE</span></span>
 <span><span class="co">#&gt; sample5                    FALSE          FALSE</span></span></code></pre></div>
 <p>Use <code>output = "report"</code> to inspect one threshold row per
-metric and one flag row per observation. Missing values remain
-<code>NA</code>; no observations are removed.</p>
+metric and one flag row per observation. The report always includes
+<code>mad_qc_outlier</code>, the compact any-selected-metric flag.
+Missing values remain <code>NA</code>; no observations are removed.</p>
   </main>
 </div>
 
