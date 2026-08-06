@@ -7,7 +7,7 @@
 ## Citation
 
 Source:
-[`DESCRIPTION`](https://github.com/Thokas99/veryMAD/blob/main/DESCRIPTION)
+[`DESCRIPTION`](https://github.com/Thokas99/veryMAD/blob/v0.5.1/DESCRIPTION)
 
 Sirchi T (2026). *veryMAD: Explicit MAD Quality Control and Robust
 Scaling*. R package version 0.5.1,
