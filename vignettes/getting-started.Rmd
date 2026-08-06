@@ -12,19 +12,63 @@ library(veryMAD)
 ```
 
 `veryMAD` accepts observation metadata and requires users to select numeric
-metrics and directions explicitly.
+metrics, directions, and transformations explicitly. This example uses a
+small synthetic bulk RNA-seq cohort with 36 libraries. The values are only
+illustrative, but the workflow is the same for a real metadata table.
 
 ```{r}
-metadata <- data.frame(
-  library_size = c(2e6, 31e6, 32e6, 30e6, 33e6),
-  mapping_rate = c(.50, .92, .94, .93, .95),
-  row.names = paste0("sample", 1:5)
+set.seed(101)
+n_libraries <- 36L
+bulk_metadata <- data.frame(
+  sample_id = sprintf("bulk_%02d", seq_len(n_libraries)),
+  library_size = round(rlnorm(n_libraries, log(2.5e6), 0.18)),
+  mapping_rate = pmin(.995, pmax(.70, rnorm(n_libraries, .94, .015))),
+  duplication_rate = pmin(.95, pmax(.10, rnorm(n_libraries, .35, .04)))
 )
-mad_qc(metadata, c(library_size = "lower", mapping_rate = "lower"),
-  transform = c(library_size = "log1p"), verbose = FALSE)
+bulk_metadata$library_size[c(2, 11)] <- c(180000, 220000)
+bulk_metadata$mapping_rate[c(5, 24)] <- c(.70, .73)
+bulk_metadata$duplication_rate[31] <- .82
+rownames(bulk_metadata) <- bulk_metadata$sample_id
+
+bulk_annotated <- mad_qc(
+  bulk_metadata,
+  metrics = c(
+    library_size = "lower",
+    mapping_rate = "lower",
+    duplication_rate = "upper"
+  ),
+  transform = c(library_size = "log1p"),
+  min_n = 10,
+  verbose = FALSE
+)
+
+bulk_annotated[bulk_annotated$mad_qc_outlier %in% TRUE,
+  c("sample_id", "library_size_mad_outlier", "mapping_rate_mad_outlier",
+    "duplication_rate_mad_outlier", "mad_qc_outlier")]
 ```
 
-Use `output = "report"` to inspect one threshold row per metric and one flag
-row per observation. The report always includes `mad_qc_outlier`, the compact
-any-selected-metric flag. Missing values remain `NA`; no observations are
-removed.
+The annotation preserves all 36 observations and adds one logical column per
+metric, plus `mad_qc_outlier`. The combined flag is `TRUE` when any selected
+metric is flagged; the input rows are never filtered.
+
+Use `output = "report"` when thresholds and observation IDs should be kept in
+a compact object rather than added to the metadata table:
+
+```{r}
+bulk_report <- mad_qc(
+  bulk_metadata,
+  metrics = c(
+    library_size = "lower",
+    mapping_rate = "lower",
+    duplication_rate = "upper"
+  ),
+  transform = c(library_size = "log1p"),
+  output = "report",
+  min_n = 10,
+  verbose = FALSE
+)
+
+bulk_report$thresholds[, c("metric", "direction", "transform", "lower_raw",
+                           "upper_raw", "status")]
+head(bulk_report$flags)
+```

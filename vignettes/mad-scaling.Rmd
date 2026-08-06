@@ -8,11 +8,44 @@ vignette: >
 
 ```{r}
 library(veryMAD)
-mad_scale(c(1, 2, 100))
+
+set.seed(303)
+gene_scores <- rlnorm(120, meanlog = 4, sdlog = .8)
+names(gene_scores) <- sprintf("gene_%03d", seq_along(gene_scores))
+scaled_scores <- mad_scale(gene_scores)
+head(round(scaled_scores, 2))
 ```
 
-For matrices, `margin = 1` scales rows and `margin = 2` scales columns. Matrix
-dimensions and names are preserved; numeric data frames are returned as
+The vector example has 120 values, allowing the robust centre and scale to be
+estimated from a more realistic feature set. For matrices, `margin = 1`
+scales rows and `margin = 2` scales columns. The next example uses a 200 by 24
+expression matrix and includes one missing value to demonstrate that missing
+values remain missing.
+
+```{r}
+expression <- matrix(
+  rlnorm(200 * 24, meanlog = 4, sdlog = .8),
+  nrow = 200,
+  ncol = 24,
+  dimnames = list(
+    sprintf("gene_%03d", 1:200),
+    sprintf("sample_%02d", 1:24)
+  )
+)
+expression[, c(4, 19)] <- expression[, c(4, 19)] * c(2.5, .5)
+expression[12, 7] <- NA_real_
+
+scaled_genes <- mad_scale(expression, margin = 1)
+scaled_samples <- mad_scale(expression, margin = 2)
+
+dim(scaled_genes)
+dimnames(scaled_genes)[[1]][1:3]
+round(scaled_genes[1:5, 1:5], 2)
+round(scaled_samples[1:5, 1:5], 2)
+is.na(scaled_genes[12, 7])
+```
+
+Dimensions and dimnames are preserved; numeric data frames are returned as
 matrices. A MAD-based scale is robust to extreme values and differs from a
-standard deviation-based scaling. Zero-MAD margins can return zeros, `NA`, or
+standard-deviation-based scaling. Zero-MAD margins can return zeros, `NA`, or
 an error through `zero_mad`.

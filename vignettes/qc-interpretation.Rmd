@@ -10,6 +10,70 @@ Choose `lower` for unusually small values, `upper` for unusually large values,
 and `both` for either tail. Count-like metrics may benefit from explicit
 `log1p`; bounded rates are often most interpretable on their raw scale.
 
+The following synthetic single-cell metadata contains 180 cells and four
+common QC metrics. A few cells are deliberately made unusual so that the
+resulting annotation is easy to inspect.
+
+```{r}
+library(veryMAD)
+
+set.seed(202)
+n_cells <- 180L
+sc_metadata <- data.frame(
+  cell_id = sprintf("cell_%03d", seq_len(n_cells)),
+  nCount_RNA = round(rlnorm(n_cells, log(4000), .45)),
+  nFeature_RNA = round(rlnorm(n_cells, log(1200), .30)),
+  percent_mito = pmin(.40, pmax(.005, rbeta(n_cells, 2, 18))),
+  doublet_score = pmin(.99, pmax(.01, rnorm(n_cells, .12, .04)))
+)
+sc_metadata$nCount_RNA[c(1, 2)] <- c(140, 180)
+sc_metadata$nFeature_RNA[c(1, 2)] <- c(85, 120)
+sc_metadata$percent_mito[c(3, 4)] <- c(.62, .55)
+sc_metadata$doublet_score[5] <- .98
+rownames(sc_metadata) <- sc_metadata$cell_id
+
+sc_annotated <- mad_qc(
+  sc_metadata,
+  metrics = c(
+    nCount_RNA = "lower",
+    nFeature_RNA = "lower",
+    percent_mito = "upper",
+    doublet_score = "upper"
+  ),
+  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
+  min_n = 20,
+  verbose = FALSE
+)
+
+sc_annotated[sc_annotated$mad_qc_outlier %in% TRUE,
+  c("cell_id", "nCount_RNA_mad_outlier", "nFeature_RNA_mad_outlier",
+    "percent_mito_mad_outlier", "doublet_score_mad_outlier",
+    "mad_qc_outlier")]
+```
+
+This is an annotation step, not a filtering step. The full table remains
+available in `sc_annotated`; a downstream workflow can decide how to review
+or use the flagged cells.
+
+```{r}
+sc_report <- mad_qc(
+  sc_metadata,
+  metrics = c(
+    nCount_RNA = "lower",
+    nFeature_RNA = "lower",
+    percent_mito = "upper",
+    doublet_score = "upper"
+  ),
+  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
+  output = "report",
+  min_n = 20,
+  verbose = FALSE
+)
+
+sc_report$thresholds[, c("metric", "direction", "transform", "median", "mad",
+                         "lower_raw", "upper_raw", "status")]
+```
+
 `min_n` is a computational safeguard. A zero MAD is reported explicitly and
 can be handled as `"na"`, `"zero"`, or `"error"`. These flags are statistical
 heuristics, not biological diagnoses or automatic filtering decisions. The
