@@ -6,17 +6,19 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <title>Interpreting MAD QC flags • veryMAD</title>
-<script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<script src="../lightswitch.js"></script><script src="../deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="../deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="../deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="../deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="../deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Interpreting MAD QC flags">
+<script src="../deps/headroom-0.11.0/headroom.min.js"></script><script src="../deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="../deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="../deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="../deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="../deps/search-1.0.0/fuse.min.js"></script><script src="../deps/search-1.0.0/mark.min.js"></script><script src="qc-interpretation_files/libs/quarto-html/popper.min.js"></script><script src="qc-interpretation_files/libs/quarto-html/tippy.umd.min.js"></script><link href="qc-interpretation_files/libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="qc-interpretation_files/libs/quarto-html/light-border.css" rel="stylesheet">
+<!-- pkgdown --><script src="../pkgdown.js"></script><meta property="og:title" content="Interpreting MAD QC flags">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
 
 
-    <nav class="navbar navbar-expand-lg fixed-top bg-light" data-bs-theme="light" aria-label="Site navigation"><div class="container">
+    <nav class="navbar navbar-expand-lg fixed-top " aria-label="Site navigation"><div class="container">
 
     <a class="navbar-brand me-2" href="../index.html">veryMAD</a>
 
@@ -38,40 +40,42 @@
  <input class="form-control" type="search" name="search-input" id="search-input" autocomplete="off" aria-label="Search site" placeholder="Search for" data-search-index="../search.json">
 </form></li>
 <li class="nav-item"><a class="external-link nav-link" href="https://github.com/Thokas99/veryMAD/" aria-label="GitHub"><span class="fa fab fa-github fa-lg"></span></a></li>
+<li class="nav-item dropdown">
+  <button class="nav-link dropdown-toggle" type="button" id="dropdown-lightswitch" data-bs-toggle="dropdown" aria-expanded="false" aria-haspopup="true" aria-label="Light switch"><span class="fa fa-sun"></span></button>
+  <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="dropdown-lightswitch">
+<li><button class="dropdown-item" data-bs-theme-value="light"><span class="fa fa-sun"></span> Light</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="dark"><span class="fa fa-moon"></span> Dark</button></li>
+    <li><button class="dropdown-item" data-bs-theme-value="auto"><span class="fa fa-adjust"></span> Auto</button></li>
+  </ul>
+</li>
       </ul>
 </div>
 
 
   </div>
-</nav><div class="container template-article">
-
-
-
-
+</nav><div class="container template-quarto">
 <div class="row">
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Interpreting MAD QC flags</h1>
-            
-      
-      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/vignettes/qc-interpretation.Rmd" class="external-link"><code>vignettes/qc-interpretation.Rmd</code></a></small>
-      <div class="d-none name"><code>qc-interpretation.Rmd</code></div>
+
+
+
+
+      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/vignettes/qc-interpretation.qmd" class="external-link"><code>vignettes/qc-interpretation.qmd</code></a></small>
+      <div class="d-none name"><code></code></div>
     </div>
 
-    
-    
-<p>Choose <code>lower</code> for unusually small values,
-<code>upper</code> for unusually large values, and <code>both</code> for
-either tail. Count-like metrics may benefit from explicit
-<code>log1p</code>; bounded rates are often most interpretable on their
-raw scale.</p>
-<p>The following synthetic single-cell metadata contains 180 cells and
-four common QC metrics. A few cells are deliberately made unusual so
-that the resulting annotation is easy to inspect.</p>
-<div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202</span><span class="op">)</span></span>
+
+
+
+
+
+    <p>Choose <code>lower</code> for unusually small values, <code>upper</code> for unusually large values, and <code>both</code> for either tail. Count-like metrics may benefit from explicit <code>log1p</code>; bounded rates are often most interpretable on their raw scale.</p>
+<p>The following synthetic single-cell metadata contains 180 cells and four common QC metrics. A few cells are deliberately made unusual so that the resulting annotation is easy to inspect.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">202</span><span class="op">)</span></span>
 <span><span class="va">n_cells</span> <span class="op">&lt;-</span> <span class="fl">180L</span></span>
 <span><span class="va">sc_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  cell_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"cell_%03d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_cells</span><span class="op">)</span><span class="op">)</span>,</span>
@@ -102,27 +106,27 @@ that the resulting annotation is easy to inspect.</p>
 <span><span class="va">sc_annotated</span><span class="op">[</span><span class="va">sc_annotated</span><span class="op">$</span><span class="va">mad_qc_outlier</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="cn">TRUE</span>,</span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"cell_id"</span>, <span class="st">"nCount_RNA_mad_outlier"</span>, <span class="st">"nFeature_RNA_mad_outlier"</span>,</span>
 <span>    <span class="st">"percent_mito_mad_outlier"</span>, <span class="st">"doublet_score_mad_outlier"</span>,</span>
-<span>    <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">##           cell_id nCount_RNA_mad_outlier nFeature_RNA_mad_outlier</span></span>
-<span><span class="co">## cell_001 cell_001                   TRUE                     TRUE</span></span>
-<span><span class="co">## cell_002 cell_002                   TRUE                     TRUE</span></span>
-<span><span class="co">## cell_003 cell_003                  FALSE                    FALSE</span></span>
-<span><span class="co">## cell_004 cell_004                  FALSE                    FALSE</span></span>
-<span><span class="co">## cell_005 cell_005                  FALSE                    FALSE</span></span>
-<span><span class="co">## cell_050 cell_050                  FALSE                    FALSE</span></span>
-<span><span class="co">## cell_073 cell_073                  FALSE                    FALSE</span></span>
-<span><span class="co">##          percent_mito_mad_outlier doublet_score_mad_outlier mad_qc_outlier</span></span>
-<span><span class="co">## cell_001                    FALSE                     FALSE           TRUE</span></span>
-<span><span class="co">## cell_002                    FALSE                     FALSE           TRUE</span></span>
-<span><span class="co">## cell_003                     TRUE                     FALSE           TRUE</span></span>
-<span><span class="co">## cell_004                     TRUE                     FALSE           TRUE</span></span>
-<span><span class="co">## cell_005                    FALSE                      TRUE           TRUE</span></span>
-<span><span class="co">## cell_050                     TRUE                     FALSE           TRUE</span></span>
-<span><span class="co">## cell_073                     TRUE                     FALSE           TRUE</span></span></code></pre>
-<p>This is an annotation step, not a filtering step. The full table
-remains available in <code>sc_annotated</code>; a downstream workflow
-can decide how to review or use the flagged cells.</p>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<span>    <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;           cell_id nCount_RNA_mad_outlier nFeature_RNA_mad_outlier</span></span>
+<span><span class="co">#&gt; cell_001 cell_001                   TRUE                     TRUE</span></span>
+<span><span class="co">#&gt; cell_002 cell_002                   TRUE                     TRUE</span></span>
+<span><span class="co">#&gt; cell_003 cell_003                  FALSE                    FALSE</span></span>
+<span><span class="co">#&gt; cell_004 cell_004                  FALSE                    FALSE</span></span>
+<span><span class="co">#&gt; cell_005 cell_005                  FALSE                    FALSE</span></span>
+<span><span class="co">#&gt; cell_050 cell_050                  FALSE                    FALSE</span></span>
+<span><span class="co">#&gt; cell_073 cell_073                  FALSE                    FALSE</span></span>
+<span><span class="co">#&gt;          percent_mito_mad_outlier doublet_score_mad_outlier mad_qc_outlier</span></span>
+<span><span class="co">#&gt; cell_001                    FALSE                     FALSE           TRUE</span></span>
+<span><span class="co">#&gt; cell_002                    FALSE                     FALSE           TRUE</span></span>
+<span><span class="co">#&gt; cell_003                     TRUE                     FALSE           TRUE</span></span>
+<span><span class="co">#&gt; cell_004                     TRUE                     FALSE           TRUE</span></span>
+<span><span class="co">#&gt; cell_005                    FALSE                      TRUE           TRUE</span></span>
+<span><span class="co">#&gt; cell_050                     TRUE                     FALSE           TRUE</span></span>
+<span><span class="co">#&gt; cell_073                     TRUE                     FALSE           TRUE</span></span></code></pre></div>
+</div>
+<p>This is an annotation step, not a filtering step. The full table remains available in <code>sc_annotated</code>; a downstream workflow can decide how to review or use the flagged cells.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sc_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>  <span class="va">sc_metadata</span>,</span>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -138,31 +142,108 @@ can decide how to review or use the flagged cells.</p>
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">sc_report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"median"</span>, <span class="st">"mad"</span>,</span>
-<span>                         <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<pre><code><span><span class="co">##          metric direction transform     median        mad lower_raw upper_raw</span></span>
-<span><span class="co">## 1    nCount_RNA     lower     log1p 8.30511100 0.47135824  982.4200        NA</span></span>
-<span><span class="co">## 2  nFeature_RNA     lower     log1p 7.07199691 0.31699966  454.3188        NA</span></span>
-<span><span class="co">## 3  percent_mito     upper      none 0.07467968 0.05235087        NA 0.2317323</span></span>
-<span><span class="co">## 4 doublet_score     upper      none 0.12177996 0.04920403        NA 0.2693921</span></span>
-<span><span class="co">##   status</span></span>
-<span><span class="co">## 1     ok</span></span>
-<span><span class="co">## 2     ok</span></span>
-<span><span class="co">## 3     ok</span></span>
-<span><span class="co">## 4     ok</span></span></code></pre>
-<p><code>min_n</code> is a computational safeguard. A zero MAD is
-reported explicitly and can be handled as <code>"na"</code>,
-<code>"zero"</code>, or <code>"error"</code>. These flags are
-statistical heuristics, not biological diagnoses or automatic filtering
-decisions. The overall <code>mad_qc_outlier</code> flag is always
-returned as a compact any-selected- metric summary; it is
-<code>NA</code> when no metric is flagged but at least one metric could
-not be evaluated.</p>
-<p>For stratified analyses, split the metadata explicitly and call
-<code><a href="../reference/mad_qc.html">mad_qc()</a></code> on each subset. veryMAD does not infer batches,
-conditions, clusters, or causes.</p>
-  </main>
+<span>                         <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;          metric direction transform     median        mad lower_raw upper_raw</span></span>
+<span><span class="co">#&gt; 1    nCount_RNA     lower     log1p 8.30511100 0.47135824  982.4200        NA</span></span>
+<span><span class="co">#&gt; 2  nFeature_RNA     lower     log1p 7.07199691 0.31699966  454.3188        NA</span></span>
+<span><span class="co">#&gt; 3  percent_mito     upper      none 0.07467968 0.05235087        NA 0.2317323</span></span>
+<span><span class="co">#&gt; 4 doublet_score     upper      none 0.12177996 0.04920403        NA 0.2693921</span></span>
+<span><span class="co">#&gt;   status</span></span>
+<span><span class="co">#&gt; 1     ok</span></span>
+<span><span class="co">#&gt; 2     ok</span></span>
+<span><span class="co">#&gt; 3     ok</span></span>
+<span><span class="co">#&gt; 4     ok</span></span></code></pre></div>
 </div>
+<p><code>min_n</code> is a computational safeguard. A zero MAD is reported explicitly and can be handled as <code>"na"</code>, <code>"zero"</code>, or <code>"error"</code>. These flags are statistical heuristics, not biological diagnoses or automatic filtering decisions. The overall <code>mad_qc_outlier</code> flag is always returned as a compact any-selected- metric summary; it is <code>NA</code> when no metric is flagged but at least one metric could not be evaluated.</p>
+<p>For stratified analyses, split the metadata explicitly and call <code><a href="../reference/mad_qc.html">mad_qc()</a></code> on each subset. veryMAD does not infer batches, conditions, clusters, or causes.</p>
 
+
+
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'light-border',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config);
+    }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script></main>
+</div>
 
 
     <footer><div class="pkgdown-footer-left">
