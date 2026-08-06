@@ -62,7 +62,7 @@
 veryMAD
 </h1></div>
 <p align="center">
-<strong>Explicit MAD quality control · robust scaling · no hidden decisions</strong>
+<strong>Explicit MAD quality control</strong>
 </p>
 <p align="center">
 <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a> <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/Thokas99/veryMAD/releases" class="external-link"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&amp;sort=semver" alt="Latest release"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
@@ -111,14 +111,11 @@ veryMAD
 <p>Install the released version from GitHub with <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
-<p>Or install the development version:</p>
-<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD@main"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="mad-qc-in-one-call">MAD QC in one call<a class="anchor" aria-label="anchor" href="#mad-qc-in-one-call"></a>
 </h2>
-<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -142,13 +139,13 @@ veryMAD
 <span><span class="va">mapping_rate_mad_outlier</span></span>
 <span><span class="va">mad_qc_outlier</span></span></code></pre>
 <blockquote>
-<p>[!TIP] Use <code>transform = "none"</code> for raw-scale calculations, or provide named partial overrides such as <code>c(library_size = "log1p")</code>. veryMAD never infers a transformation from a column name.</p>
+<p>[!TIP] Use <code>transform = "none"</code> for raw-scale calculations, or provide named partial overrides such as <code>c(library_size = "log1p")</code>.</p>
 </blockquote>
 </div>
 <div class="section level2">
 <h2 id="inspect-thresholds-with-a-report">Inspect thresholds with a report<a class="anchor" aria-label="anchor" href="#inspect-thresholds-with-a-report"></a>
 </h2>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>  <span class="va">metadata</span>,</span>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"lower"</span>, mapping_rate <span class="op">=</span> <span class="st">"lower"</span><span class="op">)</span>,</span>
@@ -161,7 +158,7 @@ veryMAD
 <span><span class="va">report</span><span class="op">$</span><span class="va">flags</span></span>
 <span><span class="va">report</span><span class="op">$</span><span class="va">settings</span></span></code></pre></div>
 <p>The report contains only three components:</p>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span>
 <span><span class="co">#&gt; "flags" "thresholds" "settings"</span></span></code></pre></div>
 <p>Thresholds retain both calculation-scale and raw-scale limits. Missing, undersized, and zero-MAD calculations remain visible through <code>status</code> rather than being silently converted into a decision.</p>
@@ -169,7 +166,7 @@ veryMAD
 <div class="section level2">
 <h2 id="robust-mad-scaling">Robust MAD scaling<a class="anchor" aria-label="anchor" href="#robust-mad-scaling"></a>
 </h2>
-<div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span>, b <span class="op">=</span> <span class="fl">2</span>, c <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">values</span><span class="op">)</span></span>
 <span></span>
