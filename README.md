@@ -1,20 +1,49 @@
-<p align="center"><img src="man/figures/veryMAD-logo.svg" alt="veryMAD R package logo" width="250"></p>
+<p align="center">
+  <img src="man/figures/veryMAD-logo.svg" alt="veryMAD logo" width="280">
+</p>
 
-# veryMAD
+<h1 align="center">veryMAD</h1>
 
-veryMAD is a small R package for explicit MAD-based quality-control annotation
-and robust MAD scaling. It calculates flags and thresholds but never filters
-observations or infers biological causes.
+<p align="center"><strong>Explicit MAD quality control · robust scaling · no hidden decisions</strong></p>
 
-## Installation
+<p align="center">
+  <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a>
+  <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a>
+  <a href="https://github.com/Thokas99/veryMAD/releases"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&sort=semver" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
+
+> [!NOTE]
+> veryMAD calculates transparent MAD thresholds and flags. It never filters
+> observations, guesses metrics, or turns a statistical flag into a biological
+> diagnosis.
+
+## What veryMAD does
+
+| Capability | Function | Output |
+| --- | --- | --- |
+| Observation-level QC | `mad_qc()` | Annotated metadata or a compact report |
+| Robust scaling | `mad_scale()` | MAD-scaled vectors and matrices |
+| Familiar alias | `mad_z_score()` | Alias of `mad_scale()` |
+
+Rows are observations. Columns are QC metrics selected by you. Directions and
+transformations are explicit, deterministic, and auditable.
+
+## Install
+
+Install the released version from GitHub with [`pak`](https://pak.r-lib.org/):
 
 ```r
 pak::pak("Thokas99/veryMAD")
 ```
 
-## MAD QC
+Or install the development version:
 
-Rows are observations. Select QC columns and their directions explicitly.
+```r
+pak::pak("Thokas99/veryMAD@main")
+```
+
+## MAD QC in one call
 
 ```r
 library(veryMAD)
@@ -27,13 +56,31 @@ metadata <- data.frame(
 
 annotated <- mad_qc(
   metadata,
-  metrics = c(library_size = "lower", mapping_rate = "lower"),
+  metrics = c(
+    library_size = "lower",
+    mapping_rate = "lower"
+  ),
   transform = c(library_size = "log1p")
 )
+
 annotated
 ```
 
-For thresholds and one-row-per-observation flags:
+The default annotation keeps the original data and adds one logical flag per
+metric plus `mad_qc_outlier`:
+
+```text
+library_size_mad_outlier
+mapping_rate_mad_outlier
+mad_qc_outlier
+```
+
+> [!TIP]
+> Use `transform = "none"` for raw-scale calculations, or provide named
+> partial overrides such as `c(library_size = "log1p")`. veryMAD never infers
+> a transformation from a column name.
+
+## Inspect thresholds with a report
 
 ```r
 report <- mad_qc(
@@ -43,30 +90,65 @@ report <- mad_qc(
   output = "report",
   verbose = FALSE
 )
+
 report$thresholds
 report$flags
+report$settings
 ```
 
-Use `split()` and separate calls when stratified QC is scientifically needed.
-`min_n` is a computational safeguard, not a biological rule.
-
-## MAD scaling
+The report contains only three components:
 
 ```r
-mad_scale(matrix_data, margin = 1) # row-wise
-mad_z_score(matrix_data, margin = 2) # column-wise alias
+names(report)
+#> "flags" "thresholds" "settings"
 ```
 
-`margin = 1` scales rows; `margin = 2` scales columns. Vectors are scaled
-directly, and data frames are returned as matrices.
+Thresholds retain both calculation-scale and raw-scale limits. Missing,
+undersized, and zero-MAD calculations remain visible through `status` rather
+than being silently converted into a decision.
 
-## Interpretation
+## Robust MAD scaling
 
-MAD thresholds are adaptive statistical heuristics. Flags are not diagnoses,
-upper-tail count flags are not doublet calls, and veryMAD does not filter data
-automatically. Users choose metrics, directions, and transformations.
+```r
+values <- c(a = 1, b = 2, c = 100)
+mad_scale(values)
+
+matrix_data <- matrix(1:12, nrow = 3,
+  dimnames = list(paste0("gene", 1:3), paste0("sample", 1:4)))
+
+mad_scale(matrix_data, margin = 1) # scale rows
+mad_scale(matrix_data, margin = 2) # scale columns
+mad_z_score(matrix_data, margin = 1) # same implementation
+```
+
+`margin = 1` scales rows; `margin = 2` scales columns. Matrix dimensions and
+dimnames are preserved. Numeric data frames are returned as matrices.
+
+## Interpretation and guardrails
+
+> [!WARNING]
+> MAD thresholds are adaptive statistical heuristics. A flag is not a sample
+> rejection, a laboratory diagnosis, or a doublet call.
+
+- Metrics, directions, and transformations are always selected explicitly.
+- `lower`, `upper`, and `both` describe statistical tails only.
+- `min_n` is a computational safeguard, not a biological rule.
+- Missing values stay missing.
+- veryMAD does not filter data automatically.
+- For stratified QC, split the data yourself and call `mad_qc()` separately.
 
 ## Documentation
 
-See the [reference](https://thokas99.github.io/veryMAD/reference/) and
-[guides](https://thokas99.github.io/veryMAD/articles/).
+- **[Package website](https://thokas99.github.io/veryMAD/)**
+- **[Function reference](https://thokas99.github.io/veryMAD/reference/)**
+- **[Getting started](https://thokas99.github.io/veryMAD/articles/getting-started.html)**
+- **[QC interpretation](https://thokas99.github.io/veryMAD/articles/qc-interpretation.html)**
+- **[MAD scaling guide](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)**
+- **[Release notes](NEWS.md)**
+
+## Scope of the 0.5.0 release
+
+Version 0.5.0 is a deliberate breaking simplification. The public API is now
+small enough to audit: `mad_qc()` for observation-level QC and `mad_scale()`
+for robust scaling. Legacy grouped, modality-specific, plotting, grading, and
+low-level statistical entry points are no longer public functions.
