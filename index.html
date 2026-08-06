@@ -212,6 +212,20 @@ veryMAD
 </h2>
 <p>Version 0.5.0 is a deliberate breaking simplification. The public API is now small enough to audit: <code><a href="reference/mad_qc.html">mad_qc()</a></code> for observation-level QC and <code><a href="reference/mad_scale.html">mad_scale()</a></code> for robust scaling. Legacy grouped, modality-specific, plotting, grading, and low-level statistical entry points are no longer public functions.</p>
 </div>
+<div class="section level2">
+<h2 id="bioconductor-and-single-cell-qc-guidance">Bioconductor and single-cell QC guidance<a class="anchor" aria-label="anchor" href="#bioconductor-and-single-cell-qc-guidance"></a>
+</h2>
+<p>These sources motivate veryMAD’s explicit MAD-based QC scope while also supporting its guardrails: MAD flags are adaptive statistical evidence, not automatic biological decisions. Thresholds should be reviewed alongside multiple QC metrics, diagnostic plots, and the biological context of the dataset.</p>
+<ul>
+<li>
+<strong>Subramanian, A., Alperovich, M., Yang, Y., &amp; Li, B. (2022).</strong> Biology-inspired data-driven quality control for scientific discovery in single-cell transcriptomics. <em>Genome Biology, 23</em>, 267. <a href="https://doi.org/10.1186/s13059-022-02820-w" class="external-link uri">https://doi.org/10.1186/s13059-022-02820-w</a> — Presents adaptive MAD-based QC across cell-type or cluster contexts and emphasizes retaining biologically meaningful populations that fixed, data-agnostic thresholds can remove. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9793662/" class="external-link">Article</a>
+</li>
+<li>
+<strong>Single-Cell Best Practices Consortium. (n.d.).</strong> Quality control. In <em>Single-cell best practices</em>. Retrieved August 6, 2026, from <a href="https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html" class="external-link uri">https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html</a> — Recommends lenient MAD-based cutoffs for QC while warning that aggressive filtering can bias against smaller subpopulations and that several covariates should be considered together.</li>
+<li>
+<strong>Amezquita, R. A., Lun, A. T. L., Hicks, S. C., &amp; Gottardo, R. (2021).</strong> Quality control. In <em>Basics of single-cell analysis with Bioconductor</em> (Bioconductor 3.13). Bioconductor. <a href="https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics" class="external-link uri">https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics</a> — Defines common QC metrics such as library size, detected features, and mitochondrial or spike-in proportions, and describes adaptive MAD thresholds with explicit direction and transformation choices.</li>
+</ul>
+</div>
 
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
