@@ -137,12 +137,6 @@ dimnames are preserved. Numeric data frames are returned as matrices.
 - **[MAD scaling guide](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)**
 - **[Release notes](NEWS.md)**
 
-## Scope of the 0.5.1 release
-
-Version 0.5.1 is a focused API and reliability polish release. The public API
-contains exactly `mad_qc()` for observation-level QC and `mad_scale()` for
-robust scaling. The overall `mad_qc_outlier` flag is always returned.
-
 ## Bioconductor and single-cell QC guidance
 
 These sources motivate veryMAD's explicit MAD-based QC scope while also
