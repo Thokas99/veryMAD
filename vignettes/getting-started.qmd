@@ -1,13 +1,20 @@
 ---
 title: "Getting started with veryMAD"
-output: rmarkdown::html_vignette
+description: >
+  A complete observation-level QC workflow on synthetic bulk RNA-seq metadata.
 vignette: >
   %\VignetteIndexEntry{Getting started with veryMAD}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+```{r}
+#| label: setup
+#| include: false
 library(veryMAD)
 ```
 

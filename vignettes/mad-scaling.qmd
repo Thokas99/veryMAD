@@ -1,14 +1,25 @@
 ---
 title: "Robust MAD scaling"
-output: rmarkdown::html_vignette
+description: >
+  Robust centering and scaling for vectors and expression matrices.
 vignette: >
   %\VignetteIndexEntry{Robust MAD scaling}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
 ---
 
 ```{r}
+#| label: setup
+#| include: false
 library(veryMAD)
+```
 
+```{r}
+#| label: vector-scaling
 set.seed(303)
 gene_scores <- rlnorm(120, meanlog = 4, sdlog = .8)
 names(gene_scores) <- sprintf("gene_%03d", seq_along(gene_scores))

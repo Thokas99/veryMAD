@@ -10,6 +10,8 @@
 *.Rcheck/
 *.tar.gz
 docs
+vignettes/.quarto/
+vignettes/*_files/
 .claude/
 AGENTS.md
 CLAUDE.md

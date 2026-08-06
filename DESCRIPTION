@@ -15,13 +15,13 @@ Roxygen: list(markdown = TRUE)
 Imports:
     cli,
     matrixStats
-Suggests: 
+Suggests:
     knitr,
-    rmarkdown,
+    quarto,
     SeuratObject,
     testthat (>= 3.0.0)
 Config/testthat/edition: 3
-VignetteBuilder: knitr
+VignetteBuilder: quarto
 URL: https://github.com/Thokas99/veryMAD,
     https://thokas99.github.io/veryMAD/
 BugReports: https://github.com/Thokas99/veryMAD/issues

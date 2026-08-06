@@ -1,9 +1,15 @@
 ---
 title: "Interpreting MAD QC flags"
-output: rmarkdown::html_vignette
+description: >
+  Interpreting explicit MAD flags in synthetic single-cell QC metadata.
 vignette: >
   %\VignetteIndexEntry{Interpreting MAD QC flags}
-  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
 ---
 
 Choose `lower` for unusually small values, `upper` for unusually large values,
@@ -15,8 +21,13 @@ common QC metrics. A few cells are deliberately made unusual so that the
 resulting annotation is easy to inspect.
 
 ```{r}
+#| label: setup
+#| include: false
 library(veryMAD)
+```
 
+```{r}
+#| label: synthetic-sc-qc
 set.seed(202)
 n_cells <- 180L
 sc_metadata <- data.frame(
