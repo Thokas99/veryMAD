@@ -2,90 +2,55 @@
 % Please edit documentation in R/mad-qc.R
 \name{mad_qc}
 \alias{mad_qc}
-\title{Flag observations with explicit MAD thresholds}
+\title{Explicit MAD quality-control annotation}
 \usage{
 mad_qc(
   data,
   metrics,
   nmads = 3,
-  group_by = NULL,
-  transform = NULL,
-  constant = 1.4826,
-  na_rm = TRUE,
-  zero_mad = c("zero", "na", "error")
+  transform = "none",
+  output = c("annotate", "report"),
+  combine = TRUE,
+  min_n = 5,
+  zero_mad = c("na", "zero", "error"),
+  overwrite = FALSE,
+  verbose = TRUE
 )
 }
 \arguments{
-\item{data}{A data frame containing one observation per row.}
+\item{data}{A data frame, tibble, numeric matrix, or Seurat object.}
 
-\item{metrics}{A named character vector mapping metric names in \code{data} to one
-of \code{"lower"}, \code{"upper"}, or \code{"both"}.}
+\item{metrics}{A non-empty named character vector mapping columns to
+\code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
-\item{nmads}{Number of MADs from the median used to define thresholds.}
+\item{nmads}{Positive number of MADs from the median for the limits.}
 
-\item{group_by}{Optional column name used to estimate thresholds within groups.}
+\item{transform}{A scalar transformation or named partial overrides.
+Supported values are \code{"none"}, \code{"log1p"}, and \code{"log10"}.}
 
-\item{transform}{Optional named character vector mapping metrics to explicit
-transformations. Supported values are \code{"identity"}, \code{"log10"}, and
-\code{"log1p"}. Metrics absent from this vector use identity transformation.}
+\item{output}{Return annotated data (\code{"annotate"}) or a compact report
+(\code{"report"}).}
 
-\item{constant}{Consistency constant passed to MAD calculation.}
+\item{combine}{Add the combined \code{mad_qc_outlier} flag?}
 
-\item{na_rm}{Logical; remove missing values before threshold estimation.}
+\item{min_n}{Minimum number of finite, non-missing observations required.}
 
-\item{zero_mad}{How to handle groups with zero MAD: \code{"zero"}, \code{"na"}, or
-\code{"error"}.}
+\item{zero_mad}{Handling of a zero MAD: \code{"na"}, \code{"zero"}, or \code{"error"}.}
+
+\item{overwrite}{Replace existing generated flag columns?}
+
+\item{verbose}{Print a concise neutral summary?}
 }
 \value{
-A \code{mad_qc} data frame with one row per observation-metric pair. It
-includes \code{raw_value}, transformed \code{value}, threshold columns, \code{direction}, and
-\code{is_outlier}.
+Annotated input or a \code{verymad_qc} list with \code{flags}, \code{thresholds},
+and \code{settings}.
 }
 \description{
-\code{mad_qc()} calculates median absolute deviation (MAD) thresholds for selected
-numeric metadata columns and returns a long, auditable report. Rows in \code{data}
-are observations: bulk RNA-seq libraries, single cells, spatial spots, or any
-other assay-level unit with observation metadata.
-}
-\details{
-Count-like QC metrics such as library size, total RNA counts, and detected
-features are often strongly right-skewed. In those cases, estimating MAD
-thresholds after an explicit log transformation such as \code{log1p} can give a
-more useful reference distribution. Bounded percentages, proportions, and rates
-are usually kept on their original scale because a log transform changes the
-interpretation of already bounded measurements.
-
-Transformations are explicit and per metric. \code{transform = NULL} is equivalent
-to identity transformation for every metric, and \code{mad_qc()} never infers a
-transformation from a metric name. Thresholds, medians, MADs, and the \code{value}
-column are expressed on the calculation scale. The \code{raw_value} column always
-preserves the exact input measurement scale.
-
-\code{direction = "both"} flags both tails of the selected metric, but it does
-not assign a biological cause. For example, an upper-tail count or feature flag
-means unusually high relative to the reference distribution; it is not a
-doublet call or an automatic filtering decision.
+Rows are observations and \code{metrics} explicitly selects numeric QC columns.
+One reference distribution is calculated per metric across all observations;
+observations are never filtered automatically.
 }
 \examples{
-bulk_metadata <- data.frame(
-  sample_id = paste0("sample_", 1:8),
-  library_size = c(2e6, 3e7, 3.2e7, 3.4e7, 3.1e7, 3.3e7, 3.5e7, 3.6e7),
-  mapping_rate = c(0.55, 0.92, 0.94, 0.93, 0.95, 0.94, 0.93, 0.92)
-)
-mad_qc(
-  bulk_metadata,
-  metrics = c(library_size = "lower", mapping_rate = "lower"),
-  transform = c(library_size = "log1p")
-)
-cell_metadata <- data.frame(
-  cell_id = paste0("cell_", 1:8),
-  nCount_RNA = c(200, 8000, 8500, 9000, 8700, 9200, 9500, 70000),
-  nFeature_RNA = c(150, 2800, 3000, 3100, 2950, 3200, 3300, 8000),
-  percent.mt = c(3, 4, 5, 4, 6, 5, 4, 18)
-)
-mad_qc(
-  cell_metadata,
-  metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
-  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
-)
+x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
+mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
 }

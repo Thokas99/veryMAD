@@ -1,11 +1,8 @@
-^LICENSE\.md$
-^\.\.Rcheck$
-^\.posit$
-^\.serena$
-^veryMAD\.Rproj$
-^\.Rproj\.user$
+^\.claude$
+^\.gitnexus$
+^AGENTS\.md$
+^CLAUDE\.md$
+^\.codex$
 ^\.github$
-^CHANGELOG\.md$
-^_pkgdown\.yml$
+^\.serena$
 ^docs$
-^pkgdown$

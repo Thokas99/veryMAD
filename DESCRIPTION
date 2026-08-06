@@ -1,23 +1,21 @@
 Package: veryMAD
-Title: Robust MAD Scaling and Auditable Omics Quality Control
-Version: 0.4.0
+Title: Explicit MAD Quality Control and Robust Scaling
+Version: 0.5.0
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
-Description: A lightweight R toolkit for robust MAD scores, dense
-    expression-matrix scaling and auditable quality-control flagging across
-    bulk, single-cell and other observation-level omics metadata.
+Description: A small R toolkit for explicit median absolute deviation based
+    quality-control annotation and robust scaling of numeric vectors and
+    matrices. Metrics, directions and transformations are selected by the
+    user, and observations are never filtered automatically.
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1.0)
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)
-RoxygenNote: 8.0.0
 Imports:
     cli,
-    matrixStats,
-    tibble
+    matrixStats
 Suggests: 
-    ggplot2,
     knitr,
     rmarkdown,
     SeuratObject,
@@ -27,3 +25,4 @@ VignetteBuilder: knitr
 URL: https://github.com/Thokas99/veryMAD,
     https://thokas99.github.io/veryMAD/
 BugReports: https://github.com/Thokas99/veryMAD/issues
+Config/roxygen2/version: 8.1.0

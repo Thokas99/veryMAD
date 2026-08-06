@@ -1,177 +1,186 @@
-#' Flag observations with explicit MAD thresholds
+#' Explicit MAD quality-control annotation
 #'
-#' `mad_qc()` calculates median absolute deviation (MAD) thresholds for selected
-#' numeric metadata columns and returns a long, auditable report. Rows in `data`
-#' are observations: bulk RNA-seq libraries, single cells, spatial spots, or any
-#' other assay-level unit with observation metadata.
+#' Rows are observations and `metrics` explicitly selects numeric QC columns.
+#' One reference distribution is calculated per metric across all observations;
+#' observations are never filtered automatically.
 #'
-#' Count-like QC metrics such as library size, total RNA counts, and detected
-#' features are often strongly right-skewed. In those cases, estimating MAD
-#' thresholds after an explicit log transformation such as `log1p` can give a
-#' more useful reference distribution. Bounded percentages, proportions, and rates
-#' are usually kept on their original scale because a log transform changes the
-#' interpretation of already bounded measurements.
-#'
-#' Transformations are explicit and per metric. `transform = NULL` is equivalent
-#' to identity transformation for every metric, and `mad_qc()` never infers a
-#' transformation from a metric name. Thresholds, medians, MADs, and the `value`
-#' column are expressed on the calculation scale. The `raw_value` column always
-#' preserves the exact input measurement scale.
-#'
-#' `direction = "both"` flags both tails of the selected metric, but it does
-#' not assign a biological cause. For example, an upper-tail count or feature flag
-#' means unusually high relative to the reference distribution; it is not a
-#' doublet call or an automatic filtering decision.
-#'
-#' @param data A data frame containing one observation per row.
-#' @param metrics A named character vector mapping metric names in `data` to one
-#'   of `"lower"`, `"upper"`, or `"both"`.
-#' @param nmads Number of MADs from the median used to define thresholds.
-#' @param group_by Optional column name used to estimate thresholds within groups.
-#' @param transform Optional named character vector mapping metrics to explicit
-#'   transformations. Supported values are `"identity"`, `"log10"`, and
-#'   `"log1p"`. Metrics absent from this vector use identity transformation.
-#' @param constant Consistency constant passed to MAD calculation.
-#' @param na_rm Logical; remove missing values before threshold estimation.
-#' @param zero_mad How to handle groups with zero MAD: `"zero"`, `"na"`, or
-#'   `"error"`.
-#'
-#' @return A `mad_qc` data frame with one row per observation-metric pair. It
-#'   includes `raw_value`, transformed `value`, threshold columns, `direction`, and
-#'   `is_outlier`.
+#' @param data A data frame, tibble, numeric matrix, or Seurat object.
+#' @param metrics A non-empty named character vector mapping columns to
+#'   `"lower"`, `"upper"`, or `"both"`.
+#' @param nmads Positive number of MADs from the median for the limits.
+#' @param transform A scalar transformation or named partial overrides.
+#'   Supported values are `"none"`, `"log1p"`, and `"log10"`.
+#' @param output Return annotated data (`"annotate"`) or a compact report
+#'   (`"report"`).
+#' @param combine Add the combined `mad_qc_outlier` flag?
+#' @param min_n Minimum number of finite, non-missing observations required.
+#' @param zero_mad Handling of a zero MAD: `"na"`, `"zero"`, or `"error"`.
+#' @param overwrite Replace existing generated flag columns?
+#' @param verbose Print a concise neutral summary?
+#' @return Annotated input or a `verymad_qc` list with `flags`, `thresholds`,
+#'   and `settings`.
 #' @export
-#'
 #' @examples
-#' bulk_metadata <- data.frame(
-#'   sample_id = paste0("sample_", 1:8),
-#'   library_size = c(2e6, 3e7, 3.2e7, 3.4e7, 3.1e7, 3.3e7, 3.5e7, 3.6e7),
-#'   mapping_rate = c(0.55, 0.92, 0.94, 0.93, 0.95, 0.94, 0.93, 0.92)
-#' )
-#' mad_qc(
-#'   bulk_metadata,
-#'   metrics = c(library_size = "lower", mapping_rate = "lower"),
-#'   transform = c(library_size = "log1p")
-#' )
-#' cell_metadata <- data.frame(
-#'   cell_id = paste0("cell_", 1:8),
-#'   nCount_RNA = c(200, 8000, 8500, 9000, 8700, 9200, 9500, 70000),
-#'   nFeature_RNA = c(150, 2800, 3000, 3100, 2950, 3200, 3300, 8000),
-#'   percent.mt = c(3, 4, 5, 4, 6, 5, 4, 18)
-#' )
-#' mad_qc(
-#'   cell_metadata,
-#'   metrics = c(nCount_RNA = "both", nFeature_RNA = "both", percent.mt = "upper"),
-#'   transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
-#' )
-mad_qc <- function(data, metrics, nmads = 3, group_by = NULL, transform = NULL,
-                   constant = 1.4826, na_rm = TRUE,
-                   zero_mad = c("zero", "na", "error")) {
-  if (!is.data.frame(data)) stop("`data` must be a data frame.", call. = FALSE)
+#' x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
+#' mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
+mad_qc <- function(data, metrics, nmads = 3, transform = "none",
+                   output = c("annotate", "report"), combine = TRUE,
+                   min_n = 5, zero_mad = c("na", "zero", "error"),
+                   overwrite = FALSE, verbose = TRUE) {
+  output <- match.arg(output)
   zero_mad <- match.arg(zero_mad)
-  .arg_positive(nmads, "nmads"); .arg_positive(constant, "constant"); .arg_flag(na_rm, "na_rm")
-  if (!is.character(metrics) || !length(metrics) || is.null(names(metrics)) ||
-      anyNA(names(metrics)) || any(names(metrics) == "") || anyDuplicated(names(metrics))) {
-    stop("`metrics` must be a nonempty named character vector with unique names.", call. = FALSE)
-  }
-  if (!all(metrics %in% c("lower", "upper", "both"))) {
-    stop('`metrics` values must be "lower", "upper", or "both".', call. = FALSE)
-  }
-  metric_names <- names(metrics)
-  missing_metrics <- setdiff(metric_names, names(data))
-  if (length(missing_metrics)) stop(sprintf("Missing metric column(s): %s.", paste(missing_metrics, collapse = ", ")), call. = FALSE)
-  if (!all(vapply(data[metric_names], is.numeric, logical(1)))) stop("All QC metric columns must be numeric.", call. = FALSE)
-  if (!is.null(group_by) && (!is.character(group_by) || !length(group_by) || anyNA(group_by) ||
-      any(group_by == "") || anyDuplicated(group_by))) {
-    stop("`group_by` must be NULL or one or more unique column names.", call. = FALSE)
-  }
-  missing_groups <- setdiff(group_by, names(data))
-  if (length(missing_groups)) stop(sprintf("Missing grouping column(s): %s.", paste(missing_groups, collapse = ", ")), call. = FALSE)
-  transform <- .validate_transforms(transform, metric_names)
-  n <- nrow(data)
-  if (!n) return(.empty_qc(data, group_by, metric_names, transform, nmads, constant, zero_mad))
-  group <- .group_index(data, group_by)
-  ids <- .observation_ids(data)
-  pieces <- lapply(metric_names, function(metric) {
-    raw <- data[[metric]]
-    value <- .transform_metric(raw, transform[[metric]], metric)
-    median <- mad <- lower <- upper <- rep(NA_real_, n)
-    is_outlier <- rep(NA, n)
-    for (i in split(seq_len(n), group)) {
-      stats <- .mad_stats(value[i], constant, na_rm, zero_mad)
-      limits <- .mad_limits_from_stats(stats, nmads, metrics[[metric]], zero_mad)
-      median[i] <- stats$median
-      mad[i] <- stats$mad
-      lower[i] <- limits[["lower"]]
-      upper[i] <- limits[["upper"]]
-      is_outlier[i] <- .mad_flags(value[i], stats, nmads, metrics[[metric]], zero_mad)
+  .validate_scalar_flag(combine, "combine")
+  .validate_scalar_flag(overwrite, "overwrite")
+  .validate_scalar_flag(verbose, "verbose")
+  .validate_positive(nmads, "nmads")
+  .validate_positive(min_n, "min_n")
+  if (min_n != as.integer(min_n)) stop("`min_n` must be a positive integer.", call. = FALSE)
+
+  is_seurat <- inherits(data, "Seurat")
+  original <- data
+  if (is_seurat) {
+    if (!requireNamespace("SeuratObject", quietly = TRUE)) {
+      stop("Seurat input requires the `SeuratObject` package.", call. = FALSE)
     }
-    out <- data.frame(.obs = seq_len(n), id = ids, metric = metric,
-                      raw_value = raw, value = value,
-                      median = median, mad = mad, lower = lower, upper = upper,
-                      direction = unname(metrics[[metric]]),
-                      is_outlier = is_outlier,
-                      stringsAsFactors = FALSE, check.names = FALSE)
-    if (length(group_by)) out <- cbind(out[c(".obs", "id")], data[group_by], out[setdiff(names(out), c(".obs", "id"))])
-    out
-  })
-  out <- .as_mad_qc(do.call(rbind, pieces))
-  attr(out, "metrics") <- metric_names
-  attr(out, "group_by") <- group_by
-  attr(out, "transform") <- transform
-  attr(out, "nmads") <- nmads
-  attr(out, "constant") <- constant
-  attr(out, "zero_mad") <- zero_mad
-  attr(out, "observation_metadata") <- data[setdiff(names(data), metric_names)]
+    data <- data[[]]
+  } else if (is.matrix(data)) {
+    if (!is.numeric(data)) stop("`data` must be a numeric matrix.", call. = FALSE)
+    data <- as.data.frame(data, check.names = FALSE, stringsAsFactors = FALSE)
+  } else if (!is.data.frame(data)) {
+    stop("`data` must be a data frame, numeric matrix, or Seurat object.", call. = FALSE)
+  }
+
+  metrics <- .validate_metrics(data, metrics)
+  transforms <- .resolve_transforms(transform, names(metrics))
+  targets <- c(paste0(names(metrics), "_mad_outlier"), if (combine) "mad_qc_outlier")
+  if (output == "annotate" && !overwrite) {
+    conflicts <- intersect(targets, names(data))
+    if (length(conflicts)) stop(sprintf("Flag column(s) already exist: %s. Use `overwrite = TRUE`.",
+      paste(conflicts, collapse = ", ")), call. = FALSE)
+  }
+
+  result <- .qc_engine(data, metrics, transforms, nmads, min_n, zero_mad, combine)
+  annotated <- result$annotated
+  result$annotated <- NULL
+  if (verbose) .inform_qc(result, nrow(data))
+  if (output == "report") return(result)
+
+  if (is_seurat) {
+    metadata <- result$flags[setdiff(names(result$flags), "id")]
+    names(metadata)[seq_along(metrics)] <- paste0(names(metrics), "_mad_outlier")
+    rownames(metadata) <- result$flags$id
+    return(SeuratObject::AddMetaData(original, metadata = metadata))
+  }
+  if (is.matrix(original)) return(annotated)
+  out <- data
+  for (nm in names(annotated)) if (nm %in% targets) out[[nm]] <- annotated[[nm]]
   out
 }
 
-.observation_ids <- function(data) {
-  if (.row_names_info(data, type = 1L) < 0L) as.character(seq_len(nrow(data))) else rownames(data)
+.validate_scalar_flag <- function(x, name) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) stop(sprintf("`%s` must be TRUE or FALSE.", name), call. = FALSE)
 }
 
-.validate_transforms <- function(transform, metrics) {
-  out <- stats::setNames(rep("identity", length(metrics)), metrics)
-  if (is.null(transform)) return(out)
-  if (!is.character(transform) || !length(transform) || is.null(names(transform)) ||
-      any(names(transform) == "") || anyDuplicated(names(transform))) {
-    stop("`transform` must be a named character vector.", call. = FALSE)
+.validate_positive <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x <= 0) stop(sprintf("`%s` must be positive and finite.", name), call. = FALSE)
+}
+
+.validate_metrics <- function(data, metrics) {
+  if (!is.character(metrics) || !length(metrics) || is.null(names(metrics)) ||
+      anyNA(names(metrics)) || any(names(metrics) == "") || anyDuplicated(names(metrics))) {
+    stop("`metrics` must be a non-empty named character vector with unique names.", call. = FALSE)
   }
-  if (!all(names(transform) %in% metrics)) stop("`transform` names must reference requested metrics.", call. = FALSE)
-  if (!all(transform %in% c("identity", "log10", "log1p"))) stop("Unsupported transformation.", call. = FALSE)
-  out[names(transform)] <- transform
+  if (!all(metrics %in% c("lower", "upper", "both"))) stop("Metric directions must be `lower`, `upper`, or `both`.", call. = FALSE)
+  missing <- setdiff(names(metrics), names(data))
+  if (length(missing)) stop(sprintf("Missing metric column(s): %s.", paste(missing, collapse = ", ")), call. = FALSE)
+  bad <- names(metrics)[!vapply(data[names(metrics)], is.numeric, logical(1))]
+  if (length(bad)) stop(sprintf("QC metric column(s) must be numeric: %s.", paste(bad, collapse = ", ")), call. = FALSE)
+  invisible(metrics)
+}
+
+.resolve_transforms <- function(transform, metrics) {
+  out <- stats::setNames(rep("none", length(metrics)), metrics)
+  if (!is.character(transform) || !length(transform) || anyNA(transform)) stop("`transform` must be a supported scalar or named partial override.", call. = FALSE)
+  if (length(transform) == 1L && is.null(names(transform))) {
+    out[] <- transform
+  } else {
+    if (is.null(names(transform)) || any(names(transform) == "") || anyDuplicated(names(transform))) stop("Named transformations must have unique metric names.", call. = FALSE)
+    unknown <- setdiff(names(transform), metrics)
+    if (length(unknown)) stop(sprintf("Transformation names must reference selected metrics: %s.", paste(unknown, collapse = ", ")), call. = FALSE)
+    out[names(transform)] <- transform
+  }
+  out[out == "identity"] <- "none"
+  if (!all(out %in% c("none", "log1p", "log10"))) stop("Transformations must be `none`, `log1p`, or `log10`.", call. = FALSE)
   out
 }
 
 .transform_metric <- function(x, method, metric) {
   finite <- x[!is.na(x)]
   if (any(!is.finite(finite))) stop(sprintf("Metric `%s` contains non-finite values.", metric), call. = FALSE)
+  if (method == "log1p" && any(finite < 0)) stop(sprintf("`log1p` requires non-negative values in `%s`.", metric), call. = FALSE)
   if (method == "log10" && any(finite <= 0)) stop(sprintf("`log10` requires positive values in `%s`.", metric), call. = FALSE)
-  if (method == "log1p" && any(finite < 0)) stop(sprintf("`log1p` requires nonnegative values in `%s`.", metric), call. = FALSE)
-  switch(method, identity = x, log10 = log10(x), log1p = log1p(x))
+  switch(method, none = x, log1p = log1p(x), log10 = log10(x))
 }
 
-.group_index <- function(data, group_by) {
-  if (!length(group_by)) return(rep.int(1L, nrow(data)))
-  keys <- lapply(data[group_by], function(x) {
-    x <- as.character(x)
-    ifelse(is.na(x), "M", paste0("V", nchar(x), ":", x))
-  })
-  match(do.call(paste, c(keys, sep = "\r")), unique(do.call(paste, c(keys, sep = "\r"))))
+.observation_ids <- function(data) {
+  ids <- rownames(data)
+  if (is.null(ids) || length(ids) != nrow(data) || anyNA(ids) || any(ids == "") || anyDuplicated(ids)) as.character(seq_len(nrow(data))) else ids
 }
 
-.empty_qc <- function(data, group_by, metrics, transform, nmads, constant, zero_mad) {
-  out <- data.frame(.obs = integer(), id = character(), stringsAsFactors = FALSE)
-  if (length(group_by)) out <- cbind(out, data[group_by])
-  out <- cbind(out, data.frame(metric = character(), raw_value = numeric(), value = numeric(),
-    median = numeric(), mad = numeric(), lower = numeric(), upper = numeric(),
-    direction = character(), is_outlier = logical(), stringsAsFactors = FALSE))
-  out <- .as_mad_qc(out)
-  attr(out, "metrics") <- metrics
-  attr(out, "group_by") <- group_by
-  attr(out, "transform") <- transform
-  attr(out, "nmads") <- nmads
-  attr(out, "constant") <- constant
-  attr(out, "zero_mad") <- zero_mad
-  attr(out, "observation_metadata") <- data[setdiff(names(data), metrics)]
+.qc_engine <- function(data, metrics, transforms, nmads, min_n, zero_mad, combine) {
+  n <- nrow(data); ids <- .observation_ids(data)
+  flags <- data.frame(id = ids, stringsAsFactors = FALSE, check.names = FALSE)
+  thresholds <- vector("list", length(metrics)); insufficient <- character()
+  for (i in seq_along(metrics)) {
+    metric <- names(metrics)[i]; direction <- unname(metrics[[i]])
+    raw <- data[[metric]]; value <- .transform_metric(raw, transforms[[metric]], metric)
+    usable <- value[is.finite(value) & !is.na(value)]
+    status <- "ok"; centre <- spread <- lower <- upper <- NA_real_
+    if (!length(usable)) status <- "all_missing" else if (length(usable) < min_n) {
+      status <- "insufficient_n"; insufficient <- c(insufficient, metric)
+    } else {
+      centre <- stats::median(usable); spread <- stats::mad(usable, center = centre, constant = 1.4826)
+      if (spread == 0) {
+        status <- "zero_mad"
+        if (zero_mad == "error") stop(sprintf("MAD is zero for metric `%s`.", metric), call. = FALSE)
+        if (zero_mad == "zero") {
+          if (direction %in% c("lower", "both")) lower <- centre
+          if (direction %in% c("upper", "both")) upper <- centre
+        }
+      } else {
+        if (direction %in% c("lower", "both")) lower <- centre - nmads * spread
+        if (direction %in% c("upper", "both")) upper <- centre + nmads * spread
+      }
+    }
+    flag <- rep(NA, n)
+    if (status == "ok" || (status == "zero_mad" && zero_mad == "zero")) {
+      present <- !is.na(value)
+      flag[present] <- switch(direction, lower = value[present] < lower, upper = value[present] > upper, both = value[present] < lower | value[present] > upper)
+    }
+    flags[[metric]] <- flag
+    inverse <- switch(transforms[[metric]], none = identity, log1p = expm1, log10 = function(x) 10^x)
+    thresholds[[i]] <- data.frame(metric = metric, direction = direction, transform = transforms[[metric]],
+      median = centre, mad = spread, lower = lower, upper = upper,
+      lower_raw = if (is.na(lower)) NA_real_ else inverse(lower),
+      upper_raw = if (is.na(upper)) NA_real_ else inverse(upper), status = status,
+      stringsAsFactors = FALSE, check.names = FALSE)
+  }
+  if (length(insufficient)) warning(sprintf("Insufficient usable observations for metric(s): %s.", paste(insufficient, collapse = ", ")), call. = FALSE)
+  if (combine) flags$mad_qc_outlier <- .combine_flags(flags[names(metrics)])
+  annotated <- data
+  for (metric in names(metrics)) annotated[[paste0(metric, "_mad_outlier")]] <- flags[[metric]]
+  if (combine) annotated$mad_qc_outlier <- flags$mad_qc_outlier
+  out <- list(flags = flags, thresholds = do.call(rbind, thresholds), settings = list(
+    metrics = metrics, transform = transforms, nmads = nmads, constant = 1.4826,
+    min_n = min_n, zero_mad = zero_mad))
+  class(out) <- c("verymad_qc", "list")
+  out$annotated <- annotated
   out
+}
+
+.combine_flags <- function(flags) apply(flags, 1L, function(x) if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE)
+
+.inform_qc <- function(result, n) {
+  metrics <- names(result$settings$metrics); combined <- result$flags$mad_qc_outlier
+  cli::cli_inform(sprintf("veryMAD \u2022 observation QC\n%d observations checked across %d metrics\n%d observations flagged by at least one metric", n, length(metrics), sum(combined %in% TRUE)))
 }

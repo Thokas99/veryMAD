@@ -2,38 +2,49 @@
 % Please edit documentation in R/mad-scale.R
 \name{mad_scale}
 \alias{mad_scale}
-\title{Robust MAD scaling for vectors and dense matrices}
+\alias{mad_z_score}
+\title{Robust MAD scaling}
 \usage{
 mad_scale(
   x,
-  margin = c("rows", "columns"),
+  center = TRUE,
+  scale = TRUE,
   constant = 1.4826,
   na_rm = TRUE,
-  zero_mad = c("zero", "na", "error")
+  zero_mad = c("zero", "na", "error"),
+  margin = 2
 )
+
+mad_z_score(...)
 }
 \arguments{
-\item{x}{A numeric vector or ordinary dense numeric matrix.}
+\item{x}{A numeric vector, matrix, or numeric data frame.}
 
-\item{margin}{Matrix margin to scale. Ignored for vector input.}
+\item{center}{Subtract the median?}
+
+\item{scale}{Divide by the MAD?}
 
 \item{constant}{Positive MAD consistency constant.}
 
-\item{na_rm}{Remove missing values when calculating centres and spreads?}
+\item{na_rm}{Remove missing values when calculating medians and MADs?}
 
-\item{zero_mad}{Behavior for zero-MAD vectors or matrix margins.}
+\item{zero_mad}{Use zero, return \code{NA}, or error for a zero MAD.}
+
+\item{margin}{Matrix margin, \code{1} for rows or \code{2} for columns. Names
+\code{"rows"} and \code{"columns"} are also accepted.}
+
+\item{...}{Additional arguments are passed to \code{mad_scale()}.}
 }
 \value{
-A numeric vector or matrix preserving names or dimnames.
+A numeric vector or matrix. Matrix input preserves dimensions and
+dimnames; data-frame input returns a matrix.
 }
 \description{
-\code{mad_scale()} median-centres and MAD-scales a numeric vector or each margin
-of an ordinary dense numeric matrix. For expression heatmaps, use
-\code{margin = "rows"} and pass the result to the plotting function without
-applying another scaling step.
+Scale a numeric vector, matrix, or numeric data frame by its median and
+median absolute deviation. For matrices, \code{margin = 1} scales rows and
+\code{margin = 2} scales columns. \code{mad_z_score()} is an alias.
 }
 \examples{
 mad_scale(c(a = 1, b = 2, c = 100))
-x <- matrix(1:12, nrow = 3, dimnames = list(paste0("gene", 1:3), NULL))
-mad_scale(x, margin = "rows")
+mad_scale(matrix(1:12, nrow = 3), margin = 1)
 }

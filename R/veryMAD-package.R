@@ -1,11 +1,7 @@
-#' veryMAD: lightweight MAD methods for omics QC
+#' veryMAD: explicit MAD quality control and robust scaling
 #'
-#' A lightweight R toolkit for robust MAD scores, dense expression-matrix
-#' scaling and auditable quality-control flagging across bulk, single-cell and
-#' other observation-level omics metadata.
+#' A small, modality-agnostic toolkit for explicit observation-level QC flags
+#' and robust MAD scaling. veryMAD never filters observations or infers causes.
 #'
 #' @keywords internal
 "_PACKAGE"
-
-utils::globalVariables(c(".obs", "limit", "metric", "plot_facet", "plot_floor",
-  "status", "threshold", "threshold_group", "trajectory", "value", "x_group"))

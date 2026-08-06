@@ -10,3 +10,6 @@
 *.Rcheck/
 *.tar.gz
 docs
+.claude/
+AGENTS.md
+CLAUDE.md

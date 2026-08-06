@@ -1,4 +1,30 @@
 url: https://thokas99.github.io/veryMAD/
 template:
   bootstrap: 5
-
+  params:
+    bootswatch: darkly
+navbar:
+  structure:
+    left:
+      - intro
+      - reference
+      - articles
+      - news
+    right:
+      - search
+      - github
+reference:
+  - title: Quality control
+    contents:
+      - mad_qc
+  - title: Robust scaling
+    contents:
+      - mad_scale
+      - mad_z_score
+articles:
+  - title: Guides
+    navbar: Guides
+    contents:
+      - getting-started
+      - qc-interpretation
+      - mad-scaling

@@ -1,0 +1,28 @@
+---
+title: "Getting started with veryMAD"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Getting started with veryMAD}
+  %\VignetteEngine{knitr::rmarkdown}
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(collapse = TRUE, comment = "#>")
+library(veryMAD)
+```
+
+`veryMAD` accepts observation metadata and requires users to select numeric
+metrics and directions explicitly.
+
+```{r}
+metadata <- data.frame(
+  library_size = c(2e6, 31e6, 32e6, 30e6, 33e6),
+  mapping_rate = c(.50, .92, .94, .93, .95),
+  row.names = paste0("sample", 1:5)
+)
+mad_qc(metadata, c(library_size = "lower", mapping_rate = "lower"),
+  transform = c(library_size = "log1p"), verbose = FALSE)
+```
+
+Use `output = "report"` to inspect one threshold row per metric and one flag
+row per observation. Missing values remain `NA`; no observations are removed.

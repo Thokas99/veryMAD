@@ -4,11 +4,10 @@
 \name{veryMAD-package}
 \alias{veryMAD}
 \alias{veryMAD-package}
-\title{veryMAD: lightweight MAD methods for omics QC}
+\title{veryMAD: explicit MAD quality control and robust scaling}
 \description{
-A lightweight R toolkit for robust MAD scores, dense expression-matrix
-scaling and auditable quality-control flagging across bulk, single-cell and
-other observation-level omics metadata.
+A small, modality-agnostic toolkit for explicit observation-level QC flags
+and robust MAD scaling. veryMAD never filters observations or infers causes.
 }
 \seealso{
 Useful links:
