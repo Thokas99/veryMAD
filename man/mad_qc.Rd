@@ -10,7 +10,6 @@ mad_qc(
   nmads = 3,
   transform = "none",
   output = c("annotate", "report"),
-  combine = TRUE,
   min_n = 5,
   zero_mad = c("na", "zero", "error"),
   overwrite = FALSE,
@@ -30,8 +29,6 @@ Supported values are \code{"none"}, \code{"log1p"}, and \code{"log10"}.}
 
 \item{output}{Return annotated data (\code{"annotate"}) or a compact report
 (\code{"report"}).}
-
-\item{combine}{Add the combined \code{mad_qc_outlier} flag?}
 
 \item{min_n}{Minimum number of finite, non-missing observations required.}
 

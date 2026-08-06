@@ -2,7 +2,7 @@
 #'
 #' Scale a numeric vector, matrix, or numeric data frame by its median and
 #' median absolute deviation. For matrices, `margin = 1` scales rows and
-#' `margin = 2` scales columns. `mad_z_score()` is an alias.
+#' `margin = 2` scales columns.
 #'
 #' @param x A numeric vector, matrix, or numeric data frame.
 #' @param center Subtract the median?
@@ -12,7 +12,6 @@
 #' @param zero_mad Use zero, return `NA`, or error for a zero MAD.
 #' @param margin Matrix margin, `1` for rows or `2` for columns. Names
 #'   `"rows"` and `"columns"` are also accepted.
-#' @param ... Additional arguments are passed to `mad_scale()`.
 #' @return A numeric vector or matrix. Matrix input preserves dimensions and
 #'   dimnames; data-frame input returns a matrix.
 #' @export
@@ -32,11 +31,12 @@ mad_scale <- function(x, center = TRUE, scale = TRUE, constant = 1.4826,
   if (!is.matrix(x) || !is.numeric(x)) stop("`x` must be a numeric matrix or vector.", call. = FALSE)
   if (any(is.infinite(x), na.rm = TRUE)) stop("`x` must not contain Inf or -Inf.", call. = FALSE)
   if (any(is.nan(x))) stop("`x` must not contain NaN.", call. = FALSE)
+  if (!length(x)) return(x)
   margin <- if (is.character(margin)) match.arg(margin, c("rows", "columns")) else {
     if (!is.numeric(margin) || length(margin) != 1L || !margin %in% c(1, 2)) stop("`margin` must be 1, 2, `rows`, or `columns`.", call. = FALSE)
-    margin
+    as.integer(margin)
   }
-  out <- if (margin == 1 || identical(margin, "rows")) {
+  out <- if (identical(margin, 1L) || identical(margin, "rows")) {
     centres <- matrixStats::rowMedians(x, na.rm = na_rm, useNames = FALSE)
     spreads <- matrixStats::rowMads(x, na.rm = na_rm, constant = constant, useNames = FALSE)
     sweep(.scale_margins(x, centres, spreads, center, scale, zero_mad, 1L), 1L, 0, "+")
@@ -51,6 +51,7 @@ mad_scale <- function(x, center = TRUE, scale = TRUE, constant = 1.4826,
 .scale_vector <- function(x, center, scale, constant, na_rm, zero_mad) {
   if (!is.numeric(x) || !is.null(dim(x))) stop("`x` must be a numeric vector.", call. = FALSE)
   if (any(is.infinite(x), na.rm = TRUE) || any(is.nan(x))) stop("`x` must not contain Inf, -Inf, or NaN.", call. = FALSE)
+  if (!length(x)) return(stats::setNames(numeric(), names(x)))
   centre <- if (na_rm) stats::median(x, na.rm = TRUE) else stats::median(x)
   spread <- if (na_rm) stats::mad(x, center = centre, constant = constant, na.rm = TRUE) else stats::mad(x, center = centre, constant = constant, na.rm = FALSE)
   if (scale && isTRUE(spread == 0)) {
@@ -75,7 +76,3 @@ mad_scale <- function(x, center = TRUE, scale = TRUE, constant = 1.4826,
   }
   out[is.na(x)] <- NA_real_; out
 }
-
-#' @rdname mad_scale
-#' @export
-mad_z_score <- function(...) mad_scale(...)

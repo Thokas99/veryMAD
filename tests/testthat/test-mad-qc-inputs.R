@@ -1,0 +1,38 @@
+test_that("mad_qc validates the explicit metric contract", {
+  d <- data.frame(a = 1:5, b = letters[1:5])
+  expect_silent(mad_qc(d, c(a = "lower"), verbose = FALSE))
+  expect_error(mad_qc(d, c(a = "lower", a = "upper"), verbose = FALSE), "unique")
+  expect_error(mad_qc(d, c(b = "lower"), verbose = FALSE), "numeric")
+  expect_error(mad_qc(d, c(nope = "lower"), verbose = FALSE), "Missing")
+  expect_error(mad_qc(d, c(a = "sideways"), verbose = FALSE), "directions")
+  expect_error(mad_qc(d, c(a = "lower"), nmads = 0, verbose = FALSE), "positive")
+  expect_error(mad_qc(d, c(a = "lower"), min_n = 0, verbose = FALSE), "positive")
+  expect_error(mad_qc(d, c(a = "lower"), min_n = 1.5, verbose = FALSE), "integer")
+  expect_error(mad_qc(d, c(a = "lower"), transform = "unknown", verbose = FALSE), "Transformations")
+  expect_error(mad_qc(d, c(a = "lower"), transform = c(unknown = "log1p"), verbose = FALSE), "selected metrics")
+  expect_false("combine" %in% names(formals(mad_qc)))
+})
+
+test_that("mad_qc validates transformations and finite values", {
+  expect_error(mad_qc(data.frame(a = -1:3), c(a = "lower"), transform = "log1p", verbose = FALSE), "non-negative")
+  expect_error(mad_qc(data.frame(a = 0:4), c(a = "lower"), transform = "log10", verbose = FALSE), "positive")
+  expect_error(mad_qc(data.frame(a = c(1:4, Inf)), c(a = "lower"), verbose = FALSE), "non-finite")
+  expect_error(mad_qc(data.frame(a = c(1:4, NaN)), c(a = "lower"), verbose = FALSE), "non-finite")
+  expect_error(mad_qc(data.frame(a = c(1:4, -Inf)), c(a = "lower"), verbose = FALSE), "non-finite")
+})
+
+test_that("matrix, tibble-like, and optional Seurat inputs work", {
+  x <- matrix(1:15, nrow = 5, dimnames = list(letters[1:5], c("a", "b", "c")))
+  out <- mad_qc(x, c(a = "lower", b = "upper"), verbose = FALSE)
+  expect_true(is.data.frame(out)); expect_equal(nrow(out), 5)
+  tibble <- as.data.frame(x); class(tibble) <- c("tbl_df", "tbl", "data.frame")
+  expect_s3_class(mad_qc(tibble, c(a = "lower"), verbose = FALSE), "data.frame")
+
+  skip_if_not_installed("SeuratObject")
+  counts <- matrix(1:25, nrow = 5, dimnames = list(paste0("g", 1:5), paste0("c", 1:5)))
+  object <- suppressWarnings(SeuratObject::CreateSeuratObject(counts))
+  object[["qc"]] <- c(1, 2, 3, 4, 100)
+  out <- mad_qc(object, c(qc = "upper"), verbose = FALSE)
+  expect_true(inherits(out, "Seurat"))
+  expect_true(all(c("qc_mad_outlier", "mad_qc_outlier") %in% names(out[[]])))
+})

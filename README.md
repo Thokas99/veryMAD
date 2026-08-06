@@ -24,14 +24,13 @@
 | --- | --- | --- |
 | Observation-level QC | `mad_qc()` | Annotated metadata or a compact report |
 | Robust scaling | `mad_scale()` | MAD-scaled vectors and matrices |
-| Familiar alias | `mad_z_score()` | Alias of `mad_scale()` |
 
 Rows are observations. Columns are QC metrics selected by you. Directions and
 transformations are explicit, deterministic, and auditable.
 
 ## Install
 
-Install the released version from GitHub with [`pak`](https://pak.r-lib.org/):
+Install veryMAD from GitHub with [`pak`](https://pak.r-lib.org/):
 
 ```r
 pak::pak("Thokas99/veryMAD")
@@ -111,7 +110,6 @@ matrix_data <- matrix(1:12, nrow = 3,
 
 mad_scale(matrix_data, margin = 1) # scale rows
 mad_scale(matrix_data, margin = 2) # scale columns
-mad_z_score(matrix_data, margin = 1) # same implementation
 ```
 
 `margin = 1` scales rows; `margin = 2` scales columns. Matrix dimensions and
@@ -139,12 +137,11 @@ dimnames are preserved. Numeric data frames are returned as matrices.
 - **[MAD scaling guide](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)**
 - **[Release notes](NEWS.md)**
 
-## Scope of the 0.5.0 release
+## Scope of the 0.5.1 release
 
-Version 0.5.0 is a deliberate breaking simplification. The public API is now
-small enough to audit: `mad_qc()` for observation-level QC and `mad_scale()`
-for robust scaling. Legacy grouped, modality-specific, plotting, grading, and
-low-level statistical entry points are no longer public functions.
+Version 0.5.1 is a focused API and reliability polish release. The public API
+contains exactly `mad_qc()` for observation-level QC and `mad_scale()` for
+robust scaling. The overall `mad_qc_outlier` flag is always returned.
 
 ## Bioconductor and single-cell QC guidance
 

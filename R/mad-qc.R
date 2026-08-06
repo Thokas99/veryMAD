@@ -12,7 +12,6 @@
 #'   Supported values are `"none"`, `"log1p"`, and `"log10"`.
 #' @param output Return annotated data (`"annotate"`) or a compact report
 #'   (`"report"`).
-#' @param combine Add the combined `mad_qc_outlier` flag?
 #' @param min_n Minimum number of finite, non-missing observations required.
 #' @param zero_mad Handling of a zero MAD: `"na"`, `"zero"`, or `"error"`.
 #' @param overwrite Replace existing generated flag columns?
@@ -24,12 +23,11 @@
 #' x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
 #' mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
 mad_qc <- function(data, metrics, nmads = 3, transform = "none",
-                   output = c("annotate", "report"), combine = TRUE,
-                   min_n = 5, zero_mad = c("na", "zero", "error"),
+                   output = c("annotate", "report"), min_n = 5,
+                   zero_mad = c("na", "zero", "error"),
                    overwrite = FALSE, verbose = TRUE) {
   output <- match.arg(output)
   zero_mad <- match.arg(zero_mad)
-  .validate_scalar_flag(combine, "combine")
   .validate_scalar_flag(overwrite, "overwrite")
   .validate_scalar_flag(verbose, "verbose")
   .validate_positive(nmads, "nmads")
@@ -52,14 +50,14 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
 
   metrics <- .validate_metrics(data, metrics)
   transforms <- .resolve_transforms(transform, names(metrics))
-  targets <- c(paste0(names(metrics), "_mad_outlier"), if (combine) "mad_qc_outlier")
+  targets <- c(paste0(names(metrics), "_mad_outlier"), "mad_qc_outlier")
   if (output == "annotate" && !overwrite) {
     conflicts <- intersect(targets, names(data))
     if (length(conflicts)) stop(sprintf("Flag column(s) already exist: %s. Use `overwrite = TRUE`.",
       paste(conflicts, collapse = ", ")), call. = FALSE)
   }
 
-  result <- .qc_engine(data, metrics, transforms, nmads, min_n, zero_mad, combine)
+  result <- .qc_engine(data, metrics, transforms, nmads, min_n, zero_mad)
   annotated <- result$annotated
   result$annotated <- NULL
   if (verbose) .inform_qc(result, nrow(data))
@@ -115,8 +113,8 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
 }
 
 .transform_metric <- function(x, method, metric) {
+  if (any(is.nan(x) | is.infinite(x))) stop(sprintf("Metric `%s` contains non-finite values.", metric), call. = FALSE)
   finite <- x[!is.na(x)]
-  if (any(!is.finite(finite))) stop(sprintf("Metric `%s` contains non-finite values.", metric), call. = FALSE)
   if (method == "log1p" && any(finite < 0)) stop(sprintf("`log1p` requires non-negative values in `%s`.", metric), call. = FALSE)
   if (method == "log10" && any(finite <= 0)) stop(sprintf("`log10` requires positive values in `%s`.", metric), call. = FALSE)
   switch(method, none = x, log1p = log1p(x), log10 = log10(x))
@@ -127,7 +125,7 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   if (is.null(ids) || length(ids) != nrow(data) || anyNA(ids) || any(ids == "") || anyDuplicated(ids)) as.character(seq_len(nrow(data))) else ids
 }
 
-.qc_engine <- function(data, metrics, transforms, nmads, min_n, zero_mad, combine) {
+.qc_engine <- function(data, metrics, transforms, nmads, min_n, zero_mad) {
   n <- nrow(data); ids <- .observation_ids(data)
   flags <- data.frame(id = ids, stringsAsFactors = FALSE, check.names = FALSE)
   thresholds <- vector("list", length(metrics)); insufficient <- character()
@@ -166,10 +164,10 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
       stringsAsFactors = FALSE, check.names = FALSE)
   }
   if (length(insufficient)) warning(sprintf("Insufficient usable observations for metric(s): %s.", paste(insufficient, collapse = ", ")), call. = FALSE)
-  if (combine) flags$mad_qc_outlier <- .combine_flags(flags[names(metrics)])
+  flags$mad_qc_outlier <- .combine_flags(flags[names(metrics)])
   annotated <- data
   for (metric in names(metrics)) annotated[[paste0(metric, "_mad_outlier")]] <- flags[[metric]]
-  if (combine) annotated$mad_qc_outlier <- flags$mad_qc_outlier
+  annotated$mad_qc_outlier <- flags$mad_qc_outlier
   out <- list(flags = flags, thresholds = do.call(rbind, thresholds), settings = list(
     metrics = metrics, transform = transforms, nmads = nmads, constant = 1.4826,
     min_n = min_n, zero_mad = zero_mad))
@@ -178,9 +176,35 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   out
 }
 
-.combine_flags <- function(flags) apply(flags, 1L, function(x) if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE)
+.combine_flags <- function(flags) {
+  if (!nrow(flags)) return(logical())
+  vapply(seq_len(nrow(flags)), function(i) {
+    x <- unlist(flags[i, ], use.names = FALSE)
+    if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE
+  }, logical(1))
+}
 
 .inform_qc <- function(result, n) {
   metrics <- names(result$settings$metrics); combined <- result$flags$mad_qc_outlier
-  cli::cli_inform(sprintf("veryMAD \u2022 observation QC\n%d observations checked across %d metrics\n%d observations flagged by at least one metric", n, length(metrics), sum(combined %in% TRUE)))
+  cli::cli_inform("veryMAD \u2022 observation QC")
+  cli::cli_inform(sprintf("%d observations checked across %d metrics", n, length(metrics)))
+  cli::cli_inform(sprintf("%d observations flagged by at least one metric", sum(combined %in% TRUE)))
+  for (metric in metrics) {
+    cli::cli_inform(sprintf("%s: %d flagged", metric, sum(result$flags[[metric]] %in% TRUE)))
+  }
+}
+
+#' @method print verymad_qc
+#' @export
+print.verymad_qc <- function(x, ...) {
+  metrics <- setdiff(names(x$flags), c("id", "mad_qc_outlier"))
+  cat("<verymad_qc>\n")
+  cat("Observations:", nrow(x$flags), "\n")
+  cat("Metrics:", length(metrics), "\n")
+  cat("Flagged by any metric:", sum(x$flags$mad_qc_outlier %in% TRUE), "\n")
+  if (length(metrics)) cat("Metric names:", paste(metrics, collapse = ", "), "\n")
+  cat("\nThreshold status:\n")
+  statuses <- table(x$thresholds$status)
+  for (status in names(statuses)) cat("  ", status, ": ", statuses[[status]], "\n", sep = "")
+  invisible(x)
 }

@@ -1,11 +1,32 @@
+# veryMAD 0.5.1
+
+## API polish
+
+- Reduced the exported API to exactly `mad_qc()` and `mad_scale()`.
+- Removed the `mad_z_score()` alias.
+- Removed the `combine` argument.
+- `mad_qc()` now always returns the overall `mad_qc_outlier` flag.
+
+## Reliability
+
+- Added compact printing for `verymad_qc` reports.
+- Hardened empty-input, missing-value, identifier, overwrite, and zero-MAD handling.
+- Expanded tests for the complete public API and important edge cases.
+- Expanded continuous integration across Linux, macOS, Windows, and multiple R versions.
+
+## Documentation
+
+- Updated the README and vignettes for the final two-function interface.
+- Simplified the pkgdown reference index.
+- Kept `pak::pak("Thokas99/veryMAD")` as the primary installation command.
+
 # veryMAD 0.5.0
 
 ## Breaking changes
 
 - Reduced the public API to `mad_qc()` and `mad_scale()`.
-- Added `mad_z_score()` as an alias for robust MAD scaling.
 - Removed grouped QC calculations and separate modality workflows.
-- Removed redundant per-result counts and qualitative QC grades.
+- Removed redundant per-result counts and qualitative interpretation fields.
 - Changed the default QC transformation to `"none"`.
 - Changed the default zero-MAD policy to `"na"`.
 

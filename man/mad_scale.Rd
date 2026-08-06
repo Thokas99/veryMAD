@@ -2,7 +2,6 @@
 % Please edit documentation in R/mad-scale.R
 \name{mad_scale}
 \alias{mad_scale}
-\alias{mad_z_score}
 \title{Robust MAD scaling}
 \usage{
 mad_scale(
@@ -14,8 +13,6 @@ mad_scale(
   zero_mad = c("zero", "na", "error"),
   margin = 2
 )
-
-mad_z_score(...)
 }
 \arguments{
 \item{x}{A numeric vector, matrix, or numeric data frame.}
@@ -32,8 +29,6 @@ mad_z_score(...)
 
 \item{margin}{Matrix margin, \code{1} for rows or \code{2} for columns. Names
 \code{"rows"} and \code{"columns"} are also accepted.}
-
-\item{...}{Additional arguments are passed to \code{mad_scale()}.}
 }
 \value{
 A numeric vector or matrix. Matrix input preserves dimensions and
@@ -42,7 +37,7 @@ dimnames; data-frame input returns a matrix.
 \description{
 Scale a numeric vector, matrix, or numeric data frame by its median and
 median absolute deviation. For matrices, \code{margin = 1} scales rows and
-\code{margin = 2} scales columns. \code{mad_z_score()} is an alias.
+\code{margin = 2} scales columns.
 }
 \examples{
 mad_scale(c(a = 1, b = 2, c = 100))

@@ -1,6 +1,6 @@
 Package: veryMAD
 Title: Explicit MAD Quality Control and Robust Scaling
-Version: 0.5.0
+Version: 0.5.1
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
 Description: A small R toolkit for explicit median absolute deviation based

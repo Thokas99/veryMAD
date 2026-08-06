@@ -1,0 +1,33 @@
+test_that("mad_scale handles numeric vectors and names", {
+  x <- c(a = 1, b = 2, c = 100)
+  out <- mad_scale(x)
+  expect_type(out, "double"); expect_identical(names(out), names(x))
+  expect_equal(mad_scale(x, center = FALSE, scale = FALSE), x)
+  expect_equal(mad_scale(numeric()), numeric())
+  expect_error(mad_scale(c(1, 2, Inf)), "Inf")
+  expect_error(mad_scale(c(1, 2, -Inf)), "Inf")
+  expect_error(mad_scale(c(1, 2, NaN)), "NaN")
+  expect_error(mad_scale(letters), "numeric")
+})
+
+test_that("mad_scale handles matrices, margins, and data frames", {
+  m <- matrix(1:12, nrow = 3, dimnames = list(paste0("r", 1:3), paste0("c", 1:4)))
+  rows <- mad_scale(m, margin = 1)
+  columns <- mad_scale(m, margin = 2)
+  expect_true(is.matrix(rows)); expect_identical(dim(rows), dim(m)); expect_identical(dimnames(rows), dimnames(m))
+  expect_equal(rows, mad_scale(m, margin = "rows")); expect_equal(columns, mad_scale(m, margin = "columns"))
+  expect_identical(dim(mad_scale(matrix(numeric(), nrow = 0, ncol = 2))), c(0L, 2L))
+  expect_true(is.matrix(mad_scale(as.data.frame(m))))
+  expect_error(mad_scale(data.frame(a = 1:3, b = letters[1:3])), "numeric")
+  expect_error(mad_scale(m, margin = 3), "margin")
+})
+
+test_that("mad_scale handles missingness and all zero-MAD policies", {
+  x <- c(1, 2, 3, NA_real_)
+  expect_true(is.na(mad_scale(x, na_rm = FALSE)[4]))
+  expect_true(is.na(mad_scale(matrix(c(1, 2, NA, 4), nrow = 2), margin = 1, na_rm = FALSE)[1, 1]))
+  expect_true(all(is.na(mad_scale(c(1, 1, 1), zero_mad = "na"))))
+  expect_equal(mad_scale(c(1, 1, 1), zero_mad = "zero"), c(0, 0, 0))
+  expect_error(mad_scale(c(1, 1, 1), zero_mad = "error"), "zero")
+  expect_true(all(is.na(mad_scale(matrix(1, nrow = 2, ncol = 2), zero_mad = "na"))))
+})

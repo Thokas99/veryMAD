@@ -20,7 +20,6 @@ reference:
   - title: Robust scaling
     contents:
       - mad_scale
-      - mad_z_score
 articles:
   - title: Guides
     navbar: Guides
