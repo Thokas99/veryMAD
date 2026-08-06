@@ -4,7 +4,7 @@
 
 <h1 align="center">veryMAD</h1>
 
-<p align="center"><strong>Explicit MAD quality control · robust scaling · no hidden decisions</strong></p>
+<p align="center"><strong>Explicit MAD quality control</strong></p>
 
 <p align="center">
   <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a>
@@ -35,12 +35,6 @@ Install the released version from GitHub with [`pak`](https://pak.r-lib.org/):
 
 ```r
 pak::pak("Thokas99/veryMAD")
-```
-
-Or install the development version:
-
-```r
-pak::pak("Thokas99/veryMAD@main")
 ```
 
 ## MAD QC in one call
@@ -77,8 +71,7 @@ mad_qc_outlier
 
 > [!TIP]
 > Use `transform = "none"` for raw-scale calculations, or provide named
-> partial overrides such as `c(library_size = "log1p")`. veryMAD never infers
-> a transformation from a column name.
+> partial overrides such as `c(library_size = "log1p")`.
 
 ## Inspect thresholds with a report
 
