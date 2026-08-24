@@ -6,3 +6,7 @@
 ^\.github$
 ^\.serena$
 ^docs$
+^_pkgdown\.yml$
+^CHANGELOG\.md$
+^(\.nojekyll|404\.html|404\.md|CHANGELOG\.html|LICENSE-text\.html|LICENSE-text\.md|authors\.html|authors\.md|index\.html|index\.md|katex-auto\.js|lightswitch\.js|link\.svg|llms\.txt|pkgdown\.js|pkgdown\.yml|search\.json|sitemap\.xml)$
+^(articles|deps|news|reference)$
