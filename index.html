@@ -55,17 +55,14 @@
   </div>
 </nav><div class="container template-home">
 <div class="row">
-  <main id="main" class="col-md-9"><p align="center">
-<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD logo" width="280"></p>
-<div class="page-header"><h1 align="center">
-veryMAD
+  <main id="main" class="col-md-9"><div class="section level1">
+<div class="page-header"><h1 id="verymad">veryMAD<a class="anchor" aria-label="anchor" href="#verymad"></a>
 </h1></div>
-<p align="center">
-<strong>Explicit MAD quality control</strong>
-</p>
-<p align="center">
-<a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a> <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/Thokas99/veryMAD/releases" class="external-link"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&amp;sort=semver" alt="Latest release"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
-</p>
+<div class="float">
+<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD logo"><div class="figcaption">veryMAD logo</div>
+</div>
+<p><strong>Explicit MAD quality control</strong></p>
+<p><a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a> <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/Thokas99/veryMAD/releases" class="external-link"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&amp;sort=semver" alt="Latest release"></a> <a href="https://thokas99.github.io/veryMAD/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a></p>
 <blockquote>
 <p>[!NOTE] veryMAD calculates transparent MAD thresholds and flags. It never filters observations, guesses metrics, or turns a statistical flag into a biological diagnosis.</p>
 </blockquote>
@@ -86,12 +83,12 @@ veryMAD
 <tbody>
 <tr>
 <td>Observation-level QC</td>
-<td><code><a href="reference/mad_qc.html">mad_qc()</a></code></td>
+<td><a href="https://thokas99.github.io/veryMAD/reference/mad_qc.md"><code>mad_qc()</code></a></td>
 <td>Annotated metadata or a compact report</td>
 </tr>
 <tr>
 <td>Robust scaling</td>
-<td><code><a href="reference/mad_scale.html">mad_scale()</a></code></td>
+<td><a href="https://thokas99.github.io/veryMAD/reference/mad_scale.md"><code>mad_scale()</code></a></td>
 <td>MAD-scaled vectors and matrices</td>
 </tr>
 </tbody>
@@ -103,13 +100,15 @@ veryMAD
 </h2>
 <p>Install veryMAD from GitHub with <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
+<code class="sourceCode R"><span></span>
+<span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
 <h2 id="mad-qc-in-one-call">MAD QC in one call<a class="anchor" aria-label="anchor" href="#mad-qc-in-one-call"></a>
 </h2>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  library_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2e6</span>, <span class="fl">31e6</span>, <span class="fl">32e6</span>, <span class="fl">30e6</span>, <span class="fl">33e6</span><span class="op">)</span>,</span>
@@ -139,7 +138,8 @@ veryMAD
 <h2 id="inspect-thresholds-with-a-report">Inspect thresholds with a report<a class="anchor" aria-label="anchor" href="#inspect-thresholds-with-a-report"></a>
 </h2>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>  <span class="va">metadata</span>,</span>
 <span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"lower"</span>, mapping_rate <span class="op">=</span> <span class="st">"lower"</span><span class="op">)</span>,</span>
 <span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
@@ -152,7 +152,8 @@ veryMAD
 <span><span class="va">report</span><span class="op">$</span><span class="va">settings</span></span></code></pre></div>
 <p>The report contains only three components:</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span>
 <span><span class="co">#&gt; "flags" "thresholds" "settings"</span></span></code></pre></div>
 <p>Thresholds retain both calculation-scale and raw-scale limits. Missing, undersized, and zero-MAD calculations remain visible through <code>status</code> rather than being silently converted into a decision.</p>
 </div>
@@ -160,7 +161,8 @@ veryMAD
 <h2 id="robust-mad-scaling">Robust MAD scaling<a class="anchor" aria-label="anchor" href="#robust-mad-scaling"></a>
 </h2>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span>, b <span class="op">=</span> <span class="fl">2</span>, c <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<code class="sourceCode R"><span></span>
+<span><span class="va">values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>a <span class="op">=</span> <span class="fl">1</span>, b <span class="op">=</span> <span class="fl">2</span>, c <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">values</span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">matrix_data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span><span class="fl">1</span><span class="op">:</span><span class="fl">12</span>, nrow <span class="op">=</span> <span class="fl">3</span>,</span>
@@ -184,7 +186,7 @@ veryMAD
 <code>min_n</code> is a computational safeguard, not a biological rule.</li>
 <li>Missing values stay missing.</li>
 <li>veryMAD does not filter data automatically.</li>
-<li>For stratified QC, split the data yourself and call <code><a href="reference/mad_qc.html">mad_qc()</a></code> separately.</li>
+<li>For stratified QC, split the data yourself and call <a href="https://thokas99.github.io/veryMAD/reference/mad_qc.md"><code>mad_qc()</code></a> separately.</li>
 </ul>
 </div>
 <div class="section level2">
@@ -196,7 +198,7 @@ veryMAD
 <li><strong><a href="https://thokas99.github.io/veryMAD/articles/getting-started.html">Getting started</a></strong></li>
 <li><strong><a href="https://thokas99.github.io/veryMAD/articles/qc-interpretation.html">QC interpretation</a></strong></li>
 <li><strong><a href="https://thokas99.github.io/veryMAD/articles/mad-scaling.html">MAD scaling guide</a></strong></li>
-<li><strong><a href="NEWS.html">Release notes</a></strong></li>
+<li><strong><a href="https://thokas99.github.io/veryMAD/NEWS.md">Release notes</a></strong></li>
 </ul>
 </div>
 <div class="section level2">
@@ -213,7 +215,7 @@ veryMAD
 <strong>Amezquita, R. A., Lun, A. T. L., Hicks, S. C., &amp; Gottardo, R. (2021).</strong> Quality control. In <em>Basics of single-cell analysis with Bioconductor</em> (Bioconductor 3.13). Bioconductor. <a href="https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics" class="external-link uri">https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics</a> — Defines common QC metrics such as library size, detected features, and mitochondrial or spike-in proportions, and describes adaptive MAD thresholds with explicit direction and transformation choices.</li>
 </ul>
 </div>
-
+</div>
   </main><aside class="col-md-3"><div class="links">
 <h2 data-toc-skip>Links</h2>
 <ul class="list-unstyled">

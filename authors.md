@@ -13,10 +13,12 @@ Sirchi T (2026). *veryMAD: Explicit MAD Quality Control and Robust
 Scaling*. R package version 0.5.1,
 <https://github.com/Thokas99/veryMAD>.
 
-    @Manual{,
-      title = {veryMAD: Explicit MAD Quality Control and Robust Scaling},
-      author = {Thomas Sirchi},
-      year = {2026},
-      note = {R package version 0.5.1},
-      url = {https://github.com/Thokas99/veryMAD},
-    }
+``` R
+@Manual{,
+  title = {veryMAD: Explicit MAD Quality Control and Robust Scaling},
+  author = {Thomas Sirchi},
+  year = {2026},
+  note = {R package version 0.5.1},
+  url = {https://github.com/Thokas99/veryMAD},
+}
+```

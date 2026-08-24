@@ -2,6 +2,8 @@
 
 ![veryMAD logo](reference/figures/veryMAD-logo.svg)
 
+veryMAD logo
+
 **Explicit MAD quality control**
 
 [![R CMD
@@ -33,12 +35,14 @@ Install veryMAD from GitHub with [`pak`](https://pak.r-lib.org/):
 
 ``` r
 
+
 pak::pak("Thokas99/veryMAD")
 ```
 
 ## MAD QC in one call
 
 ``` r
+
 
 library(veryMAD)
 
@@ -76,6 +80,7 @@ mad_qc_outlier
 
 ``` r
 
+
 report <- mad_qc(
   metadata,
   metrics = c(library_size = "lower", mapping_rate = "lower"),
@@ -93,6 +98,7 @@ The report contains only three components:
 
 ``` r
 
+
 names(report)
 #> "flags" "thresholds" "settings"
 ```
@@ -104,6 +110,7 @@ rather than being silently converted into a decision.
 ## Robust MAD scaling
 
 ``` r
+
 
 values <- c(a = 1, b = 2, c = 100)
 mad_scale(values)
