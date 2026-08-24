@@ -68,12 +68,22 @@ Annotated input or a `verymad_qc` list with `flags`, `thresholds`, and
 ## Examples
 
 ``` r
-x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
-mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
-#>   low high low_mad_outlier high_mad_outlier mad_qc_outlier
-#> 1   1    1            TRUE            FALSE           TRUE
-#> 2  10    2           FALSE            FALSE          FALSE
-#> 3  11    3           FALSE            FALSE          FALSE
-#> 4  12    4           FALSE            FALSE          FALSE
-#> 5  13   20           FALSE             TRUE           TRUE
+qc_metadata <- data.frame(
+  sample = paste0("sample_", 1:6),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
+  pct_mito = c(.04, .05, .06, .05, .07, .30)
+)
+qc <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  verbose = FALSE
+)
+qc[, c("sample", "mad_qc_outlier")]
+#>     sample mad_qc_outlier
+#> 1 sample_1          FALSE
+#> 2 sample_2          FALSE
+#> 3 sample_3          FALSE
+#> 4 sample_4          FALSE
+#> 5 sample_5           TRUE
+#> 6 sample_6           TRUE
 ```

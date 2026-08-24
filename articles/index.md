@@ -5,13 +5,12 @@
 - [Getting started with
   veryMAD](https://thokas99.github.io/veryMAD/articles/getting-started.md):
 
-  A complete observation-level QC workflow on synthetic bulk RNA-seq
-  metadata.
+  A small observation-level QC workflow for sequencing metadata.
 
 - [Interpreting MAD QC
   flags](https://thokas99.github.io/veryMAD/articles/qc-interpretation.md):
 
-  Interpreting explicit MAD flags in synthetic single-cell QC metadata.
+  Interpreting explicit MAD flags and edge-case statuses.
 
 - [Robust MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.md):

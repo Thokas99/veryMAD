@@ -71,86 +71,90 @@
 
 
 
-    <p><code>veryMAD</code> accepts observation metadata and requires users to select numeric metrics, directions, and transformations explicitly. This example uses a small synthetic bulk RNA-seq cohort with 36 libraries. The values are only illustrative, but the workflow is the same for a real metadata table.</p>
+    <p><code>veryMAD</code> annotates observations using robust, median absolute deviation (MAD) thresholds. You choose the metrics, the direction of a poor value, and any transformation. The input rows stay in the result.</p>
+<section class="level2"><h2 id="a-basic-qc-workflow">A basic QC workflow<a class="anchor" aria-label="anchor" href="#a-basic-qc-workflow"></a>
+</h2>
+<p>The example uses a small sequencing metadata table. Low library size and low gene detection suggest poor complexity; high mitochondrial content is also a common QC concern.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">101</span><span class="op">)</span></span>
-<span><span class="va">n_libraries</span> <span class="op">&lt;-</span> <span class="fl">36L</span></span>
-<span><span class="va">bulk_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  sample_id <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/sprintf.html" class="external-link">sprintf</a></span><span class="op">(</span><span class="st">"bulk_%02d"</span>, <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="va">n_libraries</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  library_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/stats/Lognormal.html" class="external-link">rlnorm</a></span><span class="op">(</span><span class="va">n_libraries</span>, <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log</a></span><span class="op">(</span><span class="fl">2.5e6</span><span class="op">)</span>, <span class="fl">0.18</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  mapping_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fl">.995</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">.70</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_libraries</span>, <span class="fl">.94</span>, <span class="fl">.015</span><span class="op">)</span><span class="op">)</span><span class="op">)</span>,</span>
-<span>  duplication_rate <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmin</a></span><span class="op">(</span><span class="fl">.95</span>, <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">pmax</a></span><span class="op">(</span><span class="fl">.10</span>, <span class="fu"><a href="https://rdrr.io/r/stats/Normal.html" class="external-link">rnorm</a></span><span class="op">(</span><span class="va">n_libraries</span>, <span class="fl">.35</span>, <span class="fl">.04</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">sample_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span>,</span>
+<span>  library_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.4e6</span>, <span class="fl">2.5e6</span>, <span class="fl">2.6e6</span>, <span class="fl">2.7e6</span>, <span class="fl">2.8e6</span>, <span class="fl">2.6e6</span>, <span class="fl">0.45e6</span>, <span class="fl">2.5e6</span><span class="op">)</span>,</span>
+<span>  detected_genes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>, <span class="fl">12500</span>, <span class="fl">13100</span>, <span class="fl">12800</span>, <span class="fl">13400</span>, <span class="fl">12600</span>, <span class="fl">1500</span>, <span class="fl">12300</span><span class="op">)</span>,</span>
+<span>  pct_mito <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.04</span>, <span class="fl">.05</span>, <span class="fl">.06</span>, <span class="fl">.05</span>, <span class="fl">.07</span>, <span class="fl">.06</span>, <span class="fl">.08</span>, <span class="fl">.29</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
-<span><span class="va">bulk_metadata</span><span class="op">$</span><span class="va">library_size</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2</span>, <span class="fl">11</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">180000</span>, <span class="fl">220000</span><span class="op">)</span></span>
-<span><span class="va">bulk_metadata</span><span class="op">$</span><span class="va">mapping_rate</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">24</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.70</span>, <span class="fl">.73</span><span class="op">)</span></span>
-<span><span class="va">bulk_metadata</span><span class="op">$</span><span class="va">duplication_rate</span><span class="op">[</span><span class="fl">31</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fl">.82</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">bulk_metadata</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">bulk_metadata</span><span class="op">$</span><span class="va">sample_id</span></span>
 <span></span>
-<span><span class="va">bulk_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
-<span>  <span class="va">bulk_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    library_size <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    mapping_rate <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    duplication_rate <span class="op">=</span> <span class="st">"upper"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
-<span>  min_n <span class="op">=</span> <span class="fl">10</span>,</span>
+<span><span class="co"># Describe which tail is a potential QC problem for each metric</span></span>
+<span><span class="va">qc_directions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  library_size <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>  detected_genes <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>  pct_mito <span class="op">=</span> <span class="st">"upper"</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># Add one flag per metric and a combined flag to the metadata</span></span>
+<span><span class="va">qc_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>  <span class="va">sample_metadata</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="va">qc_directions</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">bulk_annotated</span><span class="op">[</span><span class="va">bulk_annotated</span><span class="op">$</span><span class="va">mad_qc_outlier</span> <span class="op"><a href="https://rdrr.io/r/base/match.html" class="external-link">%in%</a></span> <span class="cn">TRUE</span>,</span>
-<span>  <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample_id"</span>, <span class="st">"library_size_mad_outlier"</span>, <span class="st">"mapping_rate_mad_outlier"</span>,</span>
-<span>    <span class="st">"duplication_rate_mad_outlier"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;         sample_id library_size_mad_outlier mapping_rate_mad_outlier</span></span>
-<span><span class="co">#&gt; bulk_02   bulk_02                     TRUE                    FALSE</span></span>
-<span><span class="co">#&gt; bulk_05   bulk_05                    FALSE                     TRUE</span></span>
-<span><span class="co">#&gt; bulk_11   bulk_11                     TRUE                    FALSE</span></span>
-<span><span class="co">#&gt; bulk_24   bulk_24                    FALSE                     TRUE</span></span>
-<span><span class="co">#&gt; bulk_31   bulk_31                    FALSE                    FALSE</span></span>
-<span><span class="co">#&gt;         duplication_rate_mad_outlier mad_qc_outlier</span></span>
-<span><span class="co">#&gt; bulk_02                        FALSE           TRUE</span></span>
-<span><span class="co">#&gt; bulk_05                        FALSE           TRUE</span></span>
-<span><span class="co">#&gt; bulk_11                        FALSE           TRUE</span></span>
-<span><span class="co">#&gt; bulk_24                        FALSE           TRUE</span></span>
-<span><span class="co">#&gt; bulk_31                         TRUE           TRUE</span></span></code></pre></div>
+<span><span class="op">)</span></span></code></pre></div>
 </div>
-<p>The annotation preserves all 36 observations and adds one logical column per metric, plus <code>mad_qc_outlier</code>. The combined flag is <code>TRUE</code> when any selected metric is flagged; the input rows are never filtered.</p>
-<p>Use <code>output = "report"</code> when thresholds and observation IDs should be kept in a compact object rather than added to the metadata table:</p>
+<p>The result keeps all eight samples and adds logical flag columns. Inspect the columns that matter for a quick review:</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">bulk_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
-<span>  <span class="va">bulk_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    library_size <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    mapping_rate <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    duplication_rate <span class="op">=</span> <span class="st">"upper"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
+<code class="sourceCode R"><span><span class="va">qc_annotated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="st">"library_size_mad_outlier"</span>,</span>
+<span>                 <span class="st">"detected_genes_mad_outlier"</span>, <span class="st">"pct_mito_mad_outlier"</span>,</span>
+<span>                 <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;     sample library_size_mad_outlier detected_genes_mad_outlier</span></span>
+<span><span class="co">#&gt; 1 sample_1                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 2 sample_2                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 3 sample_3                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 4 sample_4                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 5 sample_5                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 6 sample_6                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt; 7 sample_7                     TRUE                       TRUE</span></span>
+<span><span class="co">#&gt; 8 sample_8                    FALSE                      FALSE</span></span>
+<span><span class="co">#&gt;   pct_mito_mad_outlier mad_qc_outlier</span></span>
+<span><span class="co">#&gt; 1                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 2                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 3                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 4                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 5                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 6                FALSE          FALSE</span></span>
+<span><span class="co">#&gt; 7                FALSE           TRUE</span></span>
+<span><span class="co">#&gt; 8                 TRUE           TRUE</span></span></code></pre></div>
+</div>
+<p><code>mad_qc_outlier</code> is <code>TRUE</code> when at least one selected metric is flagged. veryMAD does not remove those rows, so the decision about filtering or follow-up stays with the analysis workflow.</p>
+</section><section class="level2"><h2 id="inspect-thresholds-with-a-report">Inspect thresholds with a report<a class="anchor" aria-label="anchor" href="#inspect-thresholds-with-a-report"></a>
+</h2>
+<p>Use <code>output = "report"</code> when you want thresholds and flags in a compact object instead of adding columns to the input table.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">qc_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>  <span class="va">sample_metadata</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="va">qc_directions</span>,</span>
 <span>  output <span class="op">=</span> <span class="st">"report"</span>,</span>
-<span>  min_n <span class="op">=</span> <span class="fl">10</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">bulk_report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"lower_raw"</span>,</span>
-<span>                           <span class="st">"upper_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;             metric direction transform    lower_raw upper_raw status</span></span>
-<span><span class="co">#&gt; 1     library_size     lower     log1p 1.431377e+06        NA     ok</span></span>
-<span><span class="co">#&gt; 2     mapping_rate     lower      none 8.961747e-01        NA     ok</span></span>
-<span><span class="co">#&gt; 3 duplication_rate     upper      none           NA 0.4744178     ok</span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">bulk_report</span><span class="op">$</span><span class="va">flags</span><span class="op">)</span></span>
-<span><span class="co">#&gt;        id library_size mapping_rate duplication_rate mad_qc_outlier</span></span>
-<span><span class="co">#&gt; 1 bulk_01        FALSE        FALSE            FALSE          FALSE</span></span>
-<span><span class="co">#&gt; 2 bulk_02         TRUE        FALSE            FALSE           TRUE</span></span>
-<span><span class="co">#&gt; 3 bulk_03        FALSE        FALSE            FALSE          FALSE</span></span>
-<span><span class="co">#&gt; 4 bulk_04        FALSE        FALSE            FALSE          FALSE</span></span>
-<span><span class="co">#&gt; 5 bulk_05        FALSE         TRUE            FALSE           TRUE</span></span>
-<span><span class="co">#&gt; 6 bulk_06        FALSE        FALSE            FALSE          FALSE</span></span></code></pre></div>
+<span><span class="va">qc_report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"lower_raw"</span>,</span>
+<span>                         <span class="st">"upper_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;           metric direction  lower_raw upper_raw status</span></span>
+<span><span class="co">#&gt; 1   library_size     lower 2105220.00        NA     ok</span></span>
+<span><span class="co">#&gt; 2 detected_genes     lower   10770.88        NA     ok</span></span>
+<span><span class="co">#&gt; 3       pct_mito     upper         NA  0.104478     ok</span></span>
+<span><span class="va">qc_report</span><span class="op">$</span><span class="va">flags</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;   id mad_qc_outlier</span></span>
+<span><span class="co">#&gt; 1  1          FALSE</span></span>
+<span><span class="co">#&gt; 2  2          FALSE</span></span>
+<span><span class="co">#&gt; 3  3          FALSE</span></span>
+<span><span class="co">#&gt; 4  4          FALSE</span></span>
+<span><span class="co">#&gt; 5  5          FALSE</span></span>
+<span><span class="co">#&gt; 6  6          FALSE</span></span>
+<span><span class="co">#&gt; 7  7           TRUE</span></span>
+<span><span class="co">#&gt; 8  8           TRUE</span></span></code></pre></div>
 </div>
-
-
-
-<script id="quarto-html-after-body" type="application/javascript">
+<p>The threshold table records the calculation status for each metric. Missing or undersized metrics remain visible there instead of being silently turned into a filtering decision.</p>
+</section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
       var mailtoRegex = new RegExp(/^mailto:/);
@@ -233,7 +237,8 @@
       }
     }
   });
-  </script></main>
+  </script></main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside>
 </div>
 
 

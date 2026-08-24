@@ -2,8 +2,6 @@
 
 ![veryMAD logo](reference/figures/veryMAD-logo.svg)
 
-veryMAD logo
-
 **Explicit MAD quality control**
 
 [![R CMD
@@ -35,7 +33,6 @@ Install veryMAD from GitHub with [`pak`](https://pak.r-lib.org/):
 
 ``` r
 
-
 pak::pak("Thokas99/veryMAD")
 ```
 
@@ -43,29 +40,32 @@ pak::pak("Thokas99/veryMAD")
 
 ``` r
 
-
 library(veryMAD)
 
-metadata <- data.frame(
-  library_size = c(2e6, 31e6, 32e6, 30e6, 33e6),
-  mapping_rate = c(0.50, 0.92, 0.94, 0.93, 0.95),
-  row.names = paste0("sample", 1:5)
+sample_metadata <- data.frame(
+  sample = paste0("sample_", 1:6),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
+  detected_genes = c(12000, 12500, 13100, 12800, 1600, 12300)
 )
 
-annotated <- mad_qc(
-  metadata,
-  metrics = c(
-    library_size = "lower",
-    mapping_rate = "lower"
-  ),
-  transform = c(library_size = "log1p")
+# Low values suggest poor sequencing complexity
+qc_directions <- c(
+  library_size = "lower",
+  detected_genes = "lower"
 )
 
-annotated
+qc_annotated <- mad_qc(
+  sample_metadata,
+  metrics = qc_directions,
+  verbose = FALSE
+)
+
+qc_annotated[, c("sample", "library_size_mad_outlier",
+                 "detected_genes_mad_outlier", "mad_qc_outlier")]
 ```
 
-The default annotation keeps the original data and adds one logical flag
-per metric plus `mad_qc_outlier`:
+The annotation keeps the original rows and adds one logical flag per
+metric, plus `mad_qc_outlier`:
 
 ``` text
 library_size_mad_outlier
@@ -80,24 +80,21 @@ mad_qc_outlier
 
 ``` r
 
-
 report <- mad_qc(
-  metadata,
-  metrics = c(library_size = "lower", mapping_rate = "lower"),
+  sample_metadata,
+  metrics = qc_directions,
   transform = c(library_size = "log1p"),
   output = "report",
   verbose = FALSE
 )
 
-report$thresholds
-report$flags
-report$settings
+report$thresholds[, c("metric", "direction", "lower_raw", "upper_raw", "status")]
+report$flags[, c("id", "mad_qc_outlier")]
 ```
 
 The report contains only three components:
 
 ``` r
-
 
 names(report)
 #> "flags" "thresholds" "settings"
@@ -111,15 +108,17 @@ rather than being silently converted into a decision.
 
 ``` r
 
+gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+mad_scale(gene_expression)
 
-values <- c(a = 1, b = 2, c = 100)
-mad_scale(values)
+expression_matrix <- matrix(
+  1:12,
+  nrow = 3,
+  dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+)
 
-matrix_data <- matrix(1:12, nrow = 3,
-  dimnames = list(paste0("gene", 1:3), paste0("sample", 1:4)))
-
-mad_scale(matrix_data, margin = 1) # scale rows
-mad_scale(matrix_data, margin = 2) # scale columns
+mad_scale(expression_matrix, margin = 1) # scale genes
+mad_scale(expression_matrix, margin = 2) # scale samples
 ```
 
 `margin = 1` scales rows; `margin = 2` scales columns. Matrix dimensions

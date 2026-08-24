@@ -1,108 +1,101 @@
 # Interpreting MAD QC flags
 
-Choose `lower` for unusually small values, `upper` for unusually large
-values, and `both` for either tail. Count-like metrics may benefit from
-explicit `log1p`; bounded rates are often most interpretable on their
-raw scale.
+MAD flags are statistical signals for review. They are not sample
+rejection rules or biological diagnoses. The direction tells veryMAD
+which tail to inspect:
 
-The following synthetic single-cell metadata contains 180 cells and four
-common QC metrics. A few cells are deliberately made unusual so that the
-resulting annotation is easy to inspect.
+- `lower` flags unusually small values;
+- `upper` flags unusually large values;
+- `both` flags either tail.
 
-``` r
+## Read a flag in context
 
-set.seed(202)
-n_cells <- 180L
-sc_metadata <- data.frame(
-  cell_id = sprintf("cell_%03d", seq_len(n_cells)),
-  nCount_RNA = round(rlnorm(n_cells, log(4000), .45)),
-  nFeature_RNA = round(rlnorm(n_cells, log(1200), .30)),
-  percent_mito = pmin(.40, pmax(.005, rbeta(n_cells, 2, 18))),
-  doublet_score = pmin(.99, pmax(.01, rnorm(n_cells, .12, .04)))
-)
-sc_metadata$nCount_RNA[c(1, 2)] <- c(140, 180)
-sc_metadata$nFeature_RNA[c(1, 2)] <- c(85, 120)
-sc_metadata$percent_mito[c(3, 4)] <- c(.62, .55)
-sc_metadata$doublet_score[5] <- .98
-rownames(sc_metadata) <- sc_metadata$cell_id
-
-sc_annotated <- mad_qc(
-  sc_metadata,
-  metrics = c(
-    nCount_RNA = "lower",
-    nFeature_RNA = "lower",
-    percent_mito = "upper",
-    doublet_score = "upper"
-  ),
-  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
-  min_n = 20,
-  verbose = FALSE
-)
-
-sc_annotated[sc_annotated$mad_qc_outlier %in% TRUE,
-  c("cell_id", "nCount_RNA_mad_outlier", "nFeature_RNA_mad_outlier",
-    "percent_mito_mad_outlier", "doublet_score_mad_outlier",
-    "mad_qc_outlier")]
-#>           cell_id nCount_RNA_mad_outlier nFeature_RNA_mad_outlier
-#> cell_001 cell_001                   TRUE                     TRUE
-#> cell_002 cell_002                   TRUE                     TRUE
-#> cell_003 cell_003                  FALSE                    FALSE
-#> cell_004 cell_004                  FALSE                    FALSE
-#> cell_005 cell_005                  FALSE                    FALSE
-#> cell_050 cell_050                  FALSE                    FALSE
-#> cell_073 cell_073                  FALSE                    FALSE
-#>          percent_mito_mad_outlier doublet_score_mad_outlier mad_qc_outlier
-#> cell_001                    FALSE                     FALSE           TRUE
-#> cell_002                    FALSE                     FALSE           TRUE
-#> cell_003                     TRUE                     FALSE           TRUE
-#> cell_004                     TRUE                     FALSE           TRUE
-#> cell_005                    FALSE                      TRUE           TRUE
-#> cell_050                     TRUE                     FALSE           TRUE
-#> cell_073                     TRUE                     FALSE           TRUE
-```
-
-This is an annotation step, not a filtering step. The full table remains
-available in `sc_annotated`; a downstream workflow can decide how to
-review or use the flagged cells.
+This small table contains common sequencing QC metrics. One sample has
+low complexity, one has high mitochondrial content, and one has a
+missing value.
 
 ``` r
 
-sc_report <- mad_qc(
-  sc_metadata,
+qc_metadata <- data.frame(
+  sample = paste0("sample_", 1:7),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 0.5e6, NA_real_),
+  detected_genes = c(12000, 12500, 13100, 12800, 13400, 1600, 12200),
+  pct_mito = c(.04, .05, .06, .05, .07, .08, .30)
+)
+
+qc_result <- mad_qc(
+  qc_metadata,
   metrics = c(
-    nCount_RNA = "lower",
-    nFeature_RNA = "lower",
-    percent_mito = "upper",
-    doublet_score = "upper"
+    library_size = "lower",
+    detected_genes = "lower",
+    pct_mito = "upper"
   ),
-  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
-  output = "report",
-  min_n = 20,
   verbose = FALSE
 )
 
-sc_report$thresholds[, c("metric", "direction", "transform", "median", "mad",
-                         "lower_raw", "upper_raw", "status")]
-#>          metric direction transform     median        mad lower_raw upper_raw
-#> 1    nCount_RNA     lower     log1p 8.30511100 0.47135824  982.4200        NA
-#> 2  nFeature_RNA     lower     log1p 7.07199691 0.31699966  454.3188        NA
-#> 3  percent_mito     upper      none 0.07467968 0.05235087        NA 0.2317323
-#> 4 doublet_score     upper      none 0.12177996 0.04920403        NA 0.2693921
-#>   status
-#> 1     ok
-#> 2     ok
-#> 3     ok
-#> 4     ok
+qc_result$flags[, c("id", "library_size", "detected_genes",
+                    "pct_mito", "mad_qc_outlier")]
+#> NULL
 ```
 
-`min_n` is a computational safeguard. A zero MAD is reported explicitly
-and can be handled as `"na"`, `"zero"`, or `"error"`. These flags are
-statistical heuristics, not biological diagnoses or automatic filtering
-decisions. The overall `mad_qc_outlier` flag is always returned as a
-compact any-selected- metric summary; it is `NA` when no metric is
-flagged but at least one metric could not be evaluated.
+The missing library size remains missing in its flag column. The
+combined flag is `NA` only when no metric is flagged and at least one
+metric could not be evaluated. Review the individual flags and the
+source metadata before deciding what to do with a sample.
 
-For stratified analyses, split the metadata explicitly and call
+## Threshold status and transformations
+
+Count-like metrics can be easier to compare after an explicit
+transformation. The threshold table keeps both the calculation-scale and
+raw-scale limits.
+
+``` r
+
+transformed_result <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  transform = c(library_size = "log1p"),
+  verbose = FALSE
+)
+
+transformed_result$thresholds[, c(
+  "metric", "direction", "transform", "lower_raw", "upper_raw", "status"
+)]
+#> NULL
+```
+
+`min_n` is a computational safeguard. If a metric has too few usable
+values, its status is `insufficient_n`; if every value is missing, its
+status is `all_missing`. These statuses make the limitation visible
+rather than turning it into a silent pass or fail.
+
+## Zero MAD and downstream decisions
+
+A zero MAD means that the usable values do not vary enough to estimate a
+non-zero robust spread. Choose the policy that matches the downstream
+task.
+
+``` r
+
+constant_metric <- data.frame(
+  sample = paste0("sample_", 1:6),
+  detected_genes = rep(12000, 6)
+)
+
+zero_mad_result <- mad_qc(
+  constant_metric,
+  metrics = c(detected_genes = "lower"),
+  zero_mad = "zero",
+  verbose = FALSE
+)
+
+zero_mad_result$thresholds[, c("metric", "mad", "lower_raw", "status")]
+#> NULL
+```
+
+Use `zero_mad = "na"` to leave the flags unresolved, or
+`zero_mad = "error"` when a zero spread should stop the workflow. For
+stratified analyses, split the data explicitly and call
 [`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md) on
 each subset. veryMAD does not infer batches, conditions, clusters, or
-causes.
+biological causes.

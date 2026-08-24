@@ -116,14 +116,24 @@ and <code>settings</code>.</p>
 
     <div class="section level2">
     <h2 id="ref-examples">Examples<a class="anchor" aria-label="anchor" href="#ref-examples"></a></h2>
-    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">x</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>low <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">10</span>, <span class="fl">11</span>, <span class="fl">12</span>, <span class="fl">13</span><span class="op">)</span>, high <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1</span>, <span class="fl">2</span>, <span class="fl">3</span>, <span class="fl">4</span>, <span class="fl">20</span><span class="op">)</span><span class="op">)</span></span></span>
-<span class="r-in"><span><span class="fu">mad_qc</span><span class="op">(</span><span class="va">x</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>low <span class="op">=</span> <span class="st">"lower"</span>, high <span class="op">=</span> <span class="st">"upper"</span><span class="op">)</span>, verbose <span class="op">=</span> <span class="cn">FALSE</span><span class="op">)</span></span></span>
-<span class="r-out co"><span class="r-pr">#&gt;</span>   low high low_mad_outlier high_mad_outlier mad_qc_outlier</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 1   1    1            TRUE            FALSE           TRUE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 2  10    2           FALSE            FALSE          FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 3  11    3           FALSE            FALSE          FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 4  12    4           FALSE            FALSE          FALSE</span>
-<span class="r-out co"><span class="r-pr">#&gt;</span> 5  13   20           FALSE             TRUE           TRUE</span>
+    <div class="sourceCode"><pre class="sourceCode r"><code><span class="r-in"><span><span class="va">qc_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span></span>
+<span class="r-in"><span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  library_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.4e6</span>, <span class="fl">2.5e6</span>, <span class="fl">2.6e6</span>, <span class="fl">2.7e6</span>, <span class="fl">0.5e6</span>, <span class="fl">2.5e6</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  pct_mito <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">.04</span>, <span class="fl">.05</span>, <span class="fl">.06</span>, <span class="fl">.05</span>, <span class="fl">.07</span>, <span class="fl">.30</span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">qc</span> <span class="op">&lt;-</span> <span class="fu">mad_qc</span><span class="op">(</span></span></span>
+<span class="r-in"><span>  <span class="va">qc_metadata</span>,</span></span>
+<span class="r-in"><span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"lower"</span>, pct_mito <span class="op">=</span> <span class="st">"upper"</span><span class="op">)</span>,</span></span>
+<span class="r-in"><span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span></span>
+<span class="r-in"><span><span class="op">)</span></span></span>
+<span class="r-in"><span><span class="va">qc</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></span>
+<span class="r-out co"><span class="r-pr">#&gt;</span>     sample mad_qc_outlier</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 1 sample_1          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 2 sample_2          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 3 sample_3          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 4 sample_4          FALSE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 5 sample_5           TRUE</span>
+<span class="r-out co"><span class="r-pr">#&gt;</span> 6 sample_6           TRUE</span>
 </code></pre></div>
     </div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>

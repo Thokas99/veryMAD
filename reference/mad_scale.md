@@ -57,12 +57,19 @@ dimnames; data-frame input returns a matrix.
 ## Examples
 
 ``` r
-mad_scale(c(a = 1, b = 2, c = 100))
-#>          a          b          c 
-#> -0.6744908  0.0000000 66.1000944 
-mad_scale(matrix(1:12, nrow = 3), margin = 1)
-#>           [,1]       [,2]      [,3]     [,4]
-#> [1,] -1.011736 -0.3372454 0.3372454 1.011736
-#> [2,] -1.011736 -0.3372454 0.3372454 1.011736
-#> [3,] -1.011736 -0.3372454 0.3372454 1.011736
+gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+mad_scale(gene_expression)
+#>     gene_A     gene_B     gene_C 
+#> -0.6744908  0.0000000 12.5455281 
+
+expression_matrix <- matrix(
+  1:12,
+  nrow = 3,
+  dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+)
+mad_scale(expression_matrix, margin = 1)
+#>         sample_1   sample_2  sample_3 sample_4
+#> gene_1 -1.011736 -0.3372454 0.3372454 1.011736
+#> gene_2 -1.011736 -0.3372454 0.3372454 1.011736
+#> gene_3 -1.011736 -0.3372454 0.3372454 1.011736
 ```

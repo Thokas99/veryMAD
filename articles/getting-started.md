@@ -1,89 +1,103 @@
 # Getting started with veryMAD
 
-`veryMAD` accepts observation metadata and requires users to select
-numeric metrics, directions, and transformations explicitly. This
-example uses a small synthetic bulk RNA-seq cohort with 36 libraries.
-The values are only illustrative, but the workflow is the same for a
-real metadata table.
+`veryMAD` annotates observations using robust, median absolute deviation
+(MAD) thresholds. You choose the metrics, the direction of a poor value,
+and any transformation. The input rows stay in the result.
+
+## A basic QC workflow
+
+The example uses a small sequencing metadata table. Low library size and
+low gene detection suggest poor complexity; high mitochondrial content
+is also a common QC concern.
 
 ``` r
 
-set.seed(101)
-n_libraries <- 36L
-bulk_metadata <- data.frame(
-  sample_id = sprintf("bulk_%02d", seq_len(n_libraries)),
-  library_size = round(rlnorm(n_libraries, log(2.5e6), 0.18)),
-  mapping_rate = pmin(.995, pmax(.70, rnorm(n_libraries, .94, .015))),
-  duplication_rate = pmin(.95, pmax(.10, rnorm(n_libraries, .35, .04)))
+sample_metadata <- data.frame(
+  sample = paste0("sample_", 1:8),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.6e6, 0.45e6, 2.5e6),
+  detected_genes = c(12000, 12500, 13100, 12800, 13400, 12600, 1500, 12300),
+  pct_mito = c(.04, .05, .06, .05, .07, .06, .08, .29)
 )
-bulk_metadata$library_size[c(2, 11)] <- c(180000, 220000)
-bulk_metadata$mapping_rate[c(5, 24)] <- c(.70, .73)
-bulk_metadata$duplication_rate[31] <- .82
-rownames(bulk_metadata) <- bulk_metadata$sample_id
 
-bulk_annotated <- mad_qc(
-  bulk_metadata,
-  metrics = c(
-    library_size = "lower",
-    mapping_rate = "lower",
-    duplication_rate = "upper"
-  ),
-  transform = c(library_size = "log1p"),
-  min_n = 10,
+# Describe which tail is a potential QC problem for each metric
+qc_directions <- c(
+  library_size = "lower",
+  detected_genes = "lower",
+  pct_mito = "upper"
+)
+
+# Add one flag per metric and a combined flag to the metadata
+qc_annotated <- mad_qc(
+  sample_metadata,
+  metrics = qc_directions,
   verbose = FALSE
 )
-
-bulk_annotated[bulk_annotated$mad_qc_outlier %in% TRUE,
-  c("sample_id", "library_size_mad_outlier", "mapping_rate_mad_outlier",
-    "duplication_rate_mad_outlier", "mad_qc_outlier")]
-#>         sample_id library_size_mad_outlier mapping_rate_mad_outlier
-#> bulk_02   bulk_02                     TRUE                    FALSE
-#> bulk_05   bulk_05                    FALSE                     TRUE
-#> bulk_11   bulk_11                     TRUE                    FALSE
-#> bulk_24   bulk_24                    FALSE                     TRUE
-#> bulk_31   bulk_31                    FALSE                    FALSE
-#>         duplication_rate_mad_outlier mad_qc_outlier
-#> bulk_02                        FALSE           TRUE
-#> bulk_05                        FALSE           TRUE
-#> bulk_11                        FALSE           TRUE
-#> bulk_24                        FALSE           TRUE
-#> bulk_31                         TRUE           TRUE
 ```
 
-The annotation preserves all 36 observations and adds one logical column
-per metric, plus `mad_qc_outlier`. The combined flag is `TRUE` when any
-selected metric is flagged; the input rows are never filtered.
-
-Use `output = "report"` when thresholds and observation IDs should be
-kept in a compact object rather than added to the metadata table:
+The result keeps all eight samples and adds logical flag columns.
+Inspect the columns that matter for a quick review:
 
 ``` r
 
-bulk_report <- mad_qc(
-  bulk_metadata,
-  metrics = c(
-    library_size = "lower",
-    mapping_rate = "lower",
-    duplication_rate = "upper"
-  ),
-  transform = c(library_size = "log1p"),
+qc_annotated[, c("sample", "library_size_mad_outlier",
+                 "detected_genes_mad_outlier", "pct_mito_mad_outlier",
+                 "mad_qc_outlier")]
+#>     sample library_size_mad_outlier detected_genes_mad_outlier
+#> 1 sample_1                    FALSE                      FALSE
+#> 2 sample_2                    FALSE                      FALSE
+#> 3 sample_3                    FALSE                      FALSE
+#> 4 sample_4                    FALSE                      FALSE
+#> 5 sample_5                    FALSE                      FALSE
+#> 6 sample_6                    FALSE                      FALSE
+#> 7 sample_7                     TRUE                       TRUE
+#> 8 sample_8                    FALSE                      FALSE
+#>   pct_mito_mad_outlier mad_qc_outlier
+#> 1                FALSE          FALSE
+#> 2                FALSE          FALSE
+#> 3                FALSE          FALSE
+#> 4                FALSE          FALSE
+#> 5                FALSE          FALSE
+#> 6                FALSE          FALSE
+#> 7                FALSE           TRUE
+#> 8                 TRUE           TRUE
+```
+
+`mad_qc_outlier` is `TRUE` when at least one selected metric is flagged.
+veryMAD does not remove those rows, so the decision about filtering or
+follow-up stays with the analysis workflow.
+
+## Inspect thresholds with a report
+
+Use `output = "report"` when you want thresholds and flags in a compact
+object instead of adding columns to the input table.
+
+``` r
+
+qc_report <- mad_qc(
+  sample_metadata,
+  metrics = qc_directions,
   output = "report",
-  min_n = 10,
   verbose = FALSE
 )
 
-bulk_report$thresholds[, c("metric", "direction", "transform", "lower_raw",
-                           "upper_raw", "status")]
-#>             metric direction transform    lower_raw upper_raw status
-#> 1     library_size     lower     log1p 1.431377e+06        NA     ok
-#> 2     mapping_rate     lower      none 8.961747e-01        NA     ok
-#> 3 duplication_rate     upper      none           NA 0.4744178     ok
-head(bulk_report$flags)
-#>        id library_size mapping_rate duplication_rate mad_qc_outlier
-#> 1 bulk_01        FALSE        FALSE            FALSE          FALSE
-#> 2 bulk_02         TRUE        FALSE            FALSE           TRUE
-#> 3 bulk_03        FALSE        FALSE            FALSE          FALSE
-#> 4 bulk_04        FALSE        FALSE            FALSE          FALSE
-#> 5 bulk_05        FALSE         TRUE            FALSE           TRUE
-#> 6 bulk_06        FALSE        FALSE            FALSE          FALSE
+qc_report$thresholds[, c("metric", "direction", "lower_raw",
+                         "upper_raw", "status")]
+#>           metric direction  lower_raw upper_raw status
+#> 1   library_size     lower 2105220.00        NA     ok
+#> 2 detected_genes     lower   10770.88        NA     ok
+#> 3       pct_mito     upper         NA  0.104478     ok
+qc_report$flags[, c("id", "mad_qc_outlier")]
+#>   id mad_qc_outlier
+#> 1  1          FALSE
+#> 2  2          FALSE
+#> 3  3          FALSE
+#> 4  4          FALSE
+#> 5  5          FALSE
+#> 6  6          FALSE
+#> 7  7           TRUE
+#> 8  8           TRUE
 ```
+
+The threshold table records the calculation status for each metric.
+Missing or undersized metrics remain visible there instead of being
+silently turned into a filtering decision.
