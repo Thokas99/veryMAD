@@ -20,8 +20,17 @@
 #'   and `settings`.
 #' @export
 #' @examples
-#' x <- data.frame(low = c(1, 10, 11, 12, 13), high = c(1, 2, 3, 4, 20))
-#' mad_qc(x, c(low = "lower", high = "upper"), verbose = FALSE)
+#' qc_metadata <- data.frame(
+#'   sample = paste0("sample_", 1:6),
+#'   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
+#'   pct_mito = c(.04, .05, .06, .05, .07, .30)
+#' )
+#' qc <- mad_qc(
+#'   qc_metadata,
+#'   metrics = c(library_size = "lower", pct_mito = "upper"),
+#'   verbose = FALSE
+#' )
+#' qc[, c("sample", "mad_qc_outlier")]
 mad_qc <- function(data, metrics, nmads = 3, transform = "none",
                    output = c("annotate", "report"), min_n = 5,
                    zero_mad = c("na", "zero", "error"),

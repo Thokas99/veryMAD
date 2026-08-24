@@ -9,7 +9,7 @@
 ..Rcheck/
 *.Rcheck/
 *.tar.gz
-docs
+docs/
 vignettes/.quarto/
 vignettes/*_files/
 .claude/

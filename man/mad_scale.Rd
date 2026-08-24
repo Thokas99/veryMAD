@@ -40,6 +40,13 @@ median absolute deviation. For matrices, \code{margin = 1} scales rows and
 \code{margin = 2} scales columns.
 }
 \examples{
-mad_scale(c(a = 1, b = 2, c = 100))
-mad_scale(matrix(1:12, nrow = 3), margin = 1)
+gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+mad_scale(gene_expression)
+
+expression_matrix <- matrix(
+  1:12,
+  nrow = 3,
+  dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+)
+mad_scale(expression_matrix, margin = 1)
 }

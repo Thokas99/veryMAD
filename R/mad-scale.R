@@ -17,8 +17,15 @@
 #' @export
 #' @rdname mad_scale
 #' @examples
-#' mad_scale(c(a = 1, b = 2, c = 100))
-#' mad_scale(matrix(1:12, nrow = 3), margin = 1)
+#' gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+#' mad_scale(gene_expression)
+#'
+#' expression_matrix <- matrix(
+#'   1:12,
+#'   nrow = 3,
+#'   dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+#' )
+#' mad_scale(expression_matrix, margin = 1)
 mad_scale <- function(x, center = TRUE, scale = TRUE, constant = 1.4826,
                       na_rm = TRUE, zero_mad = c("zero", "na", "error"), margin = 2) {
   .validate_scalar_flag(center, "center"); .validate_scalar_flag(scale, "scale"); .validate_scalar_flag(na_rm, "na_rm")
