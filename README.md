@@ -100,3 +100,4 @@ returns unscaled deviations when centered; `zero_mad = "error"` stops.
 - [Subramanian et al. (2022), adaptive QC in single-cell transcriptomics](https://doi.org/10.1186/s13059-022-02820-w)
 - [Single-cell best practices: quality control](https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html)
 - [OSCA: quality control](https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics)
+- Documentation guidance: [Kassis et al. (2026), *Scientific Agent Skills*](https://doi.org/10.48550/arXiv.2609.00065)
