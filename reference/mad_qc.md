@@ -1,8 +1,8 @@
 # Explicit MAD quality-control annotation
 
-Rows are observations and `metrics` explicitly selects numeric QC
-columns. One reference distribution is calculated per metric across all
-observations; observations are never filtered automatically.
+Rows are observations. Select numeric metric columns and a tail
+direction for each. veryMAD estimates one threshold per metric across
+the input rows and returns annotated metadata or a `verymad_qc` report.
 
 ## Usage
 
@@ -28,8 +28,8 @@ mad_qc(
 
 - metrics:
 
-  A non-empty named character vector mapping columns to `"lower"`,
-  `"upper"`, or `"both"`.
+  A non-empty named character vector with unique metric names; values
+  are `"lower"`, `"upper"`, or `"both"`.
 
 - nmads:
 
@@ -42,7 +42,8 @@ mad_qc(
 
 - output:
 
-  Return annotated data (`"annotate"`) or a compact report (`"report"`).
+  Return annotated data by default; use `"report"` for flags,
+  thresholds, and settings.
 
 - min_n:
 
@@ -54,16 +55,17 @@ mad_qc(
 
 - overwrite:
 
-  Replace existing generated flag columns?
+  Replace existing flag columns?
 
 - verbose:
 
-  Print a concise neutral summary?
+  Print a summary?
 
 ## Value
 
 Annotated input or a `verymad_qc` list with `flags`, `thresholds`, and
-`settings`.
+`settings`. Threshold reports include finite observations used and
+per-metric flagged and unresolved counts.
 
 ## Examples
 
@@ -71,14 +73,14 @@ Annotated input or a `verymad_qc` list with `flags`, `thresholds`, and
 qc_metadata <- data.frame(
   sample = paste0("sample_", 1:6),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
-  pct_mito = c(.04, .05, .06, .05, .07, .30)
+  pct_mito = c(4, 5, 6, 5, 7, 30)
 )
-qc <- mad_qc(
+annotated <- mad_qc(
   qc_metadata,
   metrics = c(library_size = "lower", pct_mito = "upper"),
   verbose = FALSE
 )
-qc[, c("sample", "mad_qc_outlier")]
+annotated[, c("sample", "mad_qc_outlier")]
 #>     sample mad_qc_outlier
 #> 1 sample_1          FALSE
 #> 2 sample_2          FALSE
@@ -86,4 +88,15 @@ qc[, c("sample", "mad_qc_outlier")]
 #> 4 sample_4          FALSE
 #> 5 sample_5           TRUE
 #> 6 sample_6           TRUE
+
+report <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  output = "report",
+  verbose = FALSE
+)
+report$thresholds[, c("metric", "n_used", "n_flagged", "n_unresolved")]
+#>         metric n_used n_flagged n_unresolved
+#> 1 library_size      6         1            0
+#> 2     pct_mito      6         1            0
 ```

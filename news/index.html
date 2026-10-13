@@ -7,7 +7,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -40,62 +40,26 @@
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="0.5.1" id="verymad-051">veryMAD 0.5.1<a class="anchor" aria-label="anchor" href="#verymad-051"></a></h2>
-<div class="section level3">
-<h3 id="api-polish-0-5-1">API polish<a class="anchor" aria-label="anchor" href="#api-polish-0-5-1"></a></h3>
-<ul><li>Reduced the exported API to exactly <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>.</li>
-<li>Removed the <code>mad_z_score()</code> alias.</li>
-<li>Removed the <code>combine</code> argument.</li>
+<h2 class="pkg-version" data-toc-text="0.6.0" id="verymad-060">veryMAD 0.6.0<a class="anchor" aria-label="anchor" href="#verymad-060"></a></h2>
+<ul><li>
+<code><a href="../reference/mad_scale.html">mad_scale()</a></code> defaults to <code>zero_mad = "na"</code>; <code>"zero"</code> uses a unit denominator and returns unscaled deviations when centered.</li>
 <li>
-<code><a href="../reference/mad_qc.html">mad_qc()</a></code> now always returns the overall <code>mad_qc_outlier</code> flag.</li>
+<code><a href="../reference/mad_qc.html">mad_qc()</a></code> reserves <code>id</code> and <code>mad_qc_outlier</code> as metric names.</li>
+<li>Threshold reports include used, flagged, and unresolved counts. Combined flags are vectorized, and report-only calls skip annotation.</li>
+<li>Added single-cell examples, regression tests, an optional <code>scuttle</code> comparison, and a reproducible benchmark script.</li>
 </ul></div>
-<div class="section level3">
-<h3 id="reliability-0-5-1">Reliability<a class="anchor" aria-label="anchor" href="#reliability-0-5-1"></a></h3>
-<ul><li>Added compact printing for <code>verymad_qc</code> reports.</li>
-<li>Hardened empty-input, missing-value, identifier, overwrite, and zero-MAD handling.</li>
-<li>Expanded tests for the complete public API and important edge cases.</li>
-<li>Expanded continuous integration across Linux, macOS, Windows, and multiple R versions.</li>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.1" id="verymad-051">veryMAD 0.5.1<a class="anchor" aria-label="anchor" href="#verymad-051"></a></h2>
+<ul><li>The public API is <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>; QC reports include an overall <code>mad_qc_outlier</code> flag.</li>
+<li>Added compact report printing and expanded input and edge-case coverage.</li>
+<li>Updated the README, guides, and package checks.</li>
 </ul></div>
-<div class="section level3">
-<h3 id="documentation-0-5-1">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-1"></a></h3>
-<ul><li>Updated the README and vignettes for the final two-function interface.</li>
-<li>Simplified the pkgdown reference index.</li>
-<li>Kept <code>pak::pak("Thokas99/veryMAD")</code> as the primary installation command.</li>
-</ul></div>
-</div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="verymad-050">veryMAD 0.5.0<a class="anchor" aria-label="anchor" href="#verymad-050"></a></h2>
-<div class="section level3">
-<h3 id="breaking-changes-0-5-0">Breaking changes<a class="anchor" aria-label="anchor" href="#breaking-changes-0-5-0"></a></h3>
-<ul><li>Reduced the public API to <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>.</li>
-<li>Removed grouped QC calculations and separate modality workflows.</li>
-<li>Removed redundant per-result counts and qualitative interpretation fields.</li>
-<li>Changed the default QC transformation to <code>"none"</code>.</li>
-<li>Changed the default zero-MAD policy to <code>"na"</code>.</li>
+<ul><li>Centered the API on <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>, with annotation or report output, explicit metric settings, and robust scaling for vectors and matrices.</li>
+<li>Added Seurat metadata support and set raw-scale thresholds and unresolved zero-MAD flags as QC defaults.</li>
+<li>Added focused guides and streamlined internal calculations.</li>
 </ul></div>
-<div class="section level3">
-<h3 id="new-interface-0-5-0">New interface<a class="anchor" aria-label="anchor" href="#new-interface-0-5-0"></a></h3>
-<ul><li>
-<code><a href="../reference/mad_qc.html">mad_qc()</a></code> provides annotation and compact report outputs.</li>
-<li>QC metrics, directions, and transformations remain explicit.</li>
-<li>Seurat support delegates to the same canonical engine.</li>
-<li>
-<code><a href="../reference/mad_scale.html">mad_scale()</a></code> supports robust scaling for vectors and matrices.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="documentation-0-5-0">Documentation<a class="anchor" aria-label="anchor" href="#documentation-0-5-0"></a></h3>
-<ul><li>Simplified the README.</li>
-<li>Added focused vignettes for QC, interpretation, and MAD scaling.</li>
-<li>Reorganized the pkgdown website around the two-function API.</li>
-</ul></div>
-<div class="section level3">
-<h3 id="internal-changes-0-5-0">Internal changes<a class="anchor" aria-label="anchor" href="#internal-changes-0-5-0"></a></h3>
-<ul><li>Consolidated QC calculations into one internal engine.</li>
-<li>Converted low-level statistical functions to internal helpers.</li>
-<li>Removed duplicated wrappers and obsolete implementation paths.</li>
-<li>Simplified dependencies and tests.</li>
-</ul></div>
-</div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>
 

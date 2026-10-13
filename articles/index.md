@@ -5,14 +5,14 @@
 - [Getting started with
   veryMAD](https://thokas99.github.io/veryMAD/articles/getting-started.md):
 
-  A small observation-level QC workflow for sequencing metadata.
+  Annotate sequencing metadata with explicit MAD thresholds.
 
 - [Interpreting MAD QC
   flags](https://thokas99.github.io/veryMAD/articles/qc-interpretation.md):
 
-  Interpreting explicit MAD flags and edge-case statuses.
+  Read MAD flags and apply them in single-cell QC workflows.
 
 - [Robust MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.md):
 
-  Robust centering and scaling for vectors and expression matrices.
+  Center and scale vectors and matrices with the median and MAD.

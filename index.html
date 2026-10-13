@@ -11,8 +11,8 @@
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
 <script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Explicit MAD Quality Control and Robust Scaling">
-<meta name="description" content="A small R toolkit for explicit median absolute deviation based quality-control annotation and robust scaling of numeric vectors and matrices. Metrics, directions and transformations are selected by the user, and observations are never filtered automatically.">
-<meta property="og:description" content="A small R toolkit for explicit median absolute deviation based quality-control annotation and robust scaling of numeric vectors and matrices. Metrics, directions and transformations are selected by the user, and observations are never filtered automatically.">
+<meta name="description" content="Computes median absolute deviation quality-control flags and robust scaling for numeric metadata, vectors, and matrices. Users select the metrics, directions, and transformations; filtering remains in the analysis workflow.">
+<meta property="og:description" content="Computes median absolute deviation quality-control flags and robust scaling for numeric metadata, vectors, and matrices. Users select the metrics, directions, and transformations; filtering remains in the analysis workflow.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -56,167 +56,92 @@
 </nav><div class="container template-home">
 <div class="row">
   <main id="main" class="col-md-9"><p align="center">
-<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD logo" width="280"></p>
+<img src="reference/figures/veryMAD-logo.svg" alt="veryMAD logo" width="240"></p>
 <div class="page-header"><h1 align="center">
 veryMAD
 </h1></div>
 <p align="center">
-<strong>Explicit MAD quality control</strong>
+<strong>MAD quality control and robust scaling for R</strong>
 </p>
 <p align="center">
 <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a> <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/Thokas99/veryMAD/releases" class="external-link"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&amp;sort=semver" alt="Latest release"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
-<blockquote>
-<p>[!NOTE] veryMAD calculates transparent MAD thresholds and flags. It never filters observations, guesses metrics, or turns a statistical flag into a biological diagnosis.</p>
-</blockquote>
-<div class="section level2">
-<h2 id="what-verymad-does">What veryMAD does<a class="anchor" aria-label="anchor" href="#what-verymad-does"></a>
-</h2>
-<table class="table">
-<colgroup>
-<col width="33%">
-<col width="33%">
-<col width="33%">
-</colgroup>
-<thead><tr>
-<th>Capability</th>
-<th>Function</th>
-<th>Output</th>
-</tr></thead>
-<tbody>
-<tr>
-<td>Observation-level QC</td>
-<td><code><a href="reference/mad_qc.html">mad_qc()</a></code></td>
-<td>Annotated metadata or a compact report</td>
-</tr>
-<tr>
-<td>Robust scaling</td>
-<td><code><a href="reference/mad_scale.html">mad_scale()</a></code></td>
-<td>MAD-scaled vectors and matrices</td>
-</tr>
-</tbody>
-</table>
-<p>Rows are observations. Columns are QC metrics selected by you. Directions and transformations are explicit, deterministic, and auditable.</p>
-</div>
+<p>veryMAD computes median absolute deviation (MAD) thresholds for selected numeric metrics. It adds observation-level flags or returns a threshold report. Rows stay in the output; filtering remains part of your analysis.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
-<p>Install veryMAD from GitHub with <a href="https://pak.r-lib.org/" class="external-link"><code>pak</code></a>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu">pak</span><span class="fu">::</span><span class="fu"><a href="https://pak.r-lib.org/reference/pak.html" class="external-link">pak</a></span><span class="op">(</span><span class="st">"Thokas99/veryMAD"</span><span class="op">)</span></span></code></pre></div>
 </div>
 <div class="section level2">
-<h2 id="mad-qc-in-one-call">MAD QC in one call<a class="anchor" aria-label="anchor" href="#mad-qc-in-one-call"></a>
+<h2 id="annotate-qc-metrics">Annotate QC metrics<a class="anchor" aria-label="anchor" href="#annotate-qc-metrics"></a>
 </h2>
+<p>Choose each metric, its outlier direction, and any transformation. For example, count-like RNA metrics can use an explicit <code>log1p</code> transformation.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">sample_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
-<span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>,</span>
-<span>  library_size <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">2.4e6</span>, <span class="fl">2.5e6</span>, <span class="fl">2.6e6</span>, <span class="fl">2.7e6</span>, <span class="fl">0.5e6</span>, <span class="fl">2.5e6</span><span class="op">)</span>,</span>
-<span>  detected_genes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">12000</span>, <span class="fl">12500</span>, <span class="fl">13100</span>, <span class="fl">12800</span>, <span class="fl">1600</span>, <span class="fl">12300</span><span class="op">)</span></span>
+<span><span class="va">metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  nCount_RNA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">820</span>, <span class="fl">910</span>, <span class="fl">970</span>, <span class="fl">1050</span>, <span class="fl">1120</span>, <span class="fl">100</span><span class="op">)</span>,</span>
+<span>  nFeature_RNA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">430</span>, <span class="fl">480</span>, <span class="fl">520</span>, <span class="fl">570</span>, <span class="fl">610</span>, <span class="fl">55</span><span class="op">)</span>,</span>
+<span>  percent.mt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">9</span>, <span class="fl">35</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="co"># Low values suggest poor sequencing complexity</span></span>
-<span><span class="va">qc_directions</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  library_size <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>  detected_genes <span class="op">=</span> <span class="st">"lower"</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">qc_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
-<span>  <span class="va">sample_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="va">qc_directions</span>,</span>
+<span><span class="va">annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>  <span class="va">metadata</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>              percent.mt <span class="op">=</span> <span class="st">"upper"</span><span class="op">)</span>,</span>
+<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">qc_annotated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample"</span>, <span class="st">"library_size_mad_outlier"</span>,</span>
-<span>                 <span class="st">"detected_genes_mad_outlier"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p>The annotation keeps the original rows and adds one logical flag per metric, plus <code>mad_qc_outlier</code>:</p>
-<pre class="text"><code><span><span class="va">library_size_mad_outlier</span></span>
-<span><span class="va">mapping_rate_mad_outlier</span></span>
-<span><span class="va">mad_qc_outlier</span></span></code></pre>
-<blockquote>
-<p>[!TIP] Use <code>transform = "none"</code> for raw-scale calculations, or provide named partial overrides such as <code>c(library_size = "log1p")</code>.</p>
-</blockquote>
+<span><span class="va">annotated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nCount_RNA_mad_outlier"</span>, <span class="st">"nFeature_RNA_mad_outlier"</span>,</span>
+<span>              <span class="st">"percent.mt_mad_outlier"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>For Seurat metadata, <code>percent.mt</code> is usually stored on a 0–100 scale: <code>8</code> means 8%.</p>
 </div>
 <div class="section level2">
-<h2 id="inspect-thresholds-with-a-report">Inspect thresholds with a report<a class="anchor" aria-label="anchor" href="#inspect-thresholds-with-a-report"></a>
+<h2 id="review-thresholds">Review thresholds<a class="anchor" aria-label="anchor" href="#review-thresholds"></a>
 </h2>
-<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
+<p>Set <code>output = "report"</code> to return flags, thresholds, and settings without adding columns to the input.</p>
+<div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">report</span> <span class="op">&lt;-</span> <span class="fu"><a href="reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
-<span>  <span class="va">sample_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="va">qc_directions</span>,</span>
-<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>library_size <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
+<span>  <span class="va">metadata</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>              percent.mt <span class="op">=</span> <span class="st">"upper"</span><span class="op">)</span>,</span>
+<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
 <span>  output <span class="op">=</span> <span class="st">"report"</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">report</span><span class="op">$</span><span class="va">flags</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"id"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p>The report contains only three components:</p>
-<div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">report</span><span class="op">)</span></span>
-<span><span class="co">#&gt; "flags" "thresholds" "settings"</span></span></code></pre></div>
-<p>Thresholds retain both calculation-scale and raw-scale limits. Missing, undersized, and zero-MAD calculations remain visible through <code>status</code> rather than being silently converted into a decision.</p>
+<span><span class="va">report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>,</span>
+<span>                      <span class="st">"status"</span>, <span class="st">"n_used"</span>, <span class="st">"n_flagged"</span>, <span class="st">"n_unresolved"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
+<p>The report returns flags, thresholds, and settings. Status identifies missing, insufficient, and zero-MAD metrics; counts show evaluated and unresolved observations. Zero-MAD flags are <code>NA</code> by default.</p>
 </div>
 <div class="section level2">
-<h2 id="robust-mad-scaling">Robust MAD scaling<a class="anchor" aria-label="anchor" href="#robust-mad-scaling"></a>
+<h2 id="scale-with-mad">Scale with MAD<a class="anchor" aria-label="anchor" href="#scale-with-mad"></a>
 </h2>
-<div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene_expression</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>gene_A <span class="op">=</span> <span class="fl">8.2</span>, gene_B <span class="op">=</span> <span class="fl">8.7</span>, gene_C <span class="op">=</span> <span class="fl">18.0</span><span class="op">)</span></span>
-<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">gene_expression</span><span class="op">)</span></span>
-<span></span>
-<span><span class="va">expression_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
-<span>  <span class="fl">1</span><span class="op">:</span><span class="fl">12</span>,</span>
-<span>  nrow <span class="op">=</span> <span class="fl">3</span>,</span>
-<span>  dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">4</span><span class="op">)</span><span class="op">)</span></span>
-<span><span class="op">)</span></span>
-<span></span>
-<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">expression_matrix</span>, margin <span class="op">=</span> <span class="fl">1</span><span class="op">)</span> <span class="co"># scale genes</span></span>
-<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">expression_matrix</span>, margin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span> <span class="co"># scale samples</span></span></code></pre></div>
-<p><code>margin = 1</code> scales rows; <code>margin = 2</code> scales columns. Matrix dimensions and dimnames are preserved. Numeric data frames are returned as matrices.</p>
+<span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">gene_expression</span><span class="op">)</span></span></code></pre></div>
+<p>For matrices, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. Dimensions and dimnames are preserved. The default <code>zero_mad = "na"</code> returns <code>NA</code> for zero-MAD groups. <code>zero_mad = "zero"</code> uses a unit denominator and returns unscaled deviations when centered; <code>zero_mad = "error"</code> stops.</p>
 </div>
 <div class="section level2">
-<h2 id="interpretation-and-guardrails">Interpretation and guardrails<a class="anchor" aria-label="anchor" href="#interpretation-and-guardrails"></a>
+<h2 id="guides">Guides<a class="anchor" aria-label="anchor" href="#guides"></a>
 </h2>
-<blockquote>
-<p>[!WARNING] MAD thresholds are adaptive statistical heuristics. A flag is not a sample rejection, a laboratory diagnosis, or a doublet call.</p>
-</blockquote>
 <ul>
-<li>Metrics, directions, and transformations are always selected explicitly.</li>
-<li>
-<code>lower</code>, <code>upper</code>, and <code>both</code> describe statistical tails only.</li>
-<li>
-<code>min_n</code> is a computational safeguard, not a biological rule.</li>
-<li>Missing values stay missing.</li>
-<li>veryMAD does not filter data automatically.</li>
-<li>For stratified QC, split the data yourself and call <code><a href="reference/mad_qc.html">mad_qc()</a></code> separately.</li>
+<li><a href="https://thokas99.github.io/veryMAD/articles/getting-started.html">Getting started</a></li>
+<li><a href="https://thokas99.github.io/veryMAD/articles/qc-interpretation.html">Interpreting QC</a></li>
+<li><a href="https://thokas99.github.io/veryMAD/articles/mad-scaling.html">MAD scaling</a></li>
+<li><a href="https://thokas99.github.io/veryMAD/reference/">Function reference</a></li>
+<li><a href="NEWS.html">Release notes</a></li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="documentation">Documentation<a class="anchor" aria-label="anchor" href="#documentation"></a>
+<h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h2>
 <ul>
-<li><strong><a href="https://thokas99.github.io/veryMAD/">Package website</a></strong></li>
-<li><strong><a href="https://thokas99.github.io/veryMAD/reference/">Function reference</a></strong></li>
-<li><strong><a href="https://thokas99.github.io/veryMAD/articles/getting-started.html">Getting started</a></strong></li>
-<li><strong><a href="https://thokas99.github.io/veryMAD/articles/qc-interpretation.html">QC interpretation</a></strong></li>
-<li><strong><a href="https://thokas99.github.io/veryMAD/articles/mad-scaling.html">MAD scaling guide</a></strong></li>
-<li><strong><a href="NEWS.html">Release notes</a></strong></li>
-</ul>
-</div>
-<div class="section level2">
-<h2 id="bioconductor-and-single-cell-qc-guidance">Bioconductor and single-cell QC guidance<a class="anchor" aria-label="anchor" href="#bioconductor-and-single-cell-qc-guidance"></a>
-</h2>
-<p>These sources motivate veryMAD’s explicit MAD-based QC scope while also supporting its guardrails: MAD flags are adaptive statistical evidence, not automatic biological decisions. Thresholds should be reviewed alongside multiple QC metrics, diagnostic plots, and the biological context of the dataset.</p>
-<ul>
-<li>
-<strong>Subramanian, A., Alperovich, M., Yang, Y., &amp; Li, B. (2022).</strong> Biology-inspired data-driven quality control for scientific discovery in single-cell transcriptomics. <em>Genome Biology, 23</em>, 267. <a href="https://doi.org/10.1186/s13059-022-02820-w" class="external-link uri">https://doi.org/10.1186/s13059-022-02820-w</a> — Presents adaptive MAD-based QC across cell-type or cluster contexts and emphasizes retaining biologically meaningful populations that fixed, data-agnostic thresholds can remove. <a href="https://pmc.ncbi.nlm.nih.gov/articles/PMC9793662/" class="external-link">Article</a>
-</li>
-<li>
-<strong>Single-Cell Best Practices Consortium. (n.d.).</strong> Quality control. In <em>Single-cell best practices</em>. Retrieved August 6, 2026, from <a href="https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html" class="external-link uri">https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html</a> — Recommends lenient MAD-based cutoffs for QC while warning that aggressive filtering can bias against smaller subpopulations and that several covariates should be considered together.</li>
-<li>
-<strong>Amezquita, R. A., Lun, A. T. L., Hicks, S. C., &amp; Gottardo, R. (2021).</strong> Quality control. In <em>Basics of single-cell analysis with Bioconductor</em> (Bioconductor 3.13). Bioconductor. <a href="https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics" class="external-link uri">https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics</a> — Defines common QC metrics such as library size, detected features, and mitochondrial or spike-in proportions, and describes adaptive MAD thresholds with explicit direction and transformation choices.</li>
+<li><a href="https://doi.org/10.1186/s13059-022-02820-w" class="external-link">Subramanian et al. (2022), adaptive QC in single-cell transcriptomics</a></li>
+<li><a href="https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html" class="external-link">Single-cell best practices: quality control</a></li>
+<li><a href="https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics" class="external-link">OSCA: quality control</a></li>
 </ul>
 </div>
 

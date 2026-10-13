@@ -22,7 +22,7 @@
 
     <a class="navbar-brand me-2" href="../index.html">veryMAD</a>
 
-    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.5.1</small>
+    <small class="nav-text text-muted me-auto" data-bs-toggle="tooltip" data-bs-placement="bottom" title="">0.6.0</small>
 
 
     <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbar" aria-controls="navbar" aria-expanded="false" aria-label="Toggle navigation">
@@ -71,10 +71,10 @@
 
 
 
-    <p><code><a href="../reference/mad_scale.html">mad_scale()</a></code> centers numeric data by its median and, by default, divides by the median absolute deviation (MAD). This is useful when a few extreme values should not dominate the scale used for an exploratory analysis.</p>
+    <p><code><a href="../reference/mad_scale.html">mad_scale()</a></code> centers numeric data by its median and divides by its median absolute deviation (MAD). Set <code>center</code> or <code>scale</code> to <code>FALSE</code> to skip that operation.</p>
 <section class="level2"><h2 id="scale-a-vector">Scale a vector<a class="anchor" aria-label="anchor" href="#scale-a-vector"></a>
 </h2>
-<p>This small vector represents expression summaries for five genes. The largest value is easy to see, but it should not determine the centre and scale by itself.</p>
+<p>This example scales expression summaries for five genes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene_expression</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -90,10 +90,10 @@
 <span><span class="co">#&gt; gene_A gene_B gene_C gene_D gene_E </span></span>
 <span><span class="co">#&gt;  -1.52  -0.67   0.00   0.51  15.01</span></span></code></pre></div>
 </div>
-<p>The names are preserved, and missing values remain missing. Set <code>center = FALSE</code> or <code>scale = FALSE</code> when only one part of the transformation is needed.</p>
+<p>Names and missing values are preserved.</p>
 </section><section class="level2"><h2 id="scale-an-expression-matrix">Scale an expression matrix<a class="anchor" aria-label="anchor" href="#scale-an-expression-matrix"></a>
 </h2>
-<p>For a matrix, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. Here, rows are genes and columns are samples, so column scaling puts samples on a common robust scale.</p>
+<p>For a matrix, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. Here rows are genes and columns are samples.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">expression_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
@@ -117,7 +117,17 @@
 <span><span class="co">#&gt; gene_B     0.67     0.67     0.67     0.67</span></span>
 <span><span class="co">#&gt; gene_C    -3.15    -5.80       NA    -5.06</span></span></code></pre></div>
 </div>
-<p>The matrix dimensions and dimnames are preserved. A zero MAD can be handled with <code>zero_mad = "zero"</code>, <code>"na"</code>, or <code>"error"</code>, depending on how the result should be used downstream.</p>
+<p>Dimensions and dimnames are preserved. The default <code>zero_mad = "na"</code> returns <code>NA</code> for zero-MAD groups. <code>"zero"</code> uses a unit denominator; centered results are unscaled deviations. Choose <code>"error"</code> to stop on zero MAD.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">mostly_constant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>value_1 <span class="op">=</span> <span class="fl">1</span>, value_2 <span class="op">=</span> <span class="fl">1</span>, value_3 <span class="op">=</span> <span class="fl">1</span>, outlier <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">mostly_constant</span><span class="op">)</span></span>
+<span><span class="co">#&gt; value_1 value_2 value_3 outlier </span></span>
+<span><span class="co">#&gt;      NA      NA      NA      NA</span></span>
+<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">mostly_constant</span>, zero_mad <span class="op">=</span> <span class="st">"zero"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; value_1 value_2 value_3 outlier </span></span>
+<span><span class="co">#&gt;       0       0       0      99</span></span></code></pre></div>
+</div>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {
       var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);

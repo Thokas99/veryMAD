@@ -1,15 +1,13 @@
 # Robust MAD scaling
 
 [`mad_scale()`](https://thokas99.github.io/veryMAD/reference/mad_scale.md)
-centers numeric data by its median and, by default, divides by the
-median absolute deviation (MAD). This is useful when a few extreme
-values should not dominate the scale used for an exploratory analysis.
+centers numeric data by its median and divides by its median absolute
+deviation (MAD). Set `center` or `scale` to `FALSE` to skip that
+operation.
 
 ## Scale a vector
 
-This small vector represents expression summaries for five genes. The
-largest value is easy to see, but it should not determine the centre and
-scale by itself.
+This example scales expression summaries for five genes.
 
 ``` r
 
@@ -27,15 +25,12 @@ round(scaled_expression, 2)
 #>  -1.52  -0.67   0.00   0.51  15.01
 ```
 
-The names are preserved, and missing values remain missing. Set
-`center = FALSE` or `scale = FALSE` when only one part of the
-transformation is needed.
+Names and missing values are preserved.
 
 ## Scale an expression matrix
 
 For a matrix, `margin = 1` scales rows and `margin = 2` scales columns.
-Here, rows are genes and columns are samples, so column scaling puts
-samples on a common robust scale.
+Here rows are genes and columns are samples.
 
 ``` r
 
@@ -61,6 +56,18 @@ round(scaled_by_sample, 2)
 #> gene_C    -3.15    -5.80       NA    -5.06
 ```
 
-The matrix dimensions and dimnames are preserved. A zero MAD can be
-handled with `zero_mad = "zero"`, `"na"`, or `"error"`, depending on how
-the result should be used downstream.
+Dimensions and dimnames are preserved. The default `zero_mad = "na"`
+returns `NA` for zero-MAD groups. `"zero"` uses a unit denominator;
+centered results are unscaled deviations. Choose `"error"` to stop on
+zero MAD.
+
+``` r
+
+mostly_constant <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
+mad_scale(mostly_constant)
+#> value_1 value_2 value_3 outlier 
+#>      NA      NA      NA      NA
+mad_scale(mostly_constant, zero_mad = "zero")
+#> value_1 value_2 value_3 outlier 
+#>       0       0       0      99
+```

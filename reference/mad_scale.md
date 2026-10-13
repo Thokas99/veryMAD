@@ -1,8 +1,7 @@
 # Robust MAD scaling
 
-Scale a numeric vector, matrix, or numeric data frame by its median and
-median absolute deviation. For matrices, `margin = 1` scales rows and
-`margin = 2` scales columns.
+Center numeric data by its median and optionally divide by its MAD. For
+matrices, `margin = 1` scales rows and `margin = 2` scales columns.
 
 ## Usage
 
@@ -13,7 +12,7 @@ mad_scale(
   scale = TRUE,
   constant = 1.4826,
   na_rm = TRUE,
-  zero_mad = c("zero", "na", "error"),
+  zero_mad = c("na", "zero", "error"),
   margin = 2
 )
 ```
@@ -42,7 +41,10 @@ mad_scale(
 
 - zero_mad:
 
-  Use zero, return `NA`, or error for a zero MAD.
+  Handling of zero MAD when `scale = TRUE`: `"na"` (default) returns
+  `NA`; `"zero"` uses a unit denominator; `"error"` stops. With
+  `center = TRUE`, `"zero"` returns centered deviations without MAD
+  scaling.
 
 - margin:
 
