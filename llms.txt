@@ -112,6 +112,8 @@ denominator and returns unscaled deviations when centered;
   control](https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html)
 - [OSCA: quality
   control](https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics)
+- Documentation guidance: [Kassis et al. (2026), *Scientific Agent
+  Skills*](https://doi.org/10.48550/arXiv.2609.00065)
 
 # Package index
 
