@@ -4,10 +4,10 @@
 \name{veryMAD-package}
 \alias{veryMAD}
 \alias{veryMAD-package}
-\title{veryMAD: explicit MAD quality control and robust scaling}
+\title{veryMAD: MAD quality control and robust scaling}
 \description{
-A small, modality-agnostic toolkit for explicit observation-level QC flags
-and robust MAD scaling. veryMAD never filters observations or infers causes.
+Computes observation-level MAD flags and robust scaling. Users choose the
+metrics and settings; filtering remains in the analysis workflow.
 }
 \seealso{
 Useful links:

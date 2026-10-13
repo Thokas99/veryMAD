@@ -10,7 +10,7 @@ mad_scale(
   scale = TRUE,
   constant = 1.4826,
   na_rm = TRUE,
-  zero_mad = c("zero", "na", "error"),
+  zero_mad = c("na", "zero", "error"),
   margin = 2
 )
 }
@@ -25,7 +25,9 @@ mad_scale(
 
 \item{na_rm}{Remove missing values when calculating medians and MADs?}
 
-\item{zero_mad}{Use zero, return \code{NA}, or error for a zero MAD.}
+\item{zero_mad}{Handling of zero MAD when \code{scale = TRUE}: \code{"na"} (default)
+returns \code{NA}; \code{"zero"} uses a unit denominator; \code{"error"} stops. With
+\code{center = TRUE}, \code{"zero"} returns centered deviations without MAD scaling.}
 
 \item{margin}{Matrix margin, \code{1} for rows or \code{2} for columns. Names
 \code{"rows"} and \code{"columns"} are also accepted.}
@@ -35,9 +37,8 @@ A numeric vector or matrix. Matrix input preserves dimensions and
 dimnames; data-frame input returns a matrix.
 }
 \description{
-Scale a numeric vector, matrix, or numeric data frame by its median and
-median absolute deviation. For matrices, \code{margin = 1} scales rows and
-\code{margin = 2} scales columns.
+Center numeric data by its median and optionally divide by its MAD. For
+matrices, \code{margin = 1} scales rows and \code{margin = 2} scales columns.
 }
 \examples{
 gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)

@@ -1,7 +1,7 @@
 ---
 title: "Getting started with veryMAD"
 description: >
-  A small observation-level QC workflow for sequencing metadata.
+  Annotate sequencing metadata with explicit MAD thresholds.
 vignette: >
   %\VignetteIndexEntry{Getting started with veryMAD}
   %\VignetteEngine{quarto::html}
@@ -12,9 +12,9 @@ knitr:
     comment: "#>"
 ---
 
-`veryMAD` annotates observations using robust, median absolute deviation (MAD)
-thresholds. You choose the metrics, the direction of a poor value, and any
-transformation. The input rows stay in the result.
+`veryMAD` estimates one median absolute deviation (MAD) threshold per selected
+metric. Choose the metrics, tail directions, and transformations. Annotation
+retains every input row; report mode returns flags and thresholds.
 
 ```{r}
 #| label: setup
@@ -24,26 +24,25 @@ library(veryMAD)
 
 ## A basic QC workflow
 
-The example uses a small sequencing metadata table. Low library size and low
-gene detection suggest poor complexity; high mitochondrial content is also a
-common QC concern.
+This sequencing metadata example uses percentage points for `pct_mito`: 8
+denotes 8%.
 
 ```{r}
 sample_metadata <- data.frame(
   sample = paste0("sample_", 1:8),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.6e6, 0.45e6, 2.5e6),
   detected_genes = c(12000, 12500, 13100, 12800, 13400, 12600, 1500, 12300),
-  pct_mito = c(.04, .05, .06, .05, .07, .06, .08, .29)
+  pct_mito = c(4, 5, 6, 5, 7, 6, 8, 29)
 )
 
-# Describe which tail is a potential QC problem for each metric
+# Select the tail to review for each metric
 qc_directions <- c(
   library_size = "lower",
   detected_genes = "lower",
   pct_mito = "upper"
 )
 
-# Add one flag per metric and a combined flag to the metadata
+# Add one flag per metric and a combined flag
 qc_annotated <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
@@ -51,8 +50,7 @@ qc_annotated <- mad_qc(
 )
 ```
 
-The result keeps all eight samples and adds logical flag columns. Inspect the
-columns that matter for a quick review:
+The result keeps every row and adds logical flags:
 
 ```{r}
 qc_annotated[, c("sample", "library_size_mad_outlier",
@@ -60,14 +58,13 @@ qc_annotated[, c("sample", "library_size_mad_outlier",
                  "mad_qc_outlier")]
 ```
 
-`mad_qc_outlier` is `TRUE` when at least one selected metric is flagged. veryMAD
-does not remove those rows, so the decision about filtering or follow-up stays
-with the analysis workflow.
+`mad_qc_outlier` is `TRUE` when any selected metric is flagged. Use the flags
+to guide review in the analysis workflow.
 
 ## Inspect thresholds with a report
 
-Use `output = "report"` when you want thresholds and flags in a compact object
-instead of adding columns to the input table.
+Use `output = "report"` to inspect thresholds and flags without adding columns
+to the input.
 
 ```{r}
 qc_report <- mad_qc(
@@ -82,6 +79,4 @@ qc_report$thresholds[, c("metric", "direction", "lower_raw",
 qc_report$flags[, c("id", "mad_qc_outlier")]
 ```
 
-The threshold table records the calculation status for each metric. Missing or
-undersized metrics remain visible there instead of being silently turned into
-a filtering decision.
+The threshold table records each metric's status and observation counts.

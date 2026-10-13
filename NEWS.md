@@ -1,51 +1,24 @@
+# veryMAD 0.6.0
+
+- `mad_scale()` defaults to `zero_mad = "na"`; `"zero"` uses a unit
+  denominator and returns unscaled deviations when centered.
+- `mad_qc()` reserves `id` and `mad_qc_outlier` as metric names.
+- Threshold reports include used, flagged, and unresolved counts. Combined
+  flags are vectorized, and report-only calls skip annotation.
+- Added single-cell examples, regression tests, an optional `scuttle`
+  comparison, and a reproducible benchmark script.
+
 # veryMAD 0.5.1
 
-## API polish
-
-- Reduced the exported API to exactly `mad_qc()` and `mad_scale()`.
-- Removed the `mad_z_score()` alias.
-- Removed the `combine` argument.
-- `mad_qc()` now always returns the overall `mad_qc_outlier` flag.
-
-## Reliability
-
-- Added compact printing for `verymad_qc` reports.
-- Hardened empty-input, missing-value, identifier, overwrite, and zero-MAD handling.
-- Expanded tests for the complete public API and important edge cases.
-- Expanded continuous integration across Linux, macOS, Windows, and multiple R versions.
-
-## Documentation
-
-- Updated the README and vignettes for the final two-function interface.
-- Simplified the pkgdown reference index.
-- Kept `pak::pak("Thokas99/veryMAD")` as the primary installation command.
+- The public API is `mad_qc()` and `mad_scale()`; QC reports include an overall
+  `mad_qc_outlier` flag.
+- Added compact report printing and expanded input and edge-case coverage.
+- Updated the README, guides, and package checks.
 
 # veryMAD 0.5.0
 
-## Breaking changes
-
-- Reduced the public API to `mad_qc()` and `mad_scale()`.
-- Removed grouped QC calculations and separate modality workflows.
-- Removed redundant per-result counts and qualitative interpretation fields.
-- Changed the default QC transformation to `"none"`.
-- Changed the default zero-MAD policy to `"na"`.
-
-## New interface
-
-- `mad_qc()` provides annotation and compact report outputs.
-- QC metrics, directions, and transformations remain explicit.
-- Seurat support delegates to the same canonical engine.
-- `mad_scale()` supports robust scaling for vectors and matrices.
-
-## Documentation
-
-- Simplified the README.
-- Added focused vignettes for QC, interpretation, and MAD scaling.
-- Reorganized the pkgdown website around the two-function API.
-
-## Internal changes
-
-- Consolidated QC calculations into one internal engine.
-- Converted low-level statistical functions to internal helpers.
-- Removed duplicated wrappers and obsolete implementation paths.
-- Simplified dependencies and tests.
+- Centered the API on `mad_qc()` and `mad_scale()`, with annotation or report
+  output, explicit metric settings, and robust scaling for vectors and matrices.
+- Added Seurat metadata support and set raw-scale thresholds and unresolved
+  zero-MAD flags as QC defaults.
+- Added focused guides and streamlined internal calculations.

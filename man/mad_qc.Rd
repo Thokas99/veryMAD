@@ -19,44 +19,53 @@ mad_qc(
 \arguments{
 \item{data}{A data frame, tibble, numeric matrix, or Seurat object.}
 
-\item{metrics}{A non-empty named character vector mapping columns to
-\code{"lower"}, \code{"upper"}, or \code{"both"}.}
+\item{metrics}{A non-empty named character vector with unique metric names;
+values are \code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
 \item{nmads}{Positive number of MADs from the median for the limits.}
 
 \item{transform}{A scalar transformation or named partial overrides.
 Supported values are \code{"none"}, \code{"log1p"}, and \code{"log10"}.}
 
-\item{output}{Return annotated data (\code{"annotate"}) or a compact report
-(\code{"report"}).}
+\item{output}{Return annotated data by default; use \code{"report"} for flags,
+thresholds, and settings.}
 
 \item{min_n}{Minimum number of finite, non-missing observations required.}
 
 \item{zero_mad}{Handling of a zero MAD: \code{"na"}, \code{"zero"}, or \code{"error"}.}
 
-\item{overwrite}{Replace existing generated flag columns?}
+\item{overwrite}{Replace existing flag columns?}
 
-\item{verbose}{Print a concise neutral summary?}
+\item{verbose}{Print a summary?}
 }
 \value{
 Annotated input or a \code{verymad_qc} list with \code{flags}, \code{thresholds},
-and \code{settings}.
+and \code{settings}. Threshold reports include finite observations used and
+per-metric flagged and unresolved counts.
 }
 \description{
-Rows are observations and \code{metrics} explicitly selects numeric QC columns.
-One reference distribution is calculated per metric across all observations;
-observations are never filtered automatically.
+Rows are observations. Select numeric metric columns and a tail direction
+for each. veryMAD estimates one threshold per metric across the input rows
+and returns annotated metadata or a \code{verymad_qc} report.
 }
 \examples{
 qc_metadata <- data.frame(
   sample = paste0("sample_", 1:6),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
-  pct_mito = c(.04, .05, .06, .05, .07, .30)
+  pct_mito = c(4, 5, 6, 5, 7, 30)
 )
-qc <- mad_qc(
+annotated <- mad_qc(
   qc_metadata,
   metrics = c(library_size = "lower", pct_mito = "upper"),
   verbose = FALSE
 )
-qc[, c("sample", "mad_qc_outlier")]
+annotated[, c("sample", "mad_qc_outlier")]
+
+report <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  output = "report",
+  verbose = FALSE
+)
+report$thresholds[, c("metric", "n_used", "n_flagged", "n_unresolved")]
 }
