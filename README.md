@@ -10,7 +10,7 @@
   <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a>
   <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a>
   <a href="https://github.com/Thokas99/veryMAD/releases"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&sort=semver" alt="Latest release"></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+  <a href="https://github.com/Thokas99/veryMAD/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
 `veryMAD` flags selected numeric metrics with median absolute deviation (MAD)
@@ -125,7 +125,7 @@ deviations from the median. `"error"` stops.
 - [QC plots](https://thokas99.github.io/veryMAD/articles/qc-plots.html)
 - [MAD scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)
 - [Function reference](https://thokas99.github.io/veryMAD/reference/)
-- [Release notes](NEWS.md)
+- [Release notes](https://thokas99.github.io/veryMAD/news/index.html)
 
 ## Further reading
 
