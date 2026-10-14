@@ -1,0 +1,1972 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+.github/
+  workflows/
+    pkgdown.yaml
+    R-CMD-check.yaml
+  .gitignore
+benchmarks/
+  benchmark-mad-qc.R
+man/
+  figures/
+    veryMAD-logo.svg
+  mad_qc.Rd
+  mad_scale.Rd
+  veryMAD-package.Rd
+R/
+  mad-qc.R
+  mad-scale.R
+  veryMAD-package.R
+  zzz.R
+tests/
+  testthat/
+    helper-data.R
+    test-mad-qc-edge-cases.R
+    test-mad-qc-inputs.R
+    test-mad-qc-output.R
+    test-mad-scale.R
+    test-print.R
+  testthat.R
+vignettes/
+  getting-started.qmd
+  mad-scaling.qmd
+  qc-interpretation.qmd
+_pkgdown.yml
+.gitignore
+.Rbuildignore
+DESCRIPTION
+LICENSE
+NAMESPACE
+NEWS.md
+README.md
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path=".github/.gitignore">
+*.html
+</file>
+
+<file path="benchmarks/benchmark-mad-qc.R">
+# Run with the current veryMAD installation:
+#   Rscript benchmarks/benchmark-mad-qc.R
+# Set VERYMAD_BENCH_ITERATIONS to repeat measurements (default: 1).
+# Allocation totals include profiled allocations of at least 1 MiB; they are
+# not peak resident memory. Allocation values are NA if R lacks memory profiling.
+
+if (!requireNamespace("veryMAD", quietly = TRUE)) {
+  stop("Install the current veryMAD package before running this benchmark.")
+}
+
+iterations <- suppressWarnings(as.integer(Sys.getenv("VERYMAD_BENCH_ITERATIONS", "1")))
+if (length(iterations) != 1L || is.na(iterations) || iterations < 1L) {
+  stop("VERYMAD_BENCH_ITERATIONS must be a positive integer.")
+}
+
+measure <- function(fun) {
+  elapsed <- numeric(iterations)
+  allocated_mib <- rep(NA_real_, iterations)
+  for (i in seq_len(iterations)) {
+    invisible(gc())
+    if (isTRUE(capabilities("profmem"))) {
+      profile <- tempfile()
+      utils::Rprofmem(profile, threshold = 1024^2)
+      elapsed[i] <- unname(system.time(invisible(fun()))["elapsed"])
+      utils::Rprofmem(NULL)
+      sizes <- suppressWarnings(as.numeric(sub(" .*", "", readLines(profile, warn = FALSE))))
+      allocated_mib[i] <- sum(sizes, na.rm = TRUE) / 1024^2
+      unlink(profile)
+    } else {
+      elapsed[i] <- unname(system.time(invisible(fun()))["elapsed"])
+    }
+  }
+  c(elapsed_seconds = median(elapsed), allocated_MiB_over_1MiB = median(allocated_mib))
+}
+
+make_metadata <- function(n) {
+  set.seed(600 + n)
+  x <- data.frame(
+    nCount_RNA = stats::rpois(n, 5000),
+    nFeature_RNA = stats::rpois(n, 1500),
+    percent.mt = stats::rbeta(n, 2, 18) * 100,
+    nCount_peaks = stats::rpois(n, 6000),
+    TSS.enrichment = stats::rgamma(n, 3, scale = 2),
+    nucleosome_signal = stats::rgamma(n, 2, scale = 0.7),
+    nCount_ADT = stats::rpois(n, 500),
+    percent.ribo = stats::rbeta(n, 3, 15) * 100,
+    log10GenesPerUMI = stats::rnorm(n, 0.7, 0.08),
+    doublet_score = stats::rbeta(n, 2, 12)
+  )
+  rownames(x) <- paste0("cell_", seq_len(n))
+  x
+}
+
+combine_reference <- function(flags) {
+  if (!nrow(flags)) return(logical())
+  vapply(seq_len(nrow(flags)), function(i) {
+    x <- unlist(flags[i, ], use.names = FALSE)
+    if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE
+  }, logical(1))
+}
+
+directions <- c(
+  nCount_RNA = "lower",
+  nFeature_RNA = "lower",
+  percent.mt = "upper",
+  nCount_peaks = "lower",
+  TSS.enrichment = "lower",
+  nucleosome_signal = "upper",
+  nCount_ADT = "lower",
+  percent.ribo = "upper",
+  log10GenesPerUMI = "lower",
+  doublet_score = "upper"
+)
+combine_flags <- getFromNamespace(".combine_flags", "veryMAD")
+check_flags <- data.frame(
+  lower = c(FALSE, TRUE, NA, FALSE),
+  upper = c(NA, FALSE, FALSE, FALSE)
+)
+stopifnot(identical(combine_flags(check_flags), combine_reference(check_flags)))
+records <- list()
+
+add_record <- function(n, n_metrics, task, result) {
+  records[[length(records) + 1L]] <<- data.frame(
+    observations = n,
+    metrics = n_metrics,
+    task = task,
+    elapsed_seconds = unname(result[["elapsed_seconds"]]),
+    allocated_MiB_over_1MiB = unname(result[["allocated_MiB_over_1MiB"]])
+  )
+}
+
+# shortcut: the row-wise reference stops at 100k rows to keep the default
+# optional run practical; raise this limit on hosts with more time and memory.
+baseline_limit <- 100000L
+for (n in c(10000L, 100000L, 500000L, 1000000L)) {
+  metadata <- make_metadata(n)
+  for (k in c(3L, 5L, 10L)) {
+    metrics <- directions[seq_len(k)]
+    transformable <- intersect(names(metrics), c(
+      "nCount_RNA", "nFeature_RNA", "nCount_peaks", "nCount_ADT"
+    ))
+    transforms <- stats::setNames(rep("log1p", length(transformable)), transformable)
+
+    for (output in c("annotate", "report")) {
+      result <- measure(function() veryMAD::mad_qc(
+        metadata,
+        metrics = metrics,
+        transform = transforms,
+        output = output,
+        verbose = FALSE
+      ))
+      add_record(n, k, paste0("mad_qc_", output), result)
+    }
+
+    flags <- as.data.frame(matrix(
+      sample(c(FALSE, TRUE, NA), n * k, replace = TRUE,
+             prob = c(0.96, 0.02, 0.02)),
+      nrow = n,
+      ncol = k
+    ))
+    names(flags) <- paste0("metric_", seq_len(k))
+    result <- measure(function() combine_flags(flags))
+    add_record(n, k, "combined_vectorized", result)
+
+    if (n <= baseline_limit) {
+      result <- measure(function() combine_reference(flags))
+      add_record(n, k, "combined_rowwise_reference", result)
+    }
+  }
+  rm(metadata)
+  invisible(gc())
+}
+
+utils::write.csv(do.call(rbind, records), row.names = FALSE)
+</file>
+
+<file path="man/figures/veryMAD-logo.svg">
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-labelledby="title desc">
+  <title id="title">veryMAD R package logo</title>
+  <desc id="desc">An angry face built from a boxplot, median line, and outliers inside a hexagonal badge.</desc>
+
+  <!-- Transparent outside the badge -->
+  <path d="M512 38 914 270 914 754 512 986 110 754 110 270Z"
+        fill="#FFF9F0" stroke="#2B2227" stroke-width="34" stroke-linejoin="round"/>
+  <path d="M512 72 883 286 883 738 512 952 141 738 141 286Z"
+        fill="none" stroke="#E24A3B" stroke-width="10" stroke-linejoin="round"/>
+
+  <!-- Statistical outliers -->
+  <g fill="#E24A3B">
+    <circle cx="512" cy="134" r="10"/>
+    <circle cx="512" cy="171" r="13"/>
+    <circle cx="512" cy="216" r="16"/>
+    <circle cx="512" cy="668" r="14"/>
+    <circle cx="512" cy="705" r="10"/>
+    <circle cx="512" cy="736" r="7"/>
+  </g>
+
+  <!-- Angry eyebrows -->
+  <g fill="#8F1022">
+    <path d="M248 270 435 358 408 414 226 329Z"/>
+    <path d="M776 270 589 358 616 414 798 329Z"/>
+  </g>
+
+  <!-- Eyes -->
+  <path d="M307 377c45 4 78 27 91 66-16 30-42 47-76 47-38 0-66-26-66-63 0-20 18-39 51-50Z"
+        fill="#2B2227"/>
+  <path d="M717 377c-45 4-78 27-91 66 16 30 42 47 76 47 38 0 66-26 66-63 0-20-18-39-51-50Z"
+        fill="#2B2227"/>
+
+  <!-- Central boxplot -->
+  <g stroke="#2B2227" stroke-width="12" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M512 250V371M472 250h80M512 542v74M478 616h68" fill="none"/>
+    <rect x="456" y="371" width="112" height="171" rx="4" fill="#F06452"/>
+    <path d="M456 456h112" fill="none" stroke="#8F1022"/>
+  </g>
+
+  <!-- Deep frown -->
+  <path d="M292 653Q512 493 732 653" fill="none" stroke="#8F1022"
+        stroke-width="42" stroke-linecap="round"/>
+
+  <!-- Package name -->
+  <text x="512" y="840" text-anchor="middle"
+        font-family="Inter, Helvetica Neue, Arial, sans-serif"
+        font-size="94" font-weight="800" letter-spacing="-4">
+    <tspan fill="#2B2227">very</tspan><tspan fill="#8F1022">MAD</tspan>
+  </text>
+</svg>
+</file>
+
+<file path="tests/testthat/helper-data.R">
+qc_data <- function() {
+  data.frame(
+    lower = c(1, 10, 11, 12, 100),
+    upper = c(1, 2, 3, 4, 20),
+    both = c(1, 2, 3, 4, 100),
+    row.names = paste0("sample", 1:5)
+  )
+}
+</file>
+
+<file path="tests/testthat.R">
+# This file is part of the standard setup for testthat.
+# It is recommended that you do not modify it.
+#
+# Where should you do additional test configuration?
+# Learn more about the roles of various files in:
+# * https://r-pkgs.org/testing-design.html#sec-tests-files-overview
+# * https://testthat.r-lib.org/articles/special-files.html
+
+library(testthat)
+library(veryMAD)
+
+test_check("veryMAD")
+</file>
+
+<file path=".github/workflows/pkgdown.yaml">
+# Workflow derived from https://github.com/r-lib/actions/tree/v2/examples
+# Need help debugging build failures? Start at https://github.com/r-lib/actions#where-to-find-help
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  release:
+    types: [published]
+  workflow_dispatch:
+
+name: pkgdown.yaml
+
+permissions: read-all
+
+jobs:
+  pkgdown:
+    runs-on: ubuntu-latest
+    # Only restrict concurrency for non-PR jobs
+    concurrency:
+      group: pkgdown-${{ github.event_name != 'pull_request' || github.run_id }}
+    env:
+      GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: r-lib/actions/setup-pandoc@v2
+
+      - uses: r-lib/actions/setup-r@v2
+
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::pkgdown, local::.
+          needs: website
+
+      - name: Build site
+        run: pkgdown::build_site_github_pages(new_process = FALSE, install = FALSE)
+        shell: Rscript {0}
+
+      - name: Deploy to GitHub pages 🚀
+        if: github.event_name != 'pull_request'
+        uses: JamesIves/github-pages-deploy-action@d92aa235d04922e8f08b40ce78cc5442fcfbfa2f # v4.8.0
+        with:
+          clean: true
+          branch: gh-pages
+          folder: docs
+</file>
+
+<file path="tests/testthat/test-mad-qc-edge-cases.R">
+test_that("empty, missing, and insufficient metrics retain explicit status", {
+  empty <- mad_qc(data.frame(a = numeric(), b = numeric()), c(a = "lower", b = "upper"), output = "report", verbose = FALSE)
+  expect_equal(nrow(empty$flags), 0)
+  expect_true(all(empty$thresholds$status == "all_missing"))
+  expect_true(all(is.na(empty$thresholds[, c("median", "mad", "lower", "upper")])))
+
+  missing <- mad_qc(data.frame(a = rep(NA_real_, 5)), c(a = "both"), output = "report", verbose = FALSE)
+  expect_equal(missing$thresholds$status, "all_missing")
+  expect_true(all(is.na(missing$flags$a)))
+  expect_true(all(is.na(missing$flags$mad_qc_outlier)))
+
+  expect_warning(insufficient <- mad_qc(data.frame(a = c(1, 2, NA, NA, NA), b = c(1, 2, 3, 4, 5)),
+    c(a = "lower", b = "upper"), output = "report", min_n = 3, verbose = FALSE), "a")
+  expect_equal(insufficient$thresholds$status, c("insufficient_n", "ok"))
+})
+
+test_that("observation identifiers fall back deterministically", {
+  d <- data.frame(a = 1:5)
+  attr(d, "row.names") <- c("dup", "dup", "", NA, "dup")
+  r <- mad_qc(d, c(a = "lower"), output = "report", verbose = FALSE)
+  expect_identical(r$flags$id, as.character(seq_len(nrow(d))))
+})
+
+test_that("zero MAD policies are explicit", {
+  d <- data.frame(a = c(1, 2, 2, 2, 3))
+  na <- mad_qc(d, c(a = "both"), output = "report", zero_mad = "na", verbose = FALSE)
+  expect_equal(na$thresholds$status, "zero_mad")
+  expect_equal(na$thresholds$n_used, 5L)
+  expect_equal(na$thresholds$n_flagged, 0L)
+  expect_equal(na$thresholds$n_unresolved, 5L)
+  expect_true(all(is.na(na$flags$a)))
+  zero <- mad_qc(d, c(a = "both"), output = "report", zero_mad = "zero", verbose = FALSE)
+  expect_equal(zero$thresholds$status, "zero_mad")
+  expect_equal(zero$thresholds$n_used, 5L)
+  expect_equal(zero$thresholds$n_flagged, 2L)
+  expect_equal(zero$thresholds$n_unresolved, 0L)
+  expect_true(all(is.logical(zero$flags$a)))
+  expect_error(mad_qc(d, c(a = "both"), zero_mad = "error", verbose = FALSE), "a")
+})
+
+test_that("overwrite detects all conflicts before annotation", {
+  d <- data.frame(a = 1:5, b = 1:5, a_mad_outlier = FALSE, b_mad_outlier = FALSE, mad_qc_outlier = FALSE)
+  expect_error(mad_qc(d, c(a = "lower", b = "upper"), verbose = FALSE), "a_mad_outlier.*b_mad_outlier.*mad_qc_outlier")
+  out <- mad_qc(d, c(a = "lower", b = "upper"), overwrite = TRUE, verbose = FALSE)
+  expect_true(all(c("a_mad_outlier", "b_mad_outlier", "mad_qc_outlier") %in% names(out)))
+})
+</file>
+
+<file path="tests/testthat/test-mad-qc-inputs.R">
+test_that("mad_qc validates the explicit metric contract", {
+  d <- data.frame(a = 1:5, b = letters[1:5])
+  expect_silent(mad_qc(d, c(a = "lower"), verbose = FALSE))
+  expect_error(mad_qc(d, c(a = "lower", a = "upper"), verbose = FALSE), "unique")
+  expect_error(mad_qc(d, c(b = "lower"), verbose = FALSE), "numeric")
+  expect_error(mad_qc(d, c(nope = "lower"), verbose = FALSE), "Missing")
+  expect_error(mad_qc(d, c(a = "sideways"), verbose = FALSE), "directions")
+  expect_error(mad_qc(d, c(a = "lower"), nmads = 0, verbose = FALSE), "positive")
+  expect_error(mad_qc(d, c(a = "lower"), min_n = 0, verbose = FALSE), "positive")
+  expect_error(mad_qc(d, c(a = "lower"), min_n = 1.5, verbose = FALSE), "integer")
+  expect_error(mad_qc(d, c(a = "lower"), transform = "unknown", verbose = FALSE), "Transformations")
+  expect_error(mad_qc(d, c(a = "lower"), transform = c(unknown = "log1p"), verbose = FALSE), "selected metrics")
+  expect_false("combine" %in% names(formals(mad_qc)))
+})
+
+test_that("reserved report and annotation names cannot be selected as metrics", {
+  for (reserved in c("id", "mad_qc_outlier")) {
+    d <- data.frame(value = 1:5)
+    names(d) <- reserved
+    metrics <- stats::setNames("upper", reserved)
+
+    expect_error(mad_qc(d, metrics, verbose = FALSE), "[Rr]eserved.*(id|mad_qc_outlier)")
+    expect_error(mad_qc(d, metrics, output = "report", verbose = FALSE),
+                 "[Rr]eserved.*(id|mad_qc_outlier)")
+  }
+})
+
+test_that("mad_qc validates transformations and finite values", {
+  expect_error(mad_qc(data.frame(a = -1:3), c(a = "lower"), transform = "log1p", verbose = FALSE), "non-negative")
+  expect_error(mad_qc(data.frame(a = 0:4), c(a = "lower"), transform = "log10", verbose = FALSE), "positive")
+  expect_error(mad_qc(data.frame(a = c(1:4, Inf)), c(a = "lower"), verbose = FALSE), "non-finite")
+  expect_error(mad_qc(data.frame(a = c(1:4, NaN)), c(a = "lower"), verbose = FALSE), "non-finite")
+  expect_error(mad_qc(data.frame(a = c(1:4, -Inf)), c(a = "lower"), verbose = FALSE), "non-finite")
+})
+
+test_that("matrix, tibble-like, and optional Seurat inputs work", {
+  x <- matrix(1:15, nrow = 5, dimnames = list(letters[1:5], c("a", "b", "c")))
+  out <- mad_qc(x, c(a = "lower", b = "upper"), verbose = FALSE)
+  expect_true(is.data.frame(out)); expect_equal(nrow(out), 5)
+  report <- mad_qc(x, c(a = "lower"), output = "report", verbose = FALSE)
+  expect_identical(report$flags$id, rownames(x))
+  expect_equal(nrow(report$flags), nrow(x))
+  tibble <- as.data.frame(x); class(tibble) <- c("tbl_df", "tbl", "data.frame")
+  expect_s3_class(mad_qc(tibble, c(a = "lower"), verbose = FALSE), "data.frame")
+
+  skip_if_not_installed("SeuratObject")
+  assay_counts <- function(x) {
+    if (utils::packageVersion("SeuratObject") >= "5.0.0") {
+      SeuratObject::LayerData(x, assay = "RNA", layer = "counts")
+    } else {
+      SeuratObject::GetAssayData(x, assay = "RNA", slot = "counts")
+    }
+  }
+  counts <- matrix(1:25, nrow = 5, dimnames = list(paste0("g", 1:5), paste0("c", 1:5)))
+  object <- suppressWarnings(SeuratObject::CreateSeuratObject(counts))
+  object[["qc"]] <- c(1, 2, 3, 4, 100)
+  counts_before <- assay_counts(object)
+  report <- mad_qc(object, c(qc = "upper"), output = "report", verbose = FALSE)
+  out <- mad_qc(object, c(qc = "upper"), verbose = FALSE)
+  expect_true(inherits(out, "Seurat"))
+  expect_true(all(c("qc_mad_outlier", "mad_qc_outlier") %in% names(out[[]])))
+  expect_identical(report$flags$id, colnames(object))
+  expect_identical(rownames(out[[]]), colnames(out))
+  expect_identical(out[[]]$qc_mad_outlier, report$flags$qc)
+  expect_identical(assay_counts(out), counts_before)
+})
+</file>
+
+<file path="tests/testthat/test-mad-qc-output.R">
+test_that("mad_qc annotates explicit tails without filtering or changing values", {
+  d <- qc_data()
+  before <- d
+  out <- mad_qc(d, c(lower = "lower", upper = "upper", both = "both"), verbose = FALSE)
+  expect_s3_class(out, "data.frame")
+  expect_equal(nrow(out), nrow(d))
+  expect_identical(rownames(out), rownames(d))
+  expect_identical(out[ names(d) ], d)
+  expect_true(all(c("lower_mad_outlier", "upper_mad_outlier", "both_mad_outlier", "mad_qc_outlier") %in% names(out)))
+  expect_true(any(out$lower_mad_outlier))
+  expect_true(any(out$upper_mad_outlier))
+  expect_true(any(out$both_mad_outlier))
+  expect_true(any(out$mad_qc_outlier))
+  expect_identical(d, before)
+})
+
+test_that("report output has the stable compact contract", {
+  r <- mad_qc(qc_data(), c(lower = "lower", upper = "upper"), output = "report", verbose = FALSE)
+  expect_s3_class(r, "verymad_qc")
+  expect_identical(names(r), c("flags", "thresholds", "settings"))
+  expect_identical(names(r$flags), c("id", "lower", "upper", "mad_qc_outlier"))
+  expect_identical(names(r$thresholds), c("metric", "direction", "transform", "median", "mad", "lower", "upper", "lower_raw", "upper_raw", "status", "n_used", "n_flagged", "n_unresolved"))
+  expect_true(all(vapply(r$flags[-1], is.logical, logical(1))))
+  expect_identical(names(r$settings), c("metrics", "transform", "nmads", "constant", "min_n", "zero_mad"))
+  expect_false("verbose" %in% names(r$settings))
+  expect_false("annotated" %in% names(r))
+})
+
+test_that("combined flags use three-valued any logic and are always present", {
+  d <- data.frame(a = c(1:4, 100), missing = rep(NA_real_, 5))
+  r <- mad_qc(d, c(a = "upper", missing = "upper"), output = "report", min_n = 3, verbose = FALSE)
+  expect_true(any(r$flags$mad_qc_outlier %in% TRUE))
+  expect_true(anyNA(r$flags$mad_qc_outlier))
+
+  all_false <- mad_qc(data.frame(a = 1:5), c(a = "both"), output = "report", min_n = 3, verbose = FALSE)
+  expect_true(all_false$flags$mad_qc_outlier[1] %in% FALSE)
+  expect_false(anyNA(all_false$flags$mad_qc_outlier))
+
+  empty <- mad_qc(data.frame(a = numeric()), c(a = "upper"), output = "report", verbose = FALSE)
+  expect_identical(empty$flags$mad_qc_outlier, logical())
+})
+
+test_that("combined flags match three-valued any logic for all logical combinations", {
+  reference <- function(flags) {
+    vapply(seq_len(nrow(flags)), function(i) {
+      x <- unlist(flags[i, , drop = FALSE], use.names = FALSE)
+      if (any(x %in% TRUE)) TRUE else if (anyNA(x)) NA else FALSE
+    }, logical(1))
+  }
+  values <- expand.grid(a = c(FALSE, TRUE, NA), b = c(FALSE, TRUE, NA),
+                        c = c(FALSE, TRUE, NA))
+
+  expect_identical(veryMAD:::.combine_flags(values), reference(values))
+  expect_identical(veryMAD:::.combine_flags(values[FALSE, ]), logical())
+  expect_identical(veryMAD:::.combine_flags(data.frame(row.names = 1:3)),
+                   reference(data.frame(row.names = 1:3)))
+})
+
+test_that("threshold reports count finite, flagged, and unresolved observations", {
+  d <- data.frame(
+    usable = c(1, 2, 3, 4, 100, NA_real_),
+    insufficient = c(1, 2, NA_real_, NA_real_, NA_real_, NA_real_),
+    missing = rep(NA_real_, 6)
+  )
+  expect_warning(r <- mad_qc(
+    d, c(usable = "upper", insufficient = "lower", missing = "upper"),
+    output = "report", min_n = 5, verbose = FALSE
+  ), "Insufficient")
+
+  counts <- r$thresholds[, c("metric", "status", "n_used", "n_flagged", "n_unresolved")]
+  expect_equal(counts$status, c("ok", "insufficient_n", "all_missing"))
+  expect_equal(counts$n_used, c(5L, 2L, 0L))
+  expect_equal(counts$n_flagged, c(1L, 0L, 0L))
+  expect_equal(counts$n_unresolved, c(1L, 6L, 6L))
+  expect_true(r$flags$mad_qc_outlier[5])
+  expect_true(is.na(r$flags$mad_qc_outlier[1]))
+})
+
+test_that("report identifiers preserve valid observation row names", {
+  d <- qc_data()
+  rownames(d) <- paste0("cell_", seq_len(nrow(d)))
+  report <- mad_qc(d, c(lower = "lower"), output = "report", verbose = FALSE)
+  annotated <- mad_qc(d, c(lower = "lower"), verbose = FALSE)
+
+  expect_identical(report$flags$id, rownames(d))
+  expect_identical(rownames(annotated), rownames(d))
+  expect_identical(annotated$lower, d$lower)
+})
+</file>
+
+<file path="tests/testthat/test-print.R">
+test_that("verbose summaries are concise and presentation-only", {
+  d <- qc_data()
+  expect_silent(mad_qc(d, c(lower = "lower", upper = "upper"), verbose = FALSE))
+  expect_message(mad_qc(d, c(lower = "lower", upper = "upper"), verbose = TRUE), "observations checked")
+  expect_message(mad_qc(d, c(lower = "lower", upper = "upper"), verbose = TRUE), "flagged by at least one metric")
+  expect_message(mad_qc(d, c(lower = "lower", upper = "upper"), verbose = TRUE), "unresolved")
+  expect_message(mad_qc(d, c(lower = "lower", upper = "upper"), verbose = TRUE), "without estimated thresholds")
+  expect_message(mad_qc(data.frame(a = rep(NA_real_, 5)), c(a = "upper"),
+                        verbose = TRUE), "5 unresolved")
+})
+
+test_that("verymad_qc printing returns invisibly and does not mutate", {
+  r <- mad_qc(qc_data(), c(lower = "lower", upper = "upper"), output = "report", verbose = FALSE)
+  before <- r
+  printed <- capture.output(returned <- print(r))
+  expect_match(paste(printed, collapse = "\n"), "<verymad_qc>")
+  expect_match(paste(printed, collapse = "\n"), "Observations flagged")
+  expect_match(paste(printed, collapse = "\n"), "Observations unresolved")
+  expect_match(paste(printed, collapse = "\n"), "without estimated thresholds")
+  expect_match(paste(printed, collapse = "\n"), "Threshold status")
+  expect_identical(returned, r)
+  expect_identical(r, before)
+
+  empty <- mad_qc(data.frame(a = numeric()), c(a = "upper"), output = "report", verbose = FALSE)
+  expect_silent(capture.output(print(empty)))
+
+  unresolved <- mad_qc(
+    data.frame(a = rep(NA_real_, 5)), c(a = "upper"),
+    output = "report", verbose = FALSE
+  )
+  printed <- paste(capture.output(print(unresolved)), collapse = "\n")
+  expect_match(printed, "Observations: 5")
+  expect_match(printed, "Metrics: 1")
+  expect_match(printed, "Observations flagged: 0")
+  expect_match(printed, "Observations unresolved: 5")
+  expect_match(printed, "Metrics without estimated thresholds: 1")
+})
+
+test_that("the package exports exactly two functions", {
+  expect_identical(sort(getNamespaceExports("veryMAD")), c("mad_qc", "mad_scale"))
+})
+</file>
+
+<file path="vignettes/getting-started.qmd">
+---
+title: "Getting started with veryMAD"
+description: >
+  Annotate sequencing metadata with explicit MAD thresholds.
+vignette: >
+  %\VignetteIndexEntry{Getting started with veryMAD}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+---
+
+`veryMAD` estimates one median absolute deviation (MAD) threshold per selected
+metric. Choose the metrics, tail directions, and transformations. Annotation
+retains every input row; report mode returns flags and thresholds.
+
+```{r}
+#| label: setup
+#| include: false
+library(veryMAD)
+```
+
+## A basic QC workflow
+
+This sequencing metadata example uses percentage points for `pct_mito`: 8
+denotes 8%.
+
+```{r}
+sample_metadata <- data.frame(
+  sample = paste0("sample_", 1:8),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.6e6, 0.45e6, 2.5e6),
+  detected_genes = c(12000, 12500, 13100, 12800, 13400, 12600, 1500, 12300),
+  pct_mito = c(4, 5, 6, 5, 7, 6, 8, 29)
+)
+
+# Select the tail to review for each metric
+qc_directions <- c(
+  library_size = "lower",
+  detected_genes = "lower",
+  pct_mito = "upper"
+)
+
+# Add one flag per metric and a combined flag
+qc_annotated <- mad_qc(
+  sample_metadata,
+  metrics = qc_directions,
+  verbose = FALSE
+)
+```
+
+The result keeps every row and adds logical flags:
+
+```{r}
+qc_annotated[, c("sample", "library_size_mad_outlier",
+                 "detected_genes_mad_outlier", "pct_mito_mad_outlier",
+                 "mad_qc_outlier")]
+```
+
+`mad_qc_outlier` is `TRUE` when any selected metric is flagged. Use the flags
+to guide review in the analysis workflow.
+
+## Inspect thresholds with a report
+
+Use `output = "report"` to inspect thresholds and flags without adding columns
+to the input.
+
+```{r}
+qc_report <- mad_qc(
+  sample_metadata,
+  metrics = qc_directions,
+  output = "report",
+  verbose = FALSE
+)
+
+qc_report$thresholds[, c("metric", "direction", "lower_raw",
+                         "upper_raw", "status")]
+qc_report$flags[, c("id", "mad_qc_outlier")]
+```
+
+The threshold table records each metric's status and observation counts.
+</file>
+
+<file path="vignettes/mad-scaling.qmd">
+---
+title: "Robust MAD scaling"
+description: >
+  Center and scale vectors and matrices with the median and MAD.
+vignette: >
+  %\VignetteIndexEntry{Robust MAD scaling}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+---
+
+`mad_scale()` centers numeric data by its median and divides by its median
+absolute deviation (MAD). Set `center` or `scale` to `FALSE` to skip that
+operation.
+
+```{r}
+#| label: setup
+#| include: false
+library(veryMAD)
+```
+
+## Scale a vector
+
+This example scales expression summaries for five genes.
+
+```{r}
+gene_expression <- c(
+  gene_A = 8.2,
+  gene_B = 8.7,
+  gene_C = 9.1,
+  gene_D = 9.4,
+  gene_E = 18.0
+)
+
+scaled_expression <- mad_scale(gene_expression)
+round(scaled_expression, 2)
+```
+
+Names and missing values are preserved.
+
+## Scale an expression matrix
+
+For a matrix, `margin = 1` scales rows and `margin = 2` scales columns. Here
+rows are genes and columns are samples.
+
+```{r}
+expression_matrix <- matrix(
+  c(
+    8.2, 8.5, 8.4, 8.6,
+    9.1, 9.0, 9.3, 9.2,
+    4.0, 4.2, NA, 4.1
+  ),
+  nrow = 3,
+  byrow = TRUE,
+  dimnames = list(
+    c("gene_A", "gene_B", "gene_C"),
+    c("sample_1", "sample_2", "sample_3", "sample_4")
+  )
+)
+
+scaled_by_sample <- mad_scale(expression_matrix, margin = 2)
+round(scaled_by_sample, 2)
+```
+
+Dimensions and dimnames are preserved. The default `zero_mad = "na"` returns
+`NA` for zero-MAD groups. `"zero"` uses a unit denominator; centered results
+are unscaled deviations. Choose `"error"` to stop on zero MAD.
+
+```{r}
+mostly_constant <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
+mad_scale(mostly_constant)
+mad_scale(mostly_constant, zero_mad = "zero")
+```
+</file>
+
+<file path="vignettes/qc-interpretation.qmd">
+---
+title: "Interpreting MAD QC flags"
+description: >
+  Read MAD flags and apply them in single-cell QC workflows.
+vignette: >
+  %\VignetteIndexEntry{Interpreting MAD QC flags}
+  %\VignetteEngine{quarto::html}
+  %\VignetteEncoding{UTF-8}
+knitr:
+  opts_chunk:
+    collapse: true
+    comment: "#>"
+---
+
+MAD flags identify selected statistical tails for review. Choose a direction
+for each metric:
+
+- `lower` flags unusually small values;
+- `upper` flags unusually large values;
+- `both` flags either tail.
+
+```{r}
+#| label: setup
+#| include: false
+library(veryMAD)
+```
+
+## Read a flag in context
+
+The example uses common sequencing metrics. `pct_mito` is in percentage
+points: 8 denotes 8%.
+
+```{r}
+qc_metadata <- data.frame(
+  sample = paste0("sample_", 1:7),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 0.5e6, NA_real_),
+  detected_genes = c(12000, 12500, 13100, 12800, 13400, 1600, 12200),
+  pct_mito = c(4, 5, 6, 5, 7, 8, 30)
+)
+
+qc_result <- mad_qc(
+  qc_metadata,
+  metrics = c(
+    library_size = "lower",
+    detected_genes = "lower",
+    pct_mito = "upper"
+  ),
+  output = "report",
+  verbose = FALSE
+)
+
+qc_result$flags[, c("id", "library_size", "detected_genes",
+                    "pct_mito", "mad_qc_outlier")]
+```
+
+The missing library size remains `NA` in its flag. The combined flag is `NA`
+when no metric is flagged and at least one metric is unresolved. Review
+individual flags with the source metadata.
+
+## Threshold status and transformations
+
+The threshold table reports calculation-scale and raw-scale limits.
+
+```{r}
+transformed_result <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  transform = c(library_size = "log1p"),
+  output = "report",
+  verbose = FALSE
+)
+
+transformed_result$thresholds[, c(
+  "metric", "direction", "transform", "lower_raw", "upper_raw", "status"
+)]
+```
+
+`min_n` sets the minimum number of observations used for estimation. The
+statuses `insufficient_n` and `all_missing` identify metrics without an
+estimated threshold.
+
+## Zero MAD and downstream decisions
+
+A zero MAD means the data provide no non-zero robust spread estimate. Choose
+the policy for the downstream analysis.
+
+```{r}
+constant_metric <- data.frame(
+  sample = paste0("sample_", 1:6),
+  detected_genes = rep(12000, 6)
+)
+
+zero_mad_result <- mad_qc(
+  constant_metric,
+  metrics = c(detected_genes = "lower"),
+  zero_mad = "zero",
+  output = "report",
+  verbose = FALSE
+)
+
+zero_mad_result$thresholds[, c("metric", "mad", "lower_raw", "status")]
+```
+
+Use `zero_mad = "na"` to leave flags unresolved or `"error"` to stop. For
+stratified analyses, split the data and call `mad_qc()` on each subset.
+
+## Single-cell RNA-seq
+
+Common RNA metrics are `nCount_RNA`, `nFeature_RNA`, and `percent.mt`. This
+example checks lower count and feature tails, an upper mitochondrial tail, and
+applies `log1p` to the count-like metrics. Seurat's `percent.mt` is usually on
+a 0–100 scale: 8 means 8%.
+
+```{r}
+rna_metadata <- data.frame(
+  sample = rep(c("sample_A", "sample_B"), each = 6),
+  nCount_RNA = c(820, 910, 970, 1050, 1120, 100, 125, 150, 175, 190, 210, 230),
+  nFeature_RNA = c(430, 480, 520, 570, 610, 55, 80, 95, 100, 115, 125, 140),
+  percent.mt = c(5, 6, 7, 8, 9, 35, 4, 5, 6, 7, 8, 9)
+)
+
+rna_metrics <- c(
+  nCount_RNA = "lower",
+  nFeature_RNA = "lower",
+  percent.mt = "upper"
+)
+rna_transform <- c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
+
+rna_report <- mad_qc(
+  rna_metadata,
+  metrics = rna_metrics,
+  transform = rna_transform,
+  output = "report",
+  verbose = FALSE
+)
+rna_report$thresholds[, c("metric", "direction", "transform", "status")]
+```
+
+## Single-cell ATAC-seq
+
+ATAC metadata may include `nCount_peaks`, `TSS.enrichment`, and
+`nucleosome_signal`. The example selects lower peak-count and TSS tails and an
+upper nucleosome-signal tail. Names and useful directions depend on the
+pipeline and assay; these are not universal thresholds.
+
+```{r}
+atac_metadata <- data.frame(
+  nCount_peaks = c(1200, 1800, 3200, 6000, 9000, 20000, 2500, 4100),
+  TSS.enrichment = c(0.8, 1.3, 3.0, 5.4, 8.0, 15.0, 4.1, 6.2),
+  nucleosome_signal = c(3.5, 2.4, 1.8, 1.4, 1.1, 0.9, 1.6, 1.3)
+)
+
+atac_report <- mad_qc(
+  atac_metadata,
+  metrics = c(
+    nCount_peaks = "lower",
+    TSS.enrichment = "lower",
+    nucleosome_signal = "upper"
+  ),
+  transform = c(nCount_peaks = "log1p"),
+  output = "report",
+  verbose = FALSE
+)
+atac_report$thresholds[, c("metric", "direction", "transform", "status")]
+```
+
+## Per-sample QC and absolute criteria
+
+Estimate thresholds per sample by splitting metadata and calling `mad_qc()`
+on each subset. Sample-specific thresholds can hide a uniformly low-quality
+sample; also review between-sample distributions.
+
+```{r}
+sample_reports <- lapply(
+  split(rna_metadata, rna_metadata$sample),
+  function(x) mad_qc(
+    x,
+    metrics = rna_metrics,
+    transform = rna_transform,
+    output = "report",
+    verbose = FALSE
+  )
+)
+sample_reports$sample_A$thresholds[, c("metric", "lower_raw", "status")]
+```
+
+MAD flags identify outliers in the supplied reference distribution. Combine
+them with separately chosen absolute criteria when appropriate. These example
+cutoffs are illustrative, not general recommendations:
+
+```{r}
+rna_annotated <- mad_qc(
+  rna_metadata,
+  metrics = rna_metrics,
+  transform = rna_transform,
+  verbose = FALSE
+)
+
+illustrative_keep <- !rna_annotated$mad_qc_outlier &
+  rna_annotated$nCount_RNA >= 500 &
+  rna_annotated$percent.mt <= 20
+table(illustrative_keep, useNA = "ifany")
+```
+
+## Seurat metadata
+
+`mad_qc()` adds flags to Seurat cell metadata. The example checks cell order
+against the original identities.
+
+```{r}
+if (requireNamespace("SeuratObject", quietly = TRUE)) {
+  counts <- matrix(
+    seq_len(40) %% 6,
+    nrow = 5,
+    dimnames = list(paste0("gene_", 1:5), paste0("cell_", 1:8))
+  )
+  seurat_object <- SeuratObject::CreateSeuratObject(counts = counts)
+  seurat_object[["percent.mt"]] <- c(4, 5, 6, 7, 8, 9, 10, 30)
+  cell_ids <- colnames(seurat_object)
+
+  seurat_metadata <- seurat_object[[]]
+  expected_flags <- mad_qc(
+    seurat_metadata,
+    metrics = rna_metrics,
+    transform = rna_transform,
+    verbose = FALSE
+  )
+  seurat_annotated <- mad_qc(
+    seurat_object,
+    metrics = rna_metrics,
+    transform = rna_transform,
+    verbose = FALSE
+  )
+
+  stopifnot(identical(rownames(seurat_annotated[[]]), cell_ids))
+  stopifnot(identical(
+    seurat_annotated[[]]$mad_qc_outlier,
+    expected_flags$mad_qc_outlier
+  ))
+  head(seurat_annotated[[]][, c("nCount_RNA", "nFeature_RNA",
+                                "percent.mt", "mad_qc_outlier")])
+}
+```
+</file>
+
+<file path="NEWS.md">
+# veryMAD 0.6.0
+
+- `mad_scale()` defaults to `zero_mad = "na"`; `"zero"` uses a unit
+  denominator and returns unscaled deviations when centered.
+- `mad_qc()` reserves `id` and `mad_qc_outlier` as metric names.
+- Threshold reports include used, flagged, and unresolved counts. Combined
+  flags are vectorized, and report-only calls skip annotation.
+- Added single-cell examples, regression tests, an optional `scuttle`
+  comparison, and a reproducible benchmark script.
+
+# veryMAD 0.5.1
+
+- The public API is `mad_qc()` and `mad_scale()`; QC reports include an overall
+  `mad_qc_outlier` flag.
+- Added compact report printing and expanded input and edge-case coverage.
+- Updated the README, guides, and package checks.
+
+# veryMAD 0.5.0
+
+- Centered the API on `mad_qc()` and `mad_scale()`, with annotation or report
+  output, explicit metric settings, and robust scaling for vectors and matrices.
+- Added Seurat metadata support and set raw-scale thresholds and unresolved
+  zero-MAD flags as QC defaults.
+- Added focused guides and streamlined internal calculations.
+</file>
+
+<file path=".github/workflows/R-CMD-check.yaml">
+name: R-CMD-check
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  R-CMD-check:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - {os: macos-latest, r: "release"}
+          - {os: windows-latest, r: "release"}
+          - {os: ubuntu-latest, r: "devel"}
+          - {os: ubuntu-latest, r: "release"}
+          - {os: ubuntu-latest, r: "oldrel-1"}
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: r-lib/actions/setup-r@v2
+        with:
+          r-version: ${{ matrix.r }}
+          use-public-rspm: true
+      - uses: r-lib/actions/setup-r-dependencies@v2
+        with:
+          extra-packages: any::rcmdcheck, local::.
+          needs: check
+      - uses: r-lib/actions/check-r-package@v2
+</file>
+
+<file path="R/zzz.R">
+.verymad_banner <- function(version = as.character(utils::packageVersion("veryMAD"))) {
+  paste0("veryMAD ", version, ": MAD quality control and robust scaling")
+}
+
+.verymad_startup_message <- function(quiet = getOption("veryMAD.quiet", FALSE),
+                                     version = as.character(utils::packageVersion("veryMAD"))) {
+  if (!isTRUE(quiet)) packageStartupMessage(.verymad_banner(version))
+  invisible(NULL)
+}
+
+.onAttach <- function(libname, pkgname) {
+  if (interactive()) .verymad_startup_message()
+}
+</file>
+
+<file path="tests/testthat/test-mad-scale.R">
+test_that("mad_scale handles numeric vectors and names", {
+  x <- c(a = 1, b = 2, c = 100)
+  out <- mad_scale(x)
+  expect_type(out, "double"); expect_identical(names(out), names(x))
+  expect_equal(mad_scale(x, center = FALSE, scale = FALSE), x)
+  expect_equal(mad_scale(numeric()), numeric())
+  expect_error(mad_scale(c(1, 2, Inf)), "Inf")
+  expect_error(mad_scale(c(1, 2, -Inf)), "Inf")
+  expect_error(mad_scale(c(1, 2, NaN)), "NaN")
+  expect_error(mad_scale(letters), "numeric")
+})
+
+test_that("mad_scale handles matrices, margins, and data frames", {
+  m <- matrix(1:12, nrow = 3, dimnames = list(paste0("r", 1:3), paste0("c", 1:4)))
+  rows <- mad_scale(m, margin = 1)
+  columns <- mad_scale(m, margin = 2)
+  expect_true(is.matrix(rows)); expect_identical(dim(rows), dim(m)); expect_identical(dimnames(rows), dimnames(m))
+  expect_equal(rows, mad_scale(m, margin = "rows")); expect_equal(columns, mad_scale(m, margin = "columns"))
+  expect_identical(dim(mad_scale(matrix(numeric(), nrow = 0, ncol = 2))), c(0L, 2L))
+  expect_true(is.matrix(mad_scale(as.data.frame(m))))
+  expect_error(mad_scale(data.frame(a = 1:3, b = letters[1:3])), "numeric")
+  expect_error(mad_scale(m, margin = 3), "margin")
+})
+
+test_that("mad_scale handles missingness and all zero-MAD policies", {
+  x <- c(1, 2, 3, NA_real_)
+  expect_true(is.na(mad_scale(x, na_rm = FALSE)[4]))
+  expect_true(is.na(mad_scale(matrix(c(1, 2, NA, 4), nrow = 2), margin = 1, na_rm = FALSE)[1, 1]))
+  expect_true(all(is.na(mad_scale(c(1, 1, 1), zero_mad = "na"))))
+  expect_equal(mad_scale(c(1, 1, 1), zero_mad = "zero"), c(0, 0, 0))
+  expect_error(mad_scale(c(1, 1, 1), zero_mad = "error"), "zero")
+  expect_true(all(is.na(mad_scale(matrix(1, nrow = 2, ncol = 2), zero_mad = "na"))))
+})
+
+test_that("mad_scale defaults to unresolved zero MAD and preserves vector names", {
+  expect_identical(eval(formals(mad_scale)$zero_mad), c("na", "zero", "error"))
+
+  constant <- c(a = 4, b = 4, c = 4)
+  expect_true(all(is.na(mad_scale(constant))))
+  expect_identical(names(mad_scale(constant)), names(constant))
+
+  mostly_constant <- c(a = 1, b = 1, c = 1, outlier = 100)
+  expect_true(all(is.na(mad_scale(mostly_constant))))
+  expect_equal(mad_scale(mostly_constant, zero_mad = "zero"),
+               c(a = 0, b = 0, c = 0, outlier = 99))
+  expect_equal(mad_scale(mostly_constant, center = FALSE, zero_mad = "zero"),
+               mostly_constant)
+})
+
+test_that("zero-MAD handling is skipped when scaling is disabled", {
+  x <- c(a = 1, b = 1, c = 1, outlier = 100)
+  expect_equal(mad_scale(x, scale = FALSE, zero_mad = "error"),
+               c(a = 0, b = 0, c = 0, outlier = 99))
+  expect_equal(mad_scale(x, center = FALSE, scale = FALSE, zero_mad = "error"), x)
+
+  m <- rbind(constant = c(1, 1, 1), variable = c(1, 2, 4))
+  expect_silent(mad_scale(m, margin = 1, scale = FALSE, zero_mad = "error"))
+  expect_silent(mad_scale(m, margin = 1, center = FALSE, scale = FALSE,
+                          zero_mad = "error"))
+})
+
+test_that("zero-MAD matrix rows and columns preserve dimensions and dimnames", {
+  rows <- rbind(
+    constant = c(2, 2, 2, 2),
+    variable = c(1, 2, 4, 8)
+  )
+  dimnames(rows) <- list(c("constant", "variable"), paste0("cell", 1:4))
+  row_scaled <- mad_scale(rows, margin = 1)
+  expect_identical(dim(row_scaled), dim(rows))
+  expect_identical(dimnames(row_scaled), dimnames(rows))
+  expect_true(all(is.na(row_scaled["constant", ])))
+  expect_equal(unname(mad_scale(rows, margin = 1, zero_mad = "zero")["constant", ]),
+               rep(0, ncol(rows)))
+  expect_equal(mad_scale(rows, margin = 1, center = FALSE,
+                         zero_mad = "zero")["constant", ],
+               rows["constant", ])
+
+  columns <- cbind(
+    constant = c(3, 3, 3, 3),
+    variable = c(1, 2, 4, 8)
+  )
+  rownames(columns) <- paste0("cell", 1:4)
+  column_scaled <- mad_scale(columns, margin = 2)
+  expect_identical(dim(column_scaled), dim(columns))
+  expect_identical(dimnames(column_scaled), dimnames(columns))
+  expect_true(all(is.na(column_scaled[, "constant"])))
+  expect_equal(unname(mad_scale(columns, margin = 2, zero_mad = "zero")[, "constant"]),
+               rep(0, nrow(columns)))
+
+  expect_error(mad_scale(rows, margin = 1, zero_mad = "error"), "row 1")
+  expect_error(mad_scale(columns, margin = 2, zero_mad = "error"), "column 1")
+})
+
+test_that("missing vectors and matrix margins retain explicit missingness", {
+  all_missing <- c(a = NA_real_, b = NA_real_)
+  expect_true(all(is.na(mad_scale(all_missing))))
+  expect_identical(names(mad_scale(all_missing)), names(all_missing))
+
+  mixed <- c(a = 1, b = NA_real_, c = 2, d = 3)
+  scaled <- mad_scale(mixed)
+  expect_true(is.na(scaled["b"]))
+  expect_true(all(is.finite(scaled[c("a", "c", "d")])) )
+
+  m <- rbind(constant_with_missing = c(1, 1, NA_real_, 1),
+             variable_with_missing = c(1, 2, NA_real_, 8))
+  out <- mad_scale(m, margin = 1)
+  expect_true(all(is.na(out["constant_with_missing", ])))
+  expect_true(is.na(out["variable_with_missing", 3]))
+  expect_true(all(is.finite(out["variable_with_missing", -3])))
+})
+
+test_that("mad_scale agrees with stats MAD", {
+  x <- c(a = 1, b = 2, c = 4, d = 5, e = 9, f = 20, missing = NA_real_)
+  centre <- stats::median(x, na.rm = TRUE)
+  spread <- stats::mad(x, center = centre, constant = 1.4826, na.rm = TRUE)
+  expect_equal(mad_scale(x), (x - centre) / spread)
+  expect_equal(mad_scale(x, center = FALSE, scale = TRUE), x / spread)
+})
+
+test_that("mad_qc matches an equivalent scuttle outlier calculation", {
+  skip_if_not_installed("scuttle")
+  depth <- c(2, 3, 4, 5, 6, 8, 10, 30)
+  report <- mad_qc(
+    data.frame(depth = depth), c(depth = "upper"), nmads = 2,
+    transform = c(depth = "log1p"), min_n = 5, output = "report",
+    verbose = FALSE
+  )
+  reference <- scuttle::isOutlier(
+    log1p(depth), nmads = 2, type = "higher", log = FALSE,
+    min.diff = NA_real_
+  )
+  expect_identical(report$flags$depth, as.logical(reference))
+  transformed <- log1p(depth[is.finite(depth)])
+  expect_equal(report$thresholds$median, stats::median(transformed))
+  expect_equal(report$thresholds$mad,
+               stats::mad(transformed, center = stats::median(transformed), constant = 1.4826))
+
+  constant <- rep(4, 6)
+  zero_mad_report <- mad_qc(
+    data.frame(value = constant), c(value = "both"), zero_mad = "zero",
+    output = "report", verbose = FALSE
+  )
+  zero_mad_reference <- scuttle::isOutlier(
+    constant, nmads = 3, type = "both", log = FALSE, min.diff = NA_real_
+  )
+  expect_identical(zero_mad_report$flags$value, as.logical(zero_mad_reference))
+})
+</file>
+
+<file path="man/mad_scale.Rd">
+% Generated by roxygen2: do not edit by hand
+% Please edit documentation in R/mad-scale.R
+\name{mad_scale}
+\alias{mad_scale}
+\title{Robust MAD scaling}
+\usage{
+mad_scale(
+  x,
+  center = TRUE,
+  scale = TRUE,
+  constant = 1.4826,
+  na_rm = TRUE,
+  zero_mad = c("na", "zero", "error"),
+  margin = 2
+)
+}
+\arguments{
+\item{x}{A numeric vector, matrix, or numeric data frame.}
+
+\item{center}{Subtract the median?}
+
+\item{scale}{Divide by the MAD?}
+
+\item{constant}{Positive MAD consistency constant.}
+
+\item{na_rm}{Remove missing values when calculating medians and MADs?}
+
+\item{zero_mad}{Handling of zero MAD when \code{scale = TRUE}: \code{"na"} (default)
+returns \code{NA}; \code{"zero"} uses a unit denominator; \code{"error"} stops. With
+\code{center = TRUE}, \code{"zero"} returns centered deviations without MAD scaling.}
+
+\item{margin}{Matrix margin, \code{1} for rows or \code{2} for columns. Names
+\code{"rows"} and \code{"columns"} are also accepted.}
+}
+\value{
+A numeric vector or matrix. Matrix input preserves dimensions and
+dimnames; data-frame input returns a matrix.
+}
+\description{
+Center numeric data by its median and optionally divide by its MAD. For
+matrices, \code{margin = 1} scales rows and \code{margin = 2} scales columns.
+}
+\examples{
+gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+mad_scale(gene_expression)
+
+expression_matrix <- matrix(
+  1:12,
+  nrow = 3,
+  dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+)
+mad_scale(expression_matrix, margin = 1)
+}
+</file>
+
+<file path="R/mad-scale.R">
+#' Robust MAD scaling
+#'
+#' Center numeric data by its median and optionally divide by its MAD. For
+#' matrices, `margin = 1` scales rows and `margin = 2` scales columns.
+#'
+#' @param x A numeric vector, matrix, or numeric data frame.
+#' @param center Subtract the median?
+#' @param scale Divide by the MAD?
+#' @param constant Positive MAD consistency constant.
+#' @param na_rm Remove missing values when calculating medians and MADs?
+#' @param zero_mad Handling of zero MAD when `scale = TRUE`: `"na"` (default)
+#'   returns `NA`; `"zero"` uses a unit denominator; `"error"` stops. With
+#'   `center = TRUE`, `"zero"` returns centered deviations without MAD scaling.
+#' @param margin Matrix margin, `1` for rows or `2` for columns. Names
+#'   `"rows"` and `"columns"` are also accepted.
+#' @return A numeric vector or matrix. Matrix input preserves dimensions and
+#'   dimnames; data-frame input returns a matrix.
+#' @export
+#' @rdname mad_scale
+#' @examples
+#' gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+#' mad_scale(gene_expression)
+#'
+#' expression_matrix <- matrix(
+#'   1:12,
+#'   nrow = 3,
+#'   dimnames = list(paste0("gene_", 1:3), paste0("sample_", 1:4))
+#' )
+#' mad_scale(expression_matrix, margin = 1)
+mad_scale <- function(x, center = TRUE, scale = TRUE, constant = 1.4826,
+                      na_rm = TRUE, zero_mad = c("na", "zero", "error"), margin = 2) {
+  .validate_scalar_flag(center, "center"); .validate_scalar_flag(scale, "scale"); .validate_scalar_flag(na_rm, "na_rm")
+  .validate_positive(constant, "constant"); zero_mad <- match.arg(zero_mad)
+  if (is.data.frame(x)) {
+    if (!all(vapply(x, is.numeric, logical(1)))) stop("All data-frame columns must be numeric.", call. = FALSE)
+    x <- as.matrix(x)
+  }
+  if (is.null(dim(x))) return(.scale_vector(x, center, scale, constant, na_rm, zero_mad))
+  if (!is.matrix(x) || !is.numeric(x)) stop("`x` must be a numeric matrix or vector.", call. = FALSE)
+  if (any(is.infinite(x), na.rm = TRUE)) stop("`x` must not contain Inf or -Inf.", call. = FALSE)
+  if (any(is.nan(x))) stop("`x` must not contain NaN.", call. = FALSE)
+  if (!length(x)) return(x)
+  margin <- if (is.character(margin)) match.arg(margin, c("rows", "columns")) else {
+    if (!is.numeric(margin) || length(margin) != 1L || !margin %in% c(1, 2)) stop("`margin` must be 1, 2, `rows`, or `columns`.", call. = FALSE)
+    as.integer(margin)
+  }
+  if (!center && !scale) return(x)
+  out <- if (identical(margin, 1L) || identical(margin, "rows")) {
+    centres <- if (center) matrixStats::rowMedians(x, na.rm = na_rm, useNames = FALSE) else NULL
+    spreads <- if (scale) matrixStats::rowMads(x, center = centres, na.rm = na_rm, constant = constant, useNames = FALSE) else NULL
+    .scale_margins(x, centres, spreads, center, scale, zero_mad, 1L)
+  } else {
+    centres <- if (center) matrixStats::colMedians(x, na.rm = na_rm, useNames = FALSE) else NULL
+    spreads <- if (scale) matrixStats::colMads(x, center = centres, na.rm = na_rm, constant = constant, useNames = FALSE) else NULL
+    .scale_margins(x, centres, spreads, center, scale, zero_mad, 2L)
+  }
+  dimnames(out) <- dimnames(x); out
+}
+
+.scale_vector <- function(x, center, scale, constant, na_rm, zero_mad) {
+  if (!is.numeric(x) || !is.null(dim(x))) stop("`x` must be a numeric vector.", call. = FALSE)
+  if (any(is.infinite(x), na.rm = TRUE) || any(is.nan(x))) stop("`x` must not contain Inf, -Inf, or NaN.", call. = FALSE)
+  if (!length(x)) return(stats::setNames(numeric(), names(x)))
+  centre <- if (center) stats::median(x, na.rm = na_rm) else NULL
+  spread <- if (scale) {
+    if (center) stats::mad(x, center = centre, constant = constant, na.rm = na_rm) else {
+      stats::mad(x, constant = constant, na.rm = na_rm)
+    }
+  } else NULL
+  zero <- scale && isTRUE(spread == 0)
+  if (zero) {
+    if (zero_mad == "error") stop("MAD is zero.", call. = FALSE)
+  }
+  out <- if (zero && zero_mad == "na") rep(NA_real_, length(x)) else x
+  if (center && !(zero && zero_mad == "na")) out <- out - centre
+  if (scale && !(zero && zero_mad == "na")) out <- out / if (zero) 1 else spread
+  out[is.na(x)] <- NA_real_; names(out) <- names(x); out
+}
+
+.scale_margins <- function(x, centres, spreads, center, scale, zero_mad, margin) {
+  affected <- if (scale) which(!is.na(spreads) & spreads == 0) else integer()
+  if (length(affected) && zero_mad == "error") stop(sprintf("MAD is zero for %s %s.", if (margin == 1) "row" else "column", affected[1]), call. = FALSE)
+  safe <- spreads
+  if (length(affected)) safe[affected] <- 1
+  out <- x
+  if (center) out <- sweep(out, margin, centres, "-")
+  if (scale) out <- sweep(out, margin, safe, "/")
+  if (length(affected) && zero_mad == "na") {
+    if (margin == 1) out[affected, ] <- NA_real_ else out[, affected] <- NA_real_
+  }
+  out[is.na(x)] <- NA_real_; out
+}
+</file>
+
+<file path=".gitignore">
+.DS_Store
+.Rproj.user/
+*.Rproj
+.Rhistory
+.RData
+.Ruserdata
+.posit/
+.serena/
+..Rcheck/
+*.Rcheck/
+*.tar.gz
+docs/
+vignettes/.quarto/
+vignettes/*_files/
+.claude/
+AGENTS.md
+CLAUDE.md
+</file>
+
+<file path="LICENSE">
+YEAR: 2026
+COPYRIGHT HOLDER: Thomas Sirchi
+</file>
+
+<file path=".Rbuildignore">
+^\.claude$
+^\.gitnexus$
+^AGENTS\.md$
+^CLAUDE\.md$
+^\.codex$
+^\.github$
+^\.serena$
+^docs$
+^benchmarks$
+^_pkgdown\.yml$
+^CHANGELOG\.md$
+^(\.nojekyll|404\.html|404\.md|CHANGELOG\.html|LICENSE-text\.html|LICENSE-text\.md|authors\.html|authors\.md|index\.html|index\.md|katex-auto\.js|lightswitch\.js|link\.svg|llms\.txt|pkgdown\.js|pkgdown\.yml|search\.json|sitemap\.xml)$
+^(articles|deps|news|reference)$
+</file>
+
+<file path="R/veryMAD-package.R">
+#' veryMAD: MAD quality control and robust scaling
+#'
+#' Computes observation-level MAD flags and robust scaling. Users choose the
+#' metrics and settings; filtering remains in the analysis workflow.
+#'
+#' @keywords internal
+"_PACKAGE"
+</file>
+
+<file path="NAMESPACE">
+# Generated by roxygen2: do not edit by hand
+
+S3method(print,verymad_qc)
+export(mad_qc)
+export(mad_scale)
+</file>
+
+<file path="man/veryMAD-package.Rd">
+% Generated by roxygen2: do not edit by hand
+% Please edit documentation in R/veryMAD-package.R
+\docType{package}
+\name{veryMAD-package}
+\alias{veryMAD}
+\alias{veryMAD-package}
+\title{veryMAD: MAD quality control and robust scaling}
+\description{
+Computes observation-level MAD flags and robust scaling. Users choose the
+metrics and settings; filtering remains in the analysis workflow.
+}
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/Thokas99/veryMAD}
+  \item \url{https://thokas99.github.io/veryMAD/}
+  \item Report bugs at \url{https://github.com/Thokas99/veryMAD/issues}
+}
+
+}
+\author{
+\strong{Maintainer}: Thomas Sirchi \email{thomasirchi@gmail.com}
+
+Authors:
+\itemize{
+  \item Thomas Sirchi \email{thomasirchi@gmail.com}
+}
+
+}
+\keyword{internal}
+</file>
+
+<file path="R/mad-qc.R">
+#' Explicit MAD quality-control annotation
+#'
+#' Rows are observations. Select numeric metric columns and a tail direction
+#' for each. veryMAD estimates one threshold per metric across the input rows
+#' and returns annotated metadata or a `verymad_qc` report.
+#'
+#' @param data A data frame, tibble, numeric matrix, or Seurat object.
+#' @param metrics A non-empty named character vector with unique metric names;
+#'   values are `"lower"`, `"upper"`, or `"both"`.
+#' @param nmads Positive number of MADs from the median for the limits.
+#' @param transform A scalar transformation or named partial overrides.
+#'   Supported values are `"none"`, `"log1p"`, and `"log10"`.
+#' @param output Return annotated data by default; use `"report"` for flags,
+#'   thresholds, and settings.
+#' @param min_n Minimum number of finite, non-missing observations required.
+#' @param zero_mad Handling of a zero MAD: `"na"`, `"zero"`, or `"error"`.
+#' @param overwrite Replace existing flag columns?
+#' @param verbose Print a summary?
+#' @return Annotated input or a `verymad_qc` list with `flags`, `thresholds`,
+#'   and `settings`. Threshold reports include finite observations used and
+#'   per-metric flagged and unresolved counts.
+#' @export
+#' @examples
+#' qc_metadata <- data.frame(
+#'   sample = paste0("sample_", 1:6),
+#'   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
+#'   pct_mito = c(4, 5, 6, 5, 7, 30)
+#' )
+#' annotated <- mad_qc(
+#'   qc_metadata,
+#'   metrics = c(library_size = "lower", pct_mito = "upper"),
+#'   verbose = FALSE
+#' )
+#' annotated[, c("sample", "mad_qc_outlier")]
+#'
+#' report <- mad_qc(
+#'   qc_metadata,
+#'   metrics = c(library_size = "lower", pct_mito = "upper"),
+#'   output = "report",
+#'   verbose = FALSE
+#' )
+#' report$thresholds[, c("metric", "n_used", "n_flagged", "n_unresolved")]
+mad_qc <- function(data, metrics, nmads = 3, transform = "none",
+                   output = c("annotate", "report"), min_n = 5,
+                   zero_mad = c("na", "zero", "error"),
+                   overwrite = FALSE, verbose = TRUE) {
+  output <- match.arg(output)
+  zero_mad <- match.arg(zero_mad)
+  .validate_scalar_flag(overwrite, "overwrite")
+  .validate_scalar_flag(verbose, "verbose")
+  .validate_positive(nmads, "nmads")
+  .validate_positive(min_n, "min_n")
+  if (min_n != as.integer(min_n)) stop("`min_n` must be a positive integer.", call. = FALSE)
+
+  is_seurat <- inherits(data, "Seurat")
+  original <- data
+  if (is_seurat) {
+    if (!requireNamespace("SeuratObject", quietly = TRUE)) {
+      stop("Seurat input requires the `SeuratObject` package.", call. = FALSE)
+    }
+    data <- data[[]]
+  } else if (is.matrix(data)) {
+    if (!is.numeric(data)) stop("`data` must be a numeric matrix.", call. = FALSE)
+  } else if (!is.data.frame(data)) {
+    stop("`data` must be a data frame, numeric matrix, or Seurat object.", call. = FALSE)
+  }
+
+  metrics <- .validate_metrics(data, metrics)
+  transforms <- .resolve_transforms(transform, names(metrics))
+  targets <- c(paste0(names(metrics), "_mad_outlier"), "mad_qc_outlier")
+  if (output == "annotate" && !overwrite) {
+    data_names <- if (is.matrix(data)) colnames(data) else names(data)
+    conflicts <- intersect(targets, data_names)
+    if (length(conflicts)) stop(sprintf("Flag column(s) already exist: %s. Use `overwrite = TRUE`.",
+      paste(conflicts, collapse = ", ")), call. = FALSE)
+  }
+
+  result <- .qc_engine(data, metrics, transforms, nmads, min_n, zero_mad,
+                       annotate = output == "annotate" && !is_seurat)
+  if (verbose) .inform_qc(result, nrow(data))
+  if (output == "report") return(result)
+
+  if (is_seurat) {
+    metadata <- result$flags[setdiff(names(result$flags), "id")]
+    names(metadata)[seq_along(metrics)] <- paste0(names(metrics), "_mad_outlier")
+    rownames(metadata) <- result$flags$id
+    return(SeuratObject::AddMetaData(original, metadata = metadata))
+  }
+  result$annotated
+}
+
+.validate_scalar_flag <- function(x, name) {
+  if (!is.logical(x) || length(x) != 1L || is.na(x)) stop(sprintf("`%s` must be TRUE or FALSE.", name), call. = FALSE)
+}
+
+.validate_positive <- function(x, name) {
+  if (!is.numeric(x) || length(x) != 1L || !is.finite(x) || x <= 0) stop(sprintf("`%s` must be positive and finite.", name), call. = FALSE)
+}
+
+.validate_metrics <- function(data, metrics) {
+  if (!is.character(metrics) || !length(metrics) || is.null(names(metrics)) ||
+      anyNA(names(metrics)) || any(names(metrics) == "") || anyDuplicated(names(metrics))) {
+    stop("`metrics` must be a non-empty named character vector with unique names.", call. = FALSE)
+  }
+  if (!all(metrics %in% c("lower", "upper", "both"))) stop("Metric directions must be `lower`, `upper`, or `both`.", call. = FALSE)
+  metric_names <- if (is.matrix(data)) colnames(data) else names(data)
+  if (is.null(metric_names)) metric_names <- character()
+  reserved <- intersect(names(metrics), c("id", "mad_qc_outlier"))
+  if (length(reserved)) stop(sprintf("Reserved metric name(s): %s.", paste(reserved, collapse = ", ")), call. = FALSE)
+  missing <- setdiff(names(metrics), metric_names)
+  if (length(missing)) stop(sprintf("Missing metric column(s): %s.", paste(missing, collapse = ", ")), call. = FALSE)
+  bad <- names(metrics)[!vapply(names(metrics), function(nm) {
+    value <- if (is.matrix(data)) data[, nm] else data[[nm]]
+    is.numeric(value)
+  }, logical(1))]
+  if (length(bad)) stop(sprintf("QC metric column(s) must be numeric: %s.", paste(bad, collapse = ", ")), call. = FALSE)
+  invisible(metrics)
+}
+
+.resolve_transforms <- function(transform, metrics) {
+  out <- stats::setNames(rep("none", length(metrics)), metrics)
+  if (!is.character(transform) || !length(transform) || anyNA(transform)) stop("`transform` must be a supported scalar or named partial override.", call. = FALSE)
+  if (length(transform) == 1L && is.null(names(transform))) {
+    out[] <- transform
+  } else {
+    if (is.null(names(transform)) || any(names(transform) == "") || anyDuplicated(names(transform))) stop("Named transformations must have unique metric names.", call. = FALSE)
+    unknown <- setdiff(names(transform), metrics)
+    if (length(unknown)) stop(sprintf("Transformation names must reference selected metrics: %s.", paste(unknown, collapse = ", ")), call. = FALSE)
+    out[names(transform)] <- transform
+  }
+  out[out == "identity"] <- "none"
+  if (!all(out %in% c("none", "log1p", "log10"))) stop("Transformations must be `none`, `log1p`, or `log10`.", call. = FALSE)
+  out
+}
+
+.transform_metric <- function(x, method, metric) {
+  if (any(is.nan(x) | is.infinite(x))) stop(sprintf("Metric `%s` contains non-finite values.", metric), call. = FALSE)
+  if (method == "log1p" && any(x < 0, na.rm = TRUE)) stop(sprintf("`log1p` requires non-negative values in `%s`.", metric), call. = FALSE)
+  if (method == "log10" && any(x <= 0, na.rm = TRUE)) stop(sprintf("`log10` requires positive values in `%s`.", metric), call. = FALSE)
+  switch(method, none = x, log1p = log1p(x), log10 = log10(x))
+}
+
+.observation_ids <- function(data) {
+  ids <- rownames(data)
+  if (is.null(ids) || length(ids) != nrow(data) || anyNA(ids) || any(ids == "") || anyDuplicated(ids)) as.character(seq_len(nrow(data))) else ids
+}
+
+.qc_engine <- function(data, metrics, transforms, nmads, min_n, zero_mad,
+                       annotate = FALSE) {
+  n <- nrow(data); ids <- .observation_ids(data)
+  flags <- data.frame(id = ids, stringsAsFactors = FALSE, check.names = FALSE)
+  thresholds <- vector("list", length(metrics)); insufficient <- character()
+  for (i in seq_along(metrics)) {
+    metric <- names(metrics)[i]; direction <- unname(metrics[[i]])
+    raw <- if (is.matrix(data)) data[, metric] else data[[metric]]
+    value <- .transform_metric(raw, transforms[[metric]], metric)
+    n_used <- sum(!is.na(value))
+    status <- "ok"; centre <- spread <- lower <- upper <- NA_real_
+    if (!n_used) status <- "all_missing" else if (n_used < min_n) {
+      status <- "insufficient_n"; insufficient <- c(insufficient, metric)
+    } else {
+      centre <- stats::median(value, na.rm = TRUE)
+      spread <- stats::mad(value, center = centre, constant = 1.4826, na.rm = TRUE)
+      if (spread == 0) {
+        status <- "zero_mad"
+        if (zero_mad == "error") stop(sprintf("MAD is zero for metric `%s`.", metric), call. = FALSE)
+        if (zero_mad == "zero") {
+          if (direction %in% c("lower", "both")) lower <- centre
+          if (direction %in% c("upper", "both")) upper <- centre
+        }
+      } else {
+        if (direction %in% c("lower", "both")) lower <- centre - nmads * spread
+        if (direction %in% c("upper", "both")) upper <- centre + nmads * spread
+      }
+    }
+    flag <- rep(NA, n)
+    if (status == "ok" || (status == "zero_mad" && zero_mad == "zero")) {
+      present <- !is.na(value)
+      flag[present] <- switch(direction, lower = value[present] < lower, upper = value[present] > upper, both = value[present] < lower | value[present] > upper)
+    }
+    flags[[metric]] <- flag
+    n_flagged <- sum(flag, na.rm = TRUE)
+    n_unresolved <- sum(is.na(flag))
+    inverse <- switch(transforms[[metric]], none = identity, log1p = expm1, log10 = function(x) 10^x)
+    thresholds[[i]] <- data.frame(metric = metric, direction = direction, transform = transforms[[metric]],
+      median = centre, mad = spread, lower = lower, upper = upper,
+      lower_raw = if (is.na(lower)) NA_real_ else inverse(lower),
+      upper_raw = if (is.na(upper)) NA_real_ else inverse(upper), status = status,
+      n_used = n_used, n_flagged = n_flagged, n_unresolved = n_unresolved,
+      stringsAsFactors = FALSE, check.names = FALSE)
+  }
+  if (length(insufficient)) warning(sprintf("Insufficient usable observations for metric(s): %s.", paste(insufficient, collapse = ", ")), call. = FALSE)
+  flags$mad_qc_outlier <- .combine_flags(flags[names(metrics)])
+  out <- list(flags = flags, thresholds = do.call(rbind, thresholds), settings = list(
+    metrics = metrics, transform = transforms, nmads = nmads, constant = 1.4826,
+    min_n = min_n, zero_mad = zero_mad))
+  class(out) <- c("verymad_qc", "list")
+  if (annotate) {
+    annotated <- if (is.matrix(data)) as.data.frame(data, check.names = FALSE,
+                                                     stringsAsFactors = FALSE) else data
+    for (metric in names(metrics)) annotated[[paste0(metric, "_mad_outlier")]] <- flags[[metric]]
+    annotated$mad_qc_outlier <- flags$mad_qc_outlier
+    out$annotated <- annotated
+  }
+  out
+}
+
+.combine_flags <- function(flags) {
+  x <- as.matrix(flags)
+  if (!nrow(x)) return(logical())
+  out <- rowSums(x, na.rm = TRUE) > 0
+  unresolved <- rowSums(is.na(x)) > 0
+  out[!out & unresolved] <- NA
+  unname(out)
+}
+
+.inform_qc <- function(result, n) {
+  metrics <- names(result$settings$metrics)
+  combined <- result$flags$mad_qc_outlier
+  unsuccessful <- sum(result$thresholds$status != "ok")
+  cli::cli_inform("veryMAD \u2022 observation QC")
+  n_metrics <- length(metrics)
+  cli::cli_inform(sprintf("%d observations checked across %d metric%s", n, n_metrics,
+                          if (n_metrics == 1L) "" else "s"))
+  cli::cli_inform(sprintf("%d observations flagged by at least one metric; %d unresolved",
+                           sum(combined %in% TRUE), sum(is.na(combined))))
+  cli::cli_inform(sprintf("%d metric%s without estimated thresholds", unsuccessful,
+                          if (unsuccessful == 1L) "" else "s"))
+}
+
+#' @method print verymad_qc
+#' @export
+print.verymad_qc <- function(x, ...) {
+  metrics <- names(x$settings$metrics)
+  status <- table(x$thresholds$status)
+  cat("<verymad_qc>\n")
+  cat("Observations:", nrow(x$flags), "\n")
+  cat("Metrics:", length(metrics), "\n")
+  cat("Observations flagged:", sum(x$flags$mad_qc_outlier %in% TRUE), "\n")
+  cat("Observations unresolved:", sum(is.na(x$flags$mad_qc_outlier)), "\n")
+  cat("Metrics without estimated thresholds:", sum(x$thresholds$status != "ok"), "\n")
+  if (length(status)) cat("Threshold status:", paste(names(status), status, sep = "=", collapse = ", "), "\n")
+  invisible(x)
+}
+</file>
+
+<file path="_pkgdown.yml">
+url: https://thokas99.github.io/veryMAD/
+template:
+  bootstrap: 5
+  light-switch: true
+reference:
+  - title: Quality control
+    contents:
+      - mad_qc
+  - title: Robust scaling
+    contents:
+      - mad_scale
+articles:
+  - title: Guides
+    contents:
+      - getting-started
+      - qc-interpretation
+      - mad-scaling
+</file>
+
+<file path="man/mad_qc.Rd">
+% Generated by roxygen2: do not edit by hand
+% Please edit documentation in R/mad-qc.R
+\name{mad_qc}
+\alias{mad_qc}
+\title{Explicit MAD quality-control annotation}
+\usage{
+mad_qc(
+  data,
+  metrics,
+  nmads = 3,
+  transform = "none",
+  output = c("annotate", "report"),
+  min_n = 5,
+  zero_mad = c("na", "zero", "error"),
+  overwrite = FALSE,
+  verbose = TRUE
+)
+}
+\arguments{
+\item{data}{A data frame, tibble, numeric matrix, or Seurat object.}
+
+\item{metrics}{A non-empty named character vector with unique metric names;
+values are \code{"lower"}, \code{"upper"}, or \code{"both"}.}
+
+\item{nmads}{Positive number of MADs from the median for the limits.}
+
+\item{transform}{A scalar transformation or named partial overrides.
+Supported values are \code{"none"}, \code{"log1p"}, and \code{"log10"}.}
+
+\item{output}{Return annotated data by default; use \code{"report"} for flags,
+thresholds, and settings.}
+
+\item{min_n}{Minimum number of finite, non-missing observations required.}
+
+\item{zero_mad}{Handling of a zero MAD: \code{"na"}, \code{"zero"}, or \code{"error"}.}
+
+\item{overwrite}{Replace existing flag columns?}
+
+\item{verbose}{Print a summary?}
+}
+\value{
+Annotated input or a \code{verymad_qc} list with \code{flags}, \code{thresholds},
+and \code{settings}. Threshold reports include finite observations used and
+per-metric flagged and unresolved counts.
+}
+\description{
+Rows are observations. Select numeric metric columns and a tail direction
+for each. veryMAD estimates one threshold per metric across the input rows
+and returns annotated metadata or a \code{verymad_qc} report.
+}
+\examples{
+qc_metadata <- data.frame(
+  sample = paste0("sample_", 1:6),
+  library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 0.5e6, 2.5e6),
+  pct_mito = c(4, 5, 6, 5, 7, 30)
+)
+annotated <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  verbose = FALSE
+)
+annotated[, c("sample", "mad_qc_outlier")]
+
+report <- mad_qc(
+  qc_metadata,
+  metrics = c(library_size = "lower", pct_mito = "upper"),
+  output = "report",
+  verbose = FALSE
+)
+report$thresholds[, c("metric", "n_used", "n_flagged", "n_unresolved")]
+}
+</file>
+
+<file path="DESCRIPTION">
+Package: veryMAD
+Title: Explicit MAD Quality Control and Robust Scaling
+Version: 0.6.0
+Authors@R: 
+    person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
+Description: Computes median absolute deviation quality-control flags and
+    robust scaling for numeric metadata, vectors, and matrices. Users select
+    the metrics, directions, and transformations; filtering remains in the
+    analysis workflow.
+License: MIT + file LICENSE
+Depends:
+    R (>= 4.1.0)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+Imports:
+    cli,
+    matrixStats
+Suggests:
+    knitr,
+    quarto,
+    scuttle,
+    SeuratObject,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+VignetteBuilder: quarto
+URL: https://github.com/Thokas99/veryMAD,
+    https://thokas99.github.io/veryMAD/
+BugReports: https://github.com/Thokas99/veryMAD/issues
+Config/roxygen2/version: 8.1.1
+</file>
+
+<file path="README.md">
+<p align="center">
+  <img src="man/figures/veryMAD-logo.svg" alt="veryMAD logo" width="240">
+</p>
+
+<h1 align="center">veryMAD</h1>
+
+<p align="center"><strong>MAD quality control and robust scaling for R</strong></p>
+
+<p align="center">
+  <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a>
+  <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a>
+  <a href="https://github.com/Thokas99/veryMAD/releases"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&sort=semver" alt="Latest release"></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
+
+veryMAD computes median absolute deviation (MAD) thresholds for selected
+numeric metrics. It adds observation-level flags or returns a threshold report.
+Rows stay in the output; filtering remains part of your analysis.
+
+## Install
+
+```r
+pak::pak("Thokas99/veryMAD")
+```
+
+## Annotate QC metrics
+
+Choose each metric, its outlier direction, and any transformation. For example,
+count-like RNA metrics can use an explicit `log1p` transformation.
+
+```r
+library(veryMAD)
+
+metadata <- data.frame(
+  nCount_RNA = c(820, 910, 970, 1050, 1120, 100),
+  nFeature_RNA = c(430, 480, 520, 570, 610, 55),
+  percent.mt = c(5, 6, 7, 8, 9, 35)
+)
+
+annotated <- mad_qc(
+  metadata,
+  metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower",
+              percent.mt = "upper"),
+  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
+  verbose = FALSE
+)
+
+annotated[, c("nCount_RNA_mad_outlier", "nFeature_RNA_mad_outlier",
+              "percent.mt_mad_outlier", "mad_qc_outlier")]
+```
+
+For Seurat metadata, `percent.mt` is usually stored on a 0–100 scale: `8`
+means 8%.
+
+## Review thresholds
+
+Set `output = "report"` to return flags, thresholds, and settings without
+adding columns to the input.
+
+```r
+report <- mad_qc(
+  metadata,
+  metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower",
+              percent.mt = "upper"),
+  transform = c(nCount_RNA = "log1p", nFeature_RNA = "log1p"),
+  output = "report",
+  verbose = FALSE
+)
+
+report$thresholds[, c("metric", "direction", "lower_raw", "upper_raw",
+                      "status", "n_used", "n_flagged", "n_unresolved")]
+```
+
+The report returns flags, thresholds, and settings. Status identifies missing,
+insufficient, and zero-MAD metrics; counts show evaluated and unresolved
+observations. Zero-MAD flags are `NA` by default.
+
+## Scale with MAD
+
+```r
+gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
+mad_scale(gene_expression)
+```
+
+For matrices, `margin = 1` scales rows and `margin = 2` scales columns.
+Dimensions and dimnames are preserved. The default `zero_mad = "na"` returns
+`NA` for zero-MAD groups. `zero_mad = "zero"` uses a unit denominator and
+returns unscaled deviations when centered; `zero_mad = "error"` stops.
+
+## Guides
+
+- [Getting started](https://thokas99.github.io/veryMAD/articles/getting-started.html)
+- [Interpreting QC](https://thokas99.github.io/veryMAD/articles/qc-interpretation.html)
+- [MAD scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)
+- [Function reference](https://thokas99.github.io/veryMAD/reference/)
+- [Release notes](NEWS.md)
+
+## Further reading
+
+- [Subramanian et al. (2022), adaptive QC in single-cell transcriptomics](https://doi.org/10.1186/s13059-022-02820-w)
+- [Single-cell best practices: quality control](https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html)
+- [OSCA: quality control](https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics)
+- Documentation guidance: [Kassis et al. (2026), *Scientific Agent Skills*](https://doi.org/10.48550/arXiv.2609.00065)
+</file>
+
+</files>
