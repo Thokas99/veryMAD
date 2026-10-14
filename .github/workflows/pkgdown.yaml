@@ -25,7 +25,7 @@ jobs:
       - uses: actions/checkout@v6
 
       - name: Install Linux build dependencies
-        run: sudo apt-get update -qq && sudo apt-get install -y libuv1-dev
+        run: sudo apt-get update -qq && sudo apt-get install -y libuv1-dev libglpk-dev
 
       - uses: r-lib/actions/setup-pandoc@v2
 
@@ -40,6 +40,7 @@ jobs:
           options(repos = repos)
           install.packages("remotes", lib = lib)
           remotes::install_gitlab("sysbiobig/sparsim", lib = lib, force = TRUE)
+          loadNamespace("SPARSim", lib.loc = lib)
         shell: Rscript {0}
 
       - uses: r-lib/actions/setup-r-dependencies@v2
