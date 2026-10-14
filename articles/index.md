@@ -5,12 +5,12 @@
 - [Getting started with
   veryMAD](https://thokas99.github.io/veryMAD/articles/getting-started.md):
 
-  Flag selected QC metrics with median absolute deviation thresholds.
+  Annotate sequencing metadata with explicit MAD thresholds.
 
 - [Interpreting MAD QC
   flags](https://thokas99.github.io/veryMAD/articles/qc-interpretation.md):
 
-  Review MAD-based QC flags in single-cell RNA and ATAC workflows.
+  Read MAD flags and apply them in single-cell QC workflows.
 
 - [Robust MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.md):

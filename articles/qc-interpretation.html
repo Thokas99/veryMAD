@@ -62,7 +62,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/vignettes/qc-interpretation.qmd" class="external-link"><code>vignettes/qc-interpretation.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/v0.6.0/vignettes/qc-interpretation.qmd" class="external-link"><code>vignettes/qc-interpretation.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -71,32 +71,18 @@
 
 
 
-    <p><code><a href="../reference/mad_qc.html">mad_qc()</a></code> flags selected tails of numeric metrics. A flag is evidence of statistical atypicality within the supplied reference distribution, not a diagnosis of cell quality.</p>
-<table class="table caption-top">
-<thead><tr class="header">
-<th>Direction</th>
-<th>Flagged values</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td><code>lower</code></td>
-<td>Below the lower limit</td>
-</tr>
-<tr class="even">
-<td><code>upper</code></td>
-<td>Above the upper limit</td>
-</tr>
-<tr class="odd">
-<td><code>both</code></td>
-<td>Outside either limit</td>
-</tr>
-</tbody>
-</table>
-<p>Limits are estimated as the median plus or minus <code>nmads</code> scaled MADs after any transformation. By default, <code>nmads = 3</code> and the MAD constant is 1.4826.</p>
-<section class="level2"><h2 id="missing-values-and-threshold-status">Missing values and threshold status<a class="anchor" aria-label="anchor" href="#missing-values-and-threshold-status"></a>
+    <p>MAD flags identify selected statistical tails for review. Choose a direction for each metric:</p>
+<ul>
+<li>
+<code>lower</code> flags unusually small values;</li>
+<li>
+<code>upper</code> flags unusually large values;</li>
+<li>
+<code>both</code> flags either tail.</li>
+</ul>
+<section class="level2"><h2 id="read-a-flag-in-context">Read a flag in context<a class="anchor" aria-label="anchor" href="#read-a-flag-in-context"></a>
 </h2>
-<p>Missing metric values receive <code>NA</code> flags. The combined flag is <code>TRUE</code> if any metric is flagged; if none is flagged, it is <code>NA</code> when any metric flag is unresolved. Because the combined flag uses an OR rule, its flagged fraction can rise as more metrics are included. Review per-metric counts alongside it.</p>
-<p>The example uses percentage points for <code>pct_mito</code>: 8 denotes 8%.</p>
+<p>The example uses common sequencing metrics. <code>pct_mito</code> is in percentage points: 8 denotes 8%.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">qc_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
@@ -128,7 +114,10 @@
 <span><span class="co">#&gt; 6  6         TRUE           TRUE    FALSE           TRUE</span></span>
 <span><span class="co">#&gt; 7  7           NA          FALSE     TRUE           TRUE</span></span></code></pre></div>
 </div>
-<p>The threshold report gives <code>status</code>, limits on raw and transformed scales, and counts of reference, flagged, and unresolved observations.</p>
+<p>The missing library size remains <code>NA</code> in its flag. The combined flag is <code>NA</code> when no metric is flagged and at least one metric is unresolved. Review individual flags with the source metadata.</p>
+</section><section class="level2"><h2 id="threshold-status-and-transformations">Threshold status and transformations<a class="anchor" aria-label="anchor" href="#threshold-status-and-transformations"></a>
+</h2>
+<p>The threshold table reports calculation-scale and raw-scale limits.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">transformed_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
@@ -140,99 +129,41 @@
 <span><span class="op">)</span></span>
 <span></span>
 <span><span class="va">transformed_result</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>  <span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>,</span>
-<span>  <span class="st">"status"</span>, <span class="st">"n_used"</span>, <span class="st">"n_flagged"</span>, <span class="st">"n_unresolved"</span></span>
+<span>  <span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>, <span class="st">"status"</span></span>
 <span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="co">#&gt;         metric direction transform lower_raw upper_raw status n_used n_flagged</span></span>
-<span><span class="co">#&gt; 1 library_size     lower     log1p   1961998        NA     ok      6         1</span></span>
-<span><span class="co">#&gt; 2     pct_mito     upper      none        NA   10.4478     ok      7         1</span></span>
-<span><span class="co">#&gt;   n_unresolved</span></span>
-<span><span class="co">#&gt; 1            1</span></span>
-<span><span class="co">#&gt; 2            0</span></span></code></pre></div>
+<span><span class="co">#&gt;         metric direction transform lower_raw upper_raw status</span></span>
+<span><span class="co">#&gt; 1 library_size     lower     log1p   1961998        NA     ok</span></span>
+<span><span class="co">#&gt; 2     pct_mito     upper      none        NA   10.4478     ok</span></span></code></pre></div>
 </div>
-<p><code>min_n</code> defaults to 5 non-missing reference observations per metric and group. Groups below this size have <code>insufficient_n</code> status; groups with no observed values have <code>all_missing</code> status.</p>
-</section><section class="level2"><h2 id="zero-mad">Zero MAD<a class="anchor" aria-label="anchor" href="#zero-mad"></a>
+<p><code>min_n</code> sets the minimum number of observations used for estimation. The statuses <code>insufficient_n</code> and <code>all_missing</code> identify metrics without an estimated threshold.</p>
+</section><section class="level2"><h2 id="zero-mad-and-downstream-decisions">Zero MAD and downstream decisions<a class="anchor" aria-label="anchor" href="#zero-mad-and-downstream-decisions"></a>
 </h2>
-<p>A zero MAD provides no estimate of non-zero spread. Choose how to handle it:</p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead><tr class="header">
-<th><code>zero_mad</code></th>
-<th>Behavior in <code><a href="../reference/mad_qc.html">mad_qc()</a></code>
-</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>"na"</code> (default)</td>
-<td>Leave flags unresolved</td>
-</tr>
-<tr class="even">
-<td><code>"zero"</code></td>
-<td>Set the selected limit at the median and flag values beyond it</td>
-</tr>
-<tr class="odd">
-<td><code>"error"</code></td>
-<td>Stop</td>
-</tr>
-</tbody>
-</table></section><section class="level2"><h2 id="rna-and-atac-metrics">RNA and ATAC metrics<a class="anchor" aria-label="anchor" href="#rna-and-atac-metrics"></a>
-</h2>
-<p>The following directions are common starting points, not universal rules. Metric definitions and their relationship to biology depend on the assay, protocol, and sample.</p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-<col style="width: 25%">
-</colgroup>
-<thead><tr class="header">
-<th>Modality</th>
-<th>Example metric</th>
-<th>Example direction</th>
-<th>Example transformation</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>RNA</td>
-<td>
-<code>nCount_RNA</code>, <code>nFeature_RNA</code>
-</td>
-<td><code>lower</code></td>
-<td><code>log1p</code></td>
-</tr>
-<tr class="even">
-<td>RNA</td>
-<td><code>percent.mt</code></td>
-<td><code>upper</code></td>
-<td><code>none</code></td>
-</tr>
-<tr class="odd">
-<td>ATAC</td>
-<td><code>nCount_peaks</code></td>
-<td><code>lower</code></td>
-<td><code>log1p</code></td>
-</tr>
-<tr class="even">
-<td>ATAC</td>
-<td><code>TSS.enrichment</code></td>
-<td><code>lower</code></td>
-<td><code>none</code></td>
-</tr>
-<tr class="odd">
-<td>ATAC</td>
-<td><code>nucleosome_signal</code></td>
-<td><code>upper</code></td>
-<td><code>none</code></td>
-</tr>
-</tbody>
-</table>
-<p>For example, in droplet RNA-seq, mitochondrial percentage can reflect cell damage, but it may also vary with cell type or biological state. ATAC metrics also depend on how peaks, TSS enrichment, and nucleosome signal were defined. Inspect distributions by sample and known cell groups before filtering.</p>
+<p>A zero MAD means the data provide no non-zero robust spread estimate. Choose the policy for the downstream analysis.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">constant_metric</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
+<span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"sample_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">6</span><span class="op">)</span>,</span>
+<span>  detected_genes <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fl">12000</span>, <span class="fl">6</span><span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">zero_mad_result</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>  <span class="va">constant_metric</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>detected_genes <span class="op">=</span> <span class="st">"lower"</span><span class="op">)</span>,</span>
+<span>  zero_mad <span class="op">=</span> <span class="st">"zero"</span>,</span>
+<span>  output <span class="op">=</span> <span class="st">"report"</span>,</span>
+<span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">zero_mad_result</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"mad"</span>, <span class="st">"lower_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;           metric mad lower_raw   status</span></span>
+<span><span class="co">#&gt; 1 detected_genes   0     12000 zero_mad</span></span></code></pre></div>
+</div>
+<p>Use <code>zero_mad = "na"</code> to leave flags unresolved or <code>"error"</code> to stop. For stratified analyses, split the data and call <code><a href="../reference/mad_qc.html">mad_qc()</a></code> on each subset.</p>
+</section><section class="level2"><h2 id="single-cell-rna-seq">Single-cell RNA-seq<a class="anchor" aria-label="anchor" href="#single-cell-rna-seq"></a>
+</h2>
+<p>Common RNA metrics are <code>nCount_RNA</code>, <code>nFeature_RNA</code>, and <code>percent.mt</code>. This example checks lower count and feature tails, an upper mitochondrial tail, and applies <code>log1p</code> to the count-like metrics. Seurat’s <code>percent.mt</code> is usually on a 0–100 scale: 8 means 8%.</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rna_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  sample <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample_A"</span>, <span class="st">"sample_B"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">6</span><span class="op">)</span>,</span>
 <span>  nCount_RNA <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">820</span>, <span class="fl">910</span>, <span class="fl">970</span>, <span class="fl">1050</span>, <span class="fl">1120</span>, <span class="fl">100</span>, <span class="fl">125</span>, <span class="fl">150</span>, <span class="fl">175</span>, <span class="fl">190</span>, <span class="fl">210</span>, <span class="fl">230</span><span class="op">)</span>,</span>
@@ -240,26 +171,31 @@
 <span>  percent.mt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">9</span>, <span class="fl">35</span>, <span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">9</span><span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
+<span><span class="va">rna_metrics</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
+<span>  nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>  nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
+<span>  percent.mt <span class="op">=</span> <span class="st">"upper"</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">rna_transform</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span></span>
+<span></span>
 <span><span class="va">rna_report</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>  <span class="va">rna_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    percent.mt <span class="op">=</span> <span class="st">"upper"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="va">rna_metrics</span>,</span>
+<span>  transform <span class="op">=</span> <span class="va">rna_transform</span>,</span>
 <span>  output <span class="op">=</span> <span class="st">"report"</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">rna_report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;         metric direction transform status</span></span>
 <span><span class="co">#&gt; 1   nCount_RNA     lower     log1p     ok</span></span>
 <span><span class="co">#&gt; 2 nFeature_RNA     lower     log1p     ok</span></span>
 <span><span class="co">#&gt; 3   percent.mt     upper      none     ok</span></span></code></pre></div>
 </div>
+</section><section class="level2"><h2 id="single-cell-atac-seq">Single-cell ATAC-seq<a class="anchor" aria-label="anchor" href="#single-cell-atac-seq"></a>
+</h2>
+<p>ATAC metadata may include <code>nCount_peaks</code>, <code>TSS.enrichment</code>, and <code>nucleosome_signal</code>. The example selects lower peak-count and TSS tails and an upper nucleosome-signal tail. Names and useful directions depend on the pipeline and assay; these are not universal thresholds.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb4"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">atac_metadata</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span></span>
 <span>  nCount_peaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">1200</span>, <span class="fl">1800</span>, <span class="fl">3200</span>, <span class="fl">6000</span>, <span class="fl">9000</span>, <span class="fl">20000</span>, <span class="fl">2500</span>, <span class="fl">4100</span><span class="op">)</span>,</span>
 <span>  TSS.enrichment <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0.8</span>, <span class="fl">1.3</span>, <span class="fl">3.0</span>, <span class="fl">5.4</span>, <span class="fl">8.0</span>, <span class="fl">15.0</span>, <span class="fl">4.1</span>, <span class="fl">6.2</span><span class="op">)</span>,</span>
@@ -277,94 +213,98 @@
 <span>  output <span class="op">=</span> <span class="st">"report"</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
-<span></span>
 <span><span class="va">atac_report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"transform"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
 <span><span class="co">#&gt;              metric direction transform status</span></span>
 <span><span class="co">#&gt; 1      nCount_peaks     lower     log1p     ok</span></span>
 <span><span class="co">#&gt; 2    TSS.enrichment     lower      none     ok</span></span>
 <span><span class="co">#&gt; 3 nucleosome_signal     upper      none     ok</span></span></code></pre></div>
 </div>
-</section><section class="level2"><h2 id="batch-and-reference-thresholds">Batch and reference thresholds<a class="anchor" aria-label="anchor" href="#batch-and-reference-thresholds"></a>
+</section><section class="level2"><h2 id="per-sample-qc-and-absolute-criteria">Per-sample QC and absolute criteria<a class="anchor" aria-label="anchor" href="#per-sample-qc-and-absolute-criteria"></a>
 </h2>
-<p><code>batch</code> estimates limits separately within each label. <code>subset</code> selects the reference observations used in each group; flags are still returned for all observations. Define a reference set independently of the QC metrics when possible, since metric-based selection can bias the limits.</p>
-<div>
-<blockquote>
-<p><strong>Warning</strong></p>
-<p>MAD limits describe the reference distribution, not an external quality standard. If most reference cells are poor, their values still define the baseline. Batch-specific limits can also miss a uniform shift across a batch. Inspect distributions by batch and cell type; add absolute criteria only when supported by the assay or protocol. <a href="https://bioconductor.org/books/3.23/OSCA.basic/quality-control.html#quality-control-motivation" class="external-link">OSCA basic discusses these adaptive QC assumptions</a>.</p>
-</blockquote>
-</div>
-<p>The 416B <a href="https://bioconductor.org/books/3.23/OSCA.workflows/lun-416b-cell-line-smart-seq2.html#quality-control" class="external-link">OSCA workflow</a> illustrates QC metrics across plates with batch information. <code>veryMAD</code> uses MAD-based thresholds on supplied metrics; it does not reproduce <code><a href="https://rdrr.io/pkg/scuttle/man/quickPerCellQC.html" class="external-link">scuttle::quickPerCellQC()</a></code>.</p>
+<p>Estimate thresholds per sample by splitting metadata and calling <code><a href="../reference/mad_qc.html">mad_qc()</a></code> on each subset. Sample-specific thresholds can hide a uniformly low-quality sample; also review between-sample distributions.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb5"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">sample_reports</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/lapply.html" class="external-link">lapply</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/split.html" class="external-link">split</a></span><span class="op">(</span><span class="va">rna_metadata</span>, <span class="va">rna_metadata</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span>,</span>
+<span>  <span class="kw">function</span><span class="op">(</span><span class="va">x</span><span class="op">)</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>    <span class="va">x</span>,</span>
+<span>    metrics <span class="op">=</span> <span class="va">rna_metrics</span>,</span>
+<span>    transform <span class="op">=</span> <span class="va">rna_transform</span>,</span>
+<span>    output <span class="op">=</span> <span class="st">"report"</span>,</span>
+<span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
+<span><span class="op">)</span></span>
+<span><span class="va">sample_reports</span><span class="op">$</span><span class="va">sample_A</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"lower_raw"</span>, <span class="st">"status"</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="co">#&gt;         metric lower_raw status</span></span>
+<span><span class="co">#&gt; 1   nCount_RNA  542.0431     ok</span></span>
+<span><span class="co">#&gt; 2 nFeature_RNA  266.8073     ok</span></span>
+<span><span class="co">#&gt; 3   percent.mt        NA     ok</span></span></code></pre></div>
+</div>
+<p>MAD flags identify outliers in the supplied reference distribution. Combine them with separately chosen absolute criteria when appropriate. These example cutoffs are illustrative, not general recommendations:</p>
+<div class="cell">
+<div class="sourceCode cell-code" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">rna_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>  <span class="va">rna_metadata</span>,</span>
-<span>  metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>    nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>    percent.mt <span class="op">=</span> <span class="st">"upper"</span></span>
-<span>  <span class="op">)</span>,</span>
-<span>  transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
-<span>  batch <span class="op">=</span> <span class="va">rna_metadata</span><span class="op">$</span><span class="va">sample</span>,</span>
+<span>  metrics <span class="op">=</span> <span class="va">rna_metrics</span>,</span>
+<span>  transform <span class="op">=</span> <span class="va">rna_transform</span>,</span>
 <span>  verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"ggplot2"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="fu"><a href="../reference/plot_mad_qc.html">plot_mad_qc</a></span><span class="op">(</span><span class="va">rna_annotated</span>,</span>
-<span>              <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_RNA"</span>, <span class="st">"percent.mt"</span><span class="op">)</span>,</span>
-<span>              batch <span class="op">=</span> <span class="va">rna_metadata</span><span class="op">$</span><span class="va">sample</span><span class="op">)</span></span>
-<span><span class="op">}</span></span></code></pre></div>
-<div class="cell-output-display">
-<div>
-<figure><p><img src="qc-interpretation_files/figure-html/unnamed-chunk-5-1.png" width="672"></p>
-</figure>
-</div>
-</div>
+<span><span class="va">illustrative_keep</span> <span class="op">&lt;-</span> <span class="op">!</span><span class="va">rna_annotated</span><span class="op">$</span><span class="va">mad_qc_outlier</span> <span class="op">&amp;</span></span>
+<span>  <span class="va">rna_annotated</span><span class="op">$</span><span class="va">nCount_RNA</span> <span class="op">&gt;=</span> <span class="fl">500</span> <span class="op">&amp;</span></span>
+<span>  <span class="va">rna_annotated</span><span class="op">$</span><span class="va">percent.mt</span> <span class="op">&lt;=</span> <span class="fl">20</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">illustrative_keep</span>, useNA <span class="op">=</span> <span class="st">"ifany"</span><span class="op">)</span></span>
+<span><span class="co">#&gt; illustrative_keep</span></span>
+<span><span class="co">#&gt; FALSE  TRUE </span></span>
+<span><span class="co">#&gt;     7     5</span></span></code></pre></div>
 </div>
 </section><section class="level2"><h2 id="seurat-metadata">Seurat metadata<a class="anchor" aria-label="anchor" href="#seurat-metadata"></a>
 </h2>
-<p><code><a href="../reference/mad_qc.html">mad_qc()</a></code> accepts a Seurat object and adds flags to cell metadata; it does not calculate QC metrics. For mitochondrial percentage, define a species- and assay-appropriate feature set and use <a href="https://satijalab.org/seurat/reference/percentagefeatureset" class="external-link"><code>Seurat::PercentageFeatureSet()</code></a> with the intended assay. Check feature identifiers and denominator: the function divides selected-feature counts by all counts in the chosen assay and reports 0–100%.</p>
-<p>This synthetic example checks that annotation preserves cell order and accepts a reference set defined before QC.</p>
+<p><code><a href="../reference/mad_qc.html">mad_qc()</a></code> adds flags to Seurat cell metadata. The example checks cell order against the original identities.</p>
 <div class="cell">
-<div class="sourceCode cell-code" id="cb6"><pre class="downlit sourceCode r">
+<div class="sourceCode cell-code" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw">if</span> <span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/ns-load.html" class="external-link">requireNamespace</a></span><span class="op">(</span><span class="st">"SeuratObject"</span>, quietly <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span><span class="op">)</span> <span class="op">{</span></span>
-<span>  <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu">Matrix</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/pkg/Matrix/man/Matrix.html" class="external-link">Matrix</a></span><span class="op">(</span></span>
+<span>  <span class="va">counts</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
 <span>    <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq_len</a></span><span class="op">(</span><span class="fl">40</span><span class="op">)</span> <span class="op"><a href="https://rdrr.io/r/base/Arithmetic.html" class="external-link">%%</a></span> <span class="fl">6</span>,</span>
 <span>    nrow <span class="op">=</span> <span class="fl">5</span>,</span>
-<span>    sparse <span class="op">=</span> <span class="cn">TRUE</span>,</span>
-<span>    dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene-"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell-"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
+<span>    dimnames <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"gene_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">5</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/r/base/paste.html" class="external-link">paste0</a></span><span class="op">(</span><span class="st">"cell_"</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">8</span><span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="op">)</span></span>
 <span>  <span class="va">seurat_object</span> <span class="op">&lt;-</span> <span class="fu">SeuratObject</span><span class="fu">::</span><span class="fu"><a href="https://satijalab.github.io/seurat-object/reference/CreateSeuratObject.html" class="external-link">CreateSeuratObject</a></span><span class="op">(</span>counts <span class="op">=</span> <span class="va">counts</span><span class="op">)</span></span>
 <span>  <span class="va">seurat_object</span><span class="op">[[</span><span class="st">"percent.mt"</span><span class="op">]</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">4</span>, <span class="fl">5</span>, <span class="fl">6</span>, <span class="fl">7</span>, <span class="fl">8</span>, <span class="fl">9</span>, <span class="fl">10</span>, <span class="fl">30</span><span class="op">)</span></span>
-<span>  <span class="va">seurat_object</span><span class="op">$</span><span class="va">sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/rep.html" class="external-link">rep</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"sample_A"</span>, <span class="st">"sample_B"</span><span class="op">)</span>, each <span class="op">=</span> <span class="fl">4</span><span class="op">)</span></span>
-<span>  <span class="va">seurat_object</span><span class="op">$</span><span class="va">reference_cells</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span>,</span>
-<span>                                     <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">TRUE</span>, <span class="cn">FALSE</span><span class="op">)</span></span>
 <span>  <span class="va">cell_ids</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">seurat_object</span><span class="op">)</span></span>
 <span></span>
+<span>  <span class="va">seurat_metadata</span> <span class="op">&lt;-</span> <span class="va">seurat_object</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span></span>
+<span>  <span class="va">expected_flags</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
+<span>    <span class="va">seurat_metadata</span>,</span>
+<span>    metrics <span class="op">=</span> <span class="va">rna_metrics</span>,</span>
+<span>    transform <span class="op">=</span> <span class="va">rna_transform</span>,</span>
+<span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
+<span>  <span class="op">)</span></span>
 <span>  <span class="va">seurat_annotated</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_qc.html">mad_qc</a></span><span class="op">(</span></span>
 <span>    <span class="va">seurat_object</span>,</span>
-<span>    metrics <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
-<span>      nCount_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>      nFeature_RNA <span class="op">=</span> <span class="st">"lower"</span>,</span>
-<span>      percent.mt <span class="op">=</span> <span class="st">"upper"</span></span>
-<span>    <span class="op">)</span>,</span>
-<span>    transform <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>nCount_RNA <span class="op">=</span> <span class="st">"log1p"</span>, nFeature_RNA <span class="op">=</span> <span class="st">"log1p"</span><span class="op">)</span>,</span>
-<span>    batch <span class="op">=</span> <span class="va">seurat_object</span><span class="op">$</span><span class="va">sample</span>,</span>
-<span>    subset <span class="op">=</span> <span class="va">seurat_object</span><span class="op">$</span><span class="va">reference_cells</span>,</span>
-<span>    min_n <span class="op">=</span> <span class="fl">3</span>,</span>
+<span>    metrics <span class="op">=</span> <span class="va">rna_metrics</span>,</span>
+<span>    transform <span class="op">=</span> <span class="va">rna_transform</span>,</span>
 <span>    verbose <span class="op">=</span> <span class="cn">FALSE</span></span>
 <span>  <span class="op">)</span></span>
 <span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">seurat_annotated</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span><span class="op">)</span>, <span class="va">cell_ids</span><span class="op">)</span><span class="op">)</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/base/stopifnot.html" class="external-link">stopifnot</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/identical.html" class="external-link">identical</a></span><span class="op">(</span></span>
+<span>    <span class="va">seurat_annotated</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">mad_qc_outlier</span>,</span>
+<span>    <span class="va">expected_flags</span><span class="op">$</span><span class="va">mad_qc_outlier</span></span>
+<span>  <span class="op">)</span><span class="op">)</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">seurat_annotated</span><span class="op">[[</span><span class="op">]</span><span class="op">]</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nCount_RNA"</span>, <span class="st">"nFeature_RNA"</span>,</span>
 <span>                                <span class="st">"percent.mt"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span><span class="op">)</span></span>
 <span><span class="op">}</span></span>
+<span><span class="co">#&gt; Warning: Feature names cannot have underscores ('_'), replacing with dashes</span></span>
+<span><span class="co">#&gt; ('-')</span></span>
+<span><span class="co">#&gt; Warning: Data is of class matrix. Coercing to dgCMatrix.</span></span>
 <span><span class="co">#&gt;        nCount_RNA nFeature_RNA percent.mt mad_qc_outlier</span></span>
-<span><span class="co">#&gt; cell-1         15            5          4             NA</span></span>
-<span><span class="co">#&gt; cell-2         10            4          5             NA</span></span>
-<span><span class="co">#&gt; cell-3         11            4          6             NA</span></span>
-<span><span class="co">#&gt; cell-4         12            4          7             NA</span></span>
-<span><span class="co">#&gt; cell-5         13            4          8             NA</span></span>
-<span><span class="co">#&gt; cell-6         14            4          9             NA</span></span></code></pre></div>
+<span><span class="co">#&gt; cell_1         15            5          4             NA</span></span>
+<span><span class="co">#&gt; cell_2         10            4          5             NA</span></span>
+<span><span class="co">#&gt; cell_3         11            4          6             NA</span></span>
+<span><span class="co">#&gt; cell_4         12            4          7             NA</span></span>
+<span><span class="co">#&gt; cell_5         13            4          8             NA</span></span>
+<span><span class="co">#&gt; cell_6         14            4          9             NA</span></span></code></pre></div>
 </div>
 </section><script id="quarto-html-after-body" type="application/javascript">
   window.document.addEventListener("DOMContentLoaded", function (event) {

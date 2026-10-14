@@ -62,7 +62,7 @@
 
 
 
-      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/vignettes/mad-scaling.qmd" class="external-link"><code>vignettes/mad-scaling.qmd</code></a></small>
+      <small class="dont-index">Source: <a href="https://github.com/Thokas99/veryMAD/blob/v0.6.0/vignettes/mad-scaling.qmd" class="external-link"><code>vignettes/mad-scaling.qmd</code></a></small>
       <div class="d-none name"><code></code></div>
     </div>
 
@@ -71,9 +71,10 @@
 
 
 
-    <p><code><a href="../reference/mad_scale.html">mad_scale()</a></code> optionally subtracts the median and divides by the scaled median absolute deviation (MAD). The default MAD constant, 1.4826, is consistent with the standard deviation for normally distributed data.</p>
-<section class="level2"><h2 id="vectors">Vectors<a class="anchor" aria-label="anchor" href="#vectors"></a>
+    <p><code><a href="../reference/mad_scale.html">mad_scale()</a></code> centers numeric data by its median and divides by its median absolute deviation (MAD). Set <code>center</code> or <code>scale</code> to <code>FALSE</code> to skip that operation.</p>
+<section class="level2"><h2 id="scale-a-vector">Scale a vector<a class="anchor" aria-label="anchor" href="#scale-a-vector"></a>
 </h2>
+<p>This example scales expression summaries for five genes.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene_expression</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span></span>
@@ -84,35 +85,15 @@
 <span>  gene_E <span class="op">=</span> <span class="fl">18.0</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">gene_expression</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">scaled_expression</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">gene_expression</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">scaled_expression</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt; gene_A gene_B gene_C gene_D gene_E </span></span>
 <span><span class="co">#&gt;  -1.52  -0.67   0.00   0.51  15.01</span></span></code></pre></div>
 </div>
 <p>Names and missing values are preserved.</p>
-</section><section class="level2"><h2 id="matrices">Matrices<a class="anchor" aria-label="anchor" href="#matrices"></a>
+</section><section class="level2"><h2 id="scale-an-expression-matrix">Scale an expression matrix<a class="anchor" aria-label="anchor" href="#scale-an-expression-matrix"></a>
 </h2>
-<p>For matrices, the margin selects which groups are scaled:</p>
-<table class="table caption-top">
-<thead><tr class="header">
-<th><code>margin</code></th>
-<th>Groups scaled</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>1</code> or <code>"rows"</code>
-</td>
-<td>Each row</td>
-</tr>
-<tr class="even">
-<td>
-<code>2</code> or <code>"columns"</code>
-</td>
-<td>Each column</td>
-</tr>
-</tbody>
-</table>
-<p>Here, rows are genes and columns are samples.</p>
+<p>For a matrix, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. Here rows are genes and columns are samples.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">expression_matrix</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">matrix</a></span><span class="op">(</span></span>
@@ -129,46 +110,21 @@
 <span>  <span class="op">)</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">expression_matrix</span>, margin <span class="op">=</span> <span class="st">"columns"</span><span class="op">)</span>, <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="va">scaled_by_sample</span> <span class="op">&lt;-</span> <span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">expression_matrix</span>, margin <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/Round.html" class="external-link">round</a></span><span class="op">(</span><span class="va">scaled_by_sample</span>, <span class="fl">2</span><span class="op">)</span></span>
 <span><span class="co">#&gt;        sample_1 sample_2 sample_3 sample_4</span></span>
 <span><span class="co">#&gt; gene_A     0.00     0.00    -0.67     0.00</span></span>
 <span><span class="co">#&gt; gene_B     0.67     0.67     0.67     0.67</span></span>
 <span><span class="co">#&gt; gene_C    -3.15    -5.80       NA    -5.06</span></span></code></pre></div>
 </div>
-<p>Dimensions and dimnames are preserved. When a group has zero MAD, choose how to handle it:</p>
-<table class="table caption-top">
-<colgroup>
-<col style="width: 50%">
-<col style="width: 50%">
-</colgroup>
-<thead><tr class="header">
-<th><code>zero_mad</code></th>
-<th>Behavior when <code>scale = TRUE</code>
-</th>
-</tr></thead>
-<tbody>
-<tr class="odd">
-<td>
-<code>"na"</code> (default)</td>
-<td>Return <code>NA</code> for the affected group</td>
-</tr>
-<tr class="even">
-<td><code>"zero"</code></td>
-<td>Use a unit denominator; centered values are deviations from the median</td>
-</tr>
-<tr class="odd">
-<td><code>"error"</code></td>
-<td>Stop</td>
-</tr>
-</tbody>
-</table>
+<p>Dimensions and dimnames are preserved. The default <code>zero_mad = "na"</code> returns <code>NA</code> for zero-MAD groups. <code>"zero"</code> uses a unit denominator; centered results are unscaled deviations. Choose <code>"error"</code> to stop on zero MAD.</p>
 <div class="cell">
 <div class="sourceCode cell-code" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">constant_values</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>value_1 <span class="op">=</span> <span class="fl">1</span>, value_2 <span class="op">=</span> <span class="fl">1</span>, value_3 <span class="op">=</span> <span class="fl">1</span>, outlier <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
-<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">constant_values</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">mostly_constant</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>value_1 <span class="op">=</span> <span class="fl">1</span>, value_2 <span class="op">=</span> <span class="fl">1</span>, value_3 <span class="op">=</span> <span class="fl">1</span>, outlier <span class="op">=</span> <span class="fl">100</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">mostly_constant</span><span class="op">)</span></span>
 <span><span class="co">#&gt; value_1 value_2 value_3 outlier </span></span>
 <span><span class="co">#&gt;      NA      NA      NA      NA</span></span>
-<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">constant_values</span>, zero_mad <span class="op">=</span> <span class="st">"zero"</span><span class="op">)</span></span>
+<span><span class="fu"><a href="../reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">mostly_constant</span>, zero_mad <span class="op">=</span> <span class="st">"zero"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; value_1 value_2 value_3 outlier </span></span>
 <span><span class="co">#&gt;       0       0       0      99</span></span></code></pre></div>
 </div>

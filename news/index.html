@@ -36,33 +36,29 @@
   <main id="main" class="col-md-9"><div class="page-header">
 
       <h1>Changelog</h1>
-      <small>Source: <a href="https://github.com/Thokas99/veryMAD/blob/main/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
+      <small>Source: <a href="https://github.com/Thokas99/veryMAD/blob/v0.6.0/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
     <div class="section level2">
-<h2 class="pkg-version" data-toc-text="development version" id="verymad-development-version">veryMAD (development version)<a class="anchor" aria-label="anchor" href="#verymad-development-version"></a></h2>
-<ul><li>Added batch-specific and reference-set thresholds to <code><a href="../reference/mad_qc.html">mad_qc()</a></code>.</li>
-<li>Added <code><a href="../reference/plot_mad_qc.html">plot_mad_qc()</a></code> to review metric distributions and flags by batch.</li>
-<li>Clarified Seurat metric definitions and QC review guidance.</li>
-</ul></div>
-    <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.6.0" id="verymad-060">veryMAD 0.6.0<a class="anchor" aria-label="anchor" href="#verymad-060"></a></h2>
-<ul><li>Set <code><a href="../reference/mad_scale.html">mad_scale()</a></code> to <code>zero_mad = "na"</code> by default; <code>"zero"</code> uses a unit denominator and returns unscaled deviations when centered.</li>
-<li>Reserved <code>id</code> and <code>mad_qc_outlier</code> as metric names in <code><a href="../reference/mad_qc.html">mad_qc()</a></code>.</li>
-<li>Added threshold counts, vectorized combined flags, and report-only output.</li>
-<li>Added single-cell examples, regression tests, an optional <code>scuttle</code> comparison, and a reproducible benchmark.</li>
+<ul><li>
+<code><a href="../reference/mad_scale.html">mad_scale()</a></code> defaults to <code>zero_mad = "na"</code>; <code>"zero"</code> uses a unit denominator and returns unscaled deviations when centered.</li>
+<li>
+<code><a href="../reference/mad_qc.html">mad_qc()</a></code> reserves <code>id</code> and <code>mad_qc_outlier</code> as metric names.</li>
+<li>Threshold reports include used, flagged, and unresolved counts. Combined flags are vectorized, and report-only calls skip annotation.</li>
+<li>Added single-cell examples, regression tests, an optional <code>scuttle</code> comparison, and a reproducible benchmark script.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.1" id="verymad-051">veryMAD 0.5.1<a class="anchor" aria-label="anchor" href="#verymad-051"></a></h2>
-<ul><li>Established <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code> as the public API.</li>
-<li>Added the combined <code>mad_qc_outlier</code> flag and compact report printing.</li>
-<li>Expanded input and edge-case coverage and updated package guides.</li>
+<ul><li>The public API is <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>; QC reports include an overall <code>mad_qc_outlier</code> flag.</li>
+<li>Added compact report printing and expanded input and edge-case coverage.</li>
+<li>Updated the README, guides, and package checks.</li>
 </ul></div>
     <div class="section level2">
 <h2 class="pkg-version" data-toc-text="0.5.0" id="verymad-050">veryMAD 0.5.0<a class="anchor" aria-label="anchor" href="#verymad-050"></a></h2>
-<ul><li>Introduced explicit metric settings, annotation and report output, and robust scaling for vectors and matrices.</li>
-<li>Added Seurat metadata support, raw-scale thresholds, and unresolved flags for zero MAD.</li>
-<li>Added package guides and streamlined internal calculations.</li>
+<ul><li>Centered the API on <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code>, with annotation or report output, explicit metric settings, and robust scaling for vectors and matrices.</li>
+<li>Added Seurat metadata support and set raw-scale thresholds and unresolved zero-MAD flags as QC defaults.</li>
+<li>Added focused guides and streamlined internal calculations.</li>
 </ul></div>
   </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
     </nav></aside></div>

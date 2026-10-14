@@ -5,14 +5,14 @@
 <meta charset="utf-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<title>MAD-Based Quality Control and Robust Scaling • veryMAD</title>
+<title>Explicit MAD Quality Control and Robust Scaling • veryMAD</title>
 <script src="lightswitch.js"></script><script src="deps/jquery-3.6.0/jquery-3.6.0.min.js"></script><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
 <link href="deps/bootstrap-5.3.8/bootstrap.min.css" rel="stylesheet">
 <script src="deps/bootstrap-5.3.8/bootstrap.bundle.min.js"></script><link href="deps/font-awesome-6.5.2/css/all.min.css" rel="stylesheet">
 <link href="deps/font-awesome-6.5.2/css/v4-shims.min.css" rel="stylesheet">
-<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="MAD-Based Quality Control and Robust Scaling">
-<meta name="description" content="Annotates numeric metrics with user-specified median absolute deviation thresholds and robustly scales numeric vectors, matrices, and data frames. Users choose the metrics, directions, transformations, and filtering decisions.">
-<meta property="og:description" content="Annotates numeric metrics with user-specified median absolute deviation thresholds and robustly scales numeric vectors, matrices, and data frames. Users choose the metrics, directions, transformations, and filtering decisions.">
+<script src="deps/headroom-0.11.0/headroom.min.js"></script><script src="deps/headroom-0.11.0/jQuery.headroom.min.js"></script><script src="deps/bootstrap-toc-1.0.1/bootstrap-toc.min.js"></script><script src="deps/clipboard.js-2.0.11/clipboard.min.js"></script><script src="deps/search-1.0.0/autocomplete.jquery.min.js"></script><script src="deps/search-1.0.0/fuse.min.js"></script><script src="deps/search-1.0.0/mark.min.js"></script><!-- pkgdown --><script src="pkgdown.js"></script><meta property="og:title" content="Explicit MAD Quality Control and Robust Scaling">
+<meta name="description" content="Computes median absolute deviation quality-control flags and robust scaling for numeric metadata, vectors, and matrices. Users select the metrics, directions, and transformations; filtering remains in the analysis workflow.">
+<meta property="og:description" content="Computes median absolute deviation quality-control flags and robust scaling for numeric metadata, vectors, and matrices. Users select the metrics, directions, and transformations; filtering remains in the analysis workflow.">
 </head>
 <body>
     <a href="#main" class="visually-hidden-focusable">Skip to contents</a>
@@ -57,17 +57,16 @@
 <div class="row">
   <main id="main" class="col-md-9"><p align="center">
 <img src="reference/figures/veryMAD-logo.svg" alt="veryMAD logo" width="240"></p>
-<div class="section level1">
-<div class="page-header"><h1 id="verymad">veryMAD<a class="anchor" aria-label="anchor" href="#verymad"></a>
+<div class="page-header"><h1 align="center">
+veryMAD
 </h1></div>
-<p><strong>MAD-based QC annotation and robust scaling for R</strong></p>
+<p align="center">
+<strong>MAD quality control and robust scaling for R</strong>
+</p>
 <p align="center">
 <a href="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg" alt="R CMD check"></a> <a href="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml" class="external-link"><img src="https://github.com/Thokas99/veryMAD/actions/workflows/pkgdown.yaml/badge.svg" alt="pkgdown"></a> <a href="https://github.com/Thokas99/veryMAD/releases" class="external-link"><img src="https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&amp;sort=semver" alt="Latest release"></a> <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
-<p><code>veryMAD</code> flags selected numeric metrics using median absolute deviation (MAD) thresholds and scales numeric vectors, matrices, and data frames. You choose the metrics, directions, transformations, and downstream filtering decisions.</p>
-<blockquote>
-<p>[!IMPORTANT] A flag marks a statistical outlier in the supplied data. It does not diagnose low-quality cells or remove observations. Review metric definitions, distributions, and biological context before filtering.</p>
-</blockquote>
+<p>veryMAD computes median absolute deviation (MAD) thresholds for selected numeric metrics. It adds observation-level flags or returns a threshold report. Rows stay in the output; filtering remains part of your analysis.</p>
 <div class="section level2">
 <h2 id="install">Install<a class="anchor" aria-label="anchor" href="#install"></a>
 </h2>
@@ -77,27 +76,7 @@
 <div class="section level2">
 <h2 id="annotate-qc-metrics">Annotate QC metrics<a class="anchor" aria-label="anchor" href="#annotate-qc-metrics"></a>
 </h2>
-<p>Rows are observations. Choose a tail for each metric; <code><a href="reference/mad_qc.html">mad_qc()</a></code> adds one logical flag per metric and a combined <code>mad_qc_outlier</code> flag.</p>
-<table class="table">
-<thead><tr>
-<th>Direction</th>
-<th>Flagged values</th>
-</tr></thead>
-<tbody>
-<tr>
-<td><code>lower</code></td>
-<td>Below the lower threshold</td>
-</tr>
-<tr>
-<td><code>upper</code></td>
-<td>Above the upper threshold</td>
-</tr>
-<tr>
-<td><code>both</code></td>
-<td>Below or above the thresholds</td>
-</tr>
-</tbody>
-</table>
+<p>Choose each metric, its outlier direction, and any transformation. For example, count-like RNA metrics can use an explicit <code>log1p</code> transformation.</p>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Thokas99/veryMAD" class="external-link">veryMAD</a></span><span class="op">)</span></span>
 <span></span>
@@ -117,10 +96,10 @@
 <span></span>
 <span><span class="va">annotated</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"nCount_RNA_mad_outlier"</span>, <span class="st">"nFeature_RNA_mad_outlier"</span>,</span>
 <span>              <span class="st">"percent.mt_mad_outlier"</span>, <span class="st">"mad_qc_outlier"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p>Transformations are applied before threshold estimation. Count-like metrics often benefit from <code>log1p</code>; choose transformations and directions for the assay and protocol.</p>
+<p>For Seurat metadata, <code>percent.mt</code> is usually stored on a 0–100 scale: <code>8</code> means 8%.</p>
 </div>
 <div class="section level2">
-<h2 id="inspect-thresholds">Inspect thresholds<a class="anchor" aria-label="anchor" href="#inspect-thresholds"></a>
+<h2 id="review-thresholds">Review thresholds<a class="anchor" aria-label="anchor" href="#review-thresholds"></a>
 </h2>
 <p>Set <code>output = "report"</code> to return flags, thresholds, and settings without adding columns to the input.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
@@ -135,9 +114,7 @@
 <span></span>
 <span><span class="va">report</span><span class="op">$</span><span class="va">thresholds</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"metric"</span>, <span class="st">"direction"</span>, <span class="st">"lower_raw"</span>, <span class="st">"upper_raw"</span>,</span>
 <span>                      <span class="st">"status"</span>, <span class="st">"n_used"</span>, <span class="st">"n_flagged"</span>, <span class="st">"n_unresolved"</span><span class="op">)</span><span class="op">]</span></span></code></pre></div>
-<p><code>n_used</code> counts non-missing reference observations. The status and unresolved counts identify metrics or groups without usable thresholds; zero MADs produce unresolved flags by default.</p>
-<p>For multi-sample data, pass one batch label per observation to <code>batch</code> to estimate thresholds within each sample. Use <code>subset</code> for an independently defined reference set; thresholds are still applied to every observation. Within-sample thresholds can miss a uniformly poor sample, so inspect distributions and consider separately justified absolute criteria. <code><a href="reference/plot_mad_qc.html">plot_mad_qc()</a></code> compares raw metric values and flags by batch (requires <code>ggplot2</code>).</p>
-<p>For Seurat, QC metrics must already be present in cell metadata. For example, use a species-appropriate feature set and the intended RNA assay with <a href="https://satijalab.org/seurat/reference/percentagefeatureset" class="external-link">Seurat’s <code>PercentageFeatureSet()</code></a> to calculate mitochondrial percentage. The function divides selected-feature counts by all counts in the chosen assay and reports 0–100%. <code>veryMAD</code> flags supplied metrics but does not calculate them.</p>
+<p>The report returns flags, thresholds, and settings. Status identifies missing, insufficient, and zero-MAD metrics; counts show evaluated and unresolved observations. Zero-MAD flags are <code>NA</code> by default.</p>
 </div>
 <div class="section level2">
 <h2 id="scale-with-mad">Scale with MAD<a class="anchor" aria-label="anchor" href="#scale-with-mad"></a>
@@ -145,7 +122,7 @@
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">gene_expression</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span>gene_A <span class="op">=</span> <span class="fl">8.2</span>, gene_B <span class="op">=</span> <span class="fl">8.7</span>, gene_C <span class="op">=</span> <span class="fl">18.0</span><span class="op">)</span></span>
 <span><span class="fu"><a href="reference/mad_scale.html">mad_scale</a></span><span class="op">(</span><span class="va">gene_expression</span><span class="op">)</span></span></code></pre></div>
-<p>Numeric data frames are returned as matrices; matrix dimensions and dimnames are preserved. For matrices and data frames, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. The default <code>zero_mad = "na"</code> returns <code>NA</code> for zero-MAD groups. <code>"zero"</code> uses a unit denominator; centered results are unscaled deviations. <code>"error"</code> stops.</p>
+<p>For matrices, <code>margin = 1</code> scales rows and <code>margin = 2</code> scales columns. Dimensions and dimnames are preserved. The default <code>zero_mad = "na"</code> returns <code>NA</code> for zero-MAD groups. <code>zero_mad = "zero"</code> uses a unit denominator and returns unscaled deviations when centered; <code>zero_mad = "error"</code> stops.</p>
 </div>
 <div class="section level2">
 <h2 id="guides">Guides<a class="anchor" aria-label="anchor" href="#guides"></a>
@@ -162,14 +139,10 @@
 <h2 id="further-reading">Further reading<a class="anchor" aria-label="anchor" href="#further-reading"></a>
 </h2>
 <ul>
-<li><a href="https://bioconductor.org/books/3.23/OSCA.basic/quality-control.html#quality-control-motivation" class="external-link">OSCA basic: QC motivation and adaptive thresholds</a></li>
-<li><a href="https://bioconductor.org/books/3.23/OSCA.workflows/lun-416b-cell-line-smart-seq2.html#quality-control" class="external-link">OSCA workflows: batch-aware QC</a></li>
-<li><a href="https://doi.org/10.1186/s13059-022-02820-w" class="external-link">Subramanian et al. (2022): biology-inspired, data-driven QC</a></li>
-<li><a href="https://www.sc-best-practices.org/preprocessing-visualization/quality-control/" class="external-link">Single-cell best practices: quality control</a></li>
-<li>Documentation guidance: <a href="https://doi.org/10.48550/arXiv.2609.00065" class="external-link">Kassis et al. (2026), <em>Scientific Agent Skills</em></a>
-</li>
+<li><a href="https://doi.org/10.1186/s13059-022-02820-w" class="external-link">Subramanian et al. (2022), adaptive QC in single-cell transcriptomics</a></li>
+<li><a href="https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html" class="external-link">Single-cell best practices: quality control</a></li>
+<li><a href="https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics" class="external-link">OSCA: quality control</a></li>
 </ul>
-</div>
 </div>
 
   </main><aside class="col-md-3"><div class="links">
