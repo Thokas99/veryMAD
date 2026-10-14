@@ -1,7 +1,8 @@
-# veryMAD (development version)
+# veryMAD 0.7.0
 
 - Added batch-specific and reference-set thresholds to `mad_qc()`.
-- Added `plot_mad_qc()` to review metric distributions and flags by batch.
+- Added violin-based batch distributions and `plot_mad_qc_scatter()` with
+  per-batch Spearman rho and finite-pair counts.
 - Clarified Seurat metric definitions and QC review guidance.
 
 # veryMAD 0.6.0

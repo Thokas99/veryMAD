@@ -55,4 +55,56 @@ test_that("plot_mad_qc shows QC status by batch", {
   expect_s3_class(plot, "ggplot")
   expect_equal(plot$data$batch, factor(d$sample, levels = c("A", "B")))
   expect_true(any(plot$data$status == "Flagged"))
+  expect_true(any(vapply(plot$layers, function(layer) inherits(layer$geom, "GeomViolin"), logical(1))))
+  expect_true(any(vapply(plot$layers, function(layer) inherits(layer$geom, "GeomBoxplot"), logical(1))))
+})
+
+test_that("plot_mad_qc handles single-observation batches without plot warnings", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(value = 1:6, sample = c(rep("A", 5), "B"))
+  expect_warning(
+    annotated <- mad_qc(d, c(value = "upper"), batch = d$sample, verbose = FALSE),
+    "Insufficient usable observations"
+  )
+  plot <- plot_mad_qc(annotated, "value", batch = d$sample)
+
+  expect_no_warning(ggplot2::ggplotGrob(plot))
+})
+
+test_that("plot_mad_qc_scatter reports within-batch Spearman rho and n", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(
+    x = c(1, 2, NA, 4, 5, 5, 5),
+    y = c(4, 3, 2, 1, 3, 1, 2),
+    sample = c(rep("A", 4), rep("B", 3)),
+    x_mad_outlier = c(FALSE, TRUE, NA, FALSE, FALSE, FALSE, FALSE),
+    y_mad_outlier = rep(FALSE, 7)
+  )
+
+  plot <- plot_mad_qc_scatter(d, "x", "y", batch = d$sample)
+  labels <- plot$layers[[2]]$data
+
+  expect_s3_class(plot, "ggplot")
+  expect_equal(labels$rho[1], -1)
+  expect_true(is.na(labels$rho[2]))
+  expect_equal(labels$n, c(3L, 3L))
+  expect_equal(
+    ggplot2::ggplot_build(plot)$data[[2]]$label,
+    c("rho = -1.00\nn = 3", "rho = NA\nn = 3")
+  )
+  expect_no_warning(ggplot2::ggplotGrob(plot))
+  expect_true(any(plot$data$status == "Flagged"))
+  expect_true(any(plot$data$status == "Unresolved"))
+  expect_error(plot_mad_qc_scatter(d, "x", "x"), "distinct")
+})
+
+test_that("QC plotting rejects empty annotated metadata", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(
+    x = numeric(), y = numeric(),
+    x_mad_outlier = logical(), y_mad_outlier = logical()
+  )
+
+  expect_error(plot_mad_qc(d, "x"), "at least one observation")
+  expect_error(plot_mad_qc_scatter(d, "x", "y"), "at least one observation")
 })

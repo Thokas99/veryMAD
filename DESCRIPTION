@@ -1,6 +1,6 @@
 Package: veryMAD
 Title: MAD-Based Quality Control and Robust Scaling
-Version: 0.6.0
+Version: 0.7.0
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
 Description: Annotates numeric metrics with user-specified median absolute

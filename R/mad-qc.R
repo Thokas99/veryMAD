@@ -263,10 +263,35 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   unname(out)
 }
 
+.validate_qc_plot_input <- function(data, metrics, batch) {
+  if (inherits(data, "Seurat")) {
+    if (!requireNamespace("SeuratObject", quietly = TRUE)) {
+      stop("Seurat input requires the `SeuratObject` package.", call. = FALSE)
+    }
+    data <- data[[]]
+  }
+  if (!is.data.frame(data)) stop("`data` must be annotated metadata or a Seurat object.", call. = FALSE)
+  if (!nrow(data)) stop("`data` must contain at least one observation.", call. = FALSE)
+  if (!is.character(metrics) || !length(metrics) || anyNA(metrics) ||
+      any(metrics == "") || anyDuplicated(metrics)) {
+    stop("`metrics` must be a non-empty character vector with unique metric names.", call. = FALSE)
+  }
+  flags <- paste0(metrics, "_mad_outlier")
+  missing <- setdiff(c(metrics, flags), names(data))
+  if (length(missing)) stop(sprintf("Missing metric or QC flag column(s): %s.", paste(missing, collapse = ", ")), call. = FALSE)
+  if (!all(vapply(metrics, function(metric) is.numeric(data[[metric]]), logical(1)))) {
+    stop("Selected metric columns must be numeric.", call. = FALSE)
+  }
+  if (!all(vapply(flags, function(flag) is.logical(data[[flag]]), logical(1)))) {
+    stop("Selected QC flag columns must be logical.", call. = FALSE)
+  }
+  list(data = data, batch = .validate_qc_strata(batch, NULL, nrow(data))$batch)
+}
+
 #' Plot MAD QC flags by metric and batch
 #'
-#' Show raw metric values by batch with flagged and unresolved observations
-#' highlighted. Each metric has its own panel. Requires `ggplot2`.
+#' Show raw metric values by batch with violins, boxplots, and colored
+#' observations. Each metric has its own panel. Requires `ggplot2`.
 #'
 #' @param data Annotated data frame or Seurat object returned by [mad_qc()].
 #' @param metrics Character vector of annotated numeric metric columns.
@@ -284,27 +309,10 @@ plot_mad_qc <- function(data, metrics, batch = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("`plot_mad_qc()` requires the `ggplot2` package.", call. = FALSE)
   }
-  if (inherits(data, "Seurat")) {
-    if (!requireNamespace("SeuratObject", quietly = TRUE)) {
-      stop("Seurat input requires the `SeuratObject` package.", call. = FALSE)
-    }
-    data <- data[[]]
-  }
-  if (!is.data.frame(data)) stop("`data` must be annotated metadata or a Seurat object.", call. = FALSE)
-  if (!is.character(metrics) || !length(metrics) || anyNA(metrics) || any(metrics == "") || anyDuplicated(metrics)) {
-    stop("`metrics` must be a non-empty character vector with unique metric names.", call. = FALSE)
-  }
-  missing <- setdiff(c(metrics, paste0(metrics, "_mad_outlier")), names(data))
-  if (length(missing)) stop(sprintf("Missing metric or QC flag column(s): %s.", paste(missing, collapse = ", ")), call. = FALSE)
-  if (!all(vapply(metrics, function(metric) is.numeric(data[[metric]]), logical(1)))) {
-    stop("Selected metric columns must be numeric.", call. = FALSE)
-  }
-  flag_names <- paste0(metrics, "_mad_outlier")
-  if (!all(vapply(flag_names, function(flag) is.logical(data[[flag]]), logical(1)))) {
-    stop("Selected QC flag columns must be logical.", call. = FALSE)
-  }
-  strata <- .validate_qc_strata(batch, NULL, nrow(data))
-  batch_labels <- if (is.null(strata$batch)) rep("All observations", nrow(data)) else strata$batch
+  plot_input <- .validate_qc_plot_input(data, metrics, batch)
+  data <- plot_input$data
+  batch <- plot_input$batch
+  batch_labels <- if (is.null(batch)) rep("All observations", nrow(data)) else batch
   plots <- lapply(seq_along(metrics), function(i) {
     metric <- metrics[i]
     flag <- data[[paste0(metric, "_mad_outlier")]]
@@ -315,14 +323,103 @@ plot_mad_qc <- function(data, metrics, batch = NULL) {
   })
   plot_data <- do.call(rbind, plots)
   plot_data$batch <- factor(plot_data$batch, levels = unique(plot_data$batch))
+  observed_data <- plot_data[is.finite(plot_data$value), , drop = FALSE]
+  violin_n <- stats::ave(seq_len(nrow(observed_data)), observed_data$metric,
+                         observed_data$batch, FUN = length)
+  violin_data <- observed_data[violin_n > 1L, , drop = FALSE]
   ggplot2::ggplot(plot_data, ggplot2::aes(x = batch, y = value)) +
-    ggplot2::geom_boxplot(outlier.shape = NA, color = "grey55") +
-    ggplot2::geom_jitter(ggplot2::aes(color = status), width = 0.15,
-                         alpha = 0.5, size = 0.7) +
+    ggplot2::geom_violin(data = violin_data, fill = "grey94", color = "grey65",
+                         linewidth = 0.3, trim = TRUE) +
+    ggplot2::geom_boxplot(data = observed_data, outlier.shape = NA, width = 0.14,
+                          fill = "white", color = "grey35", linewidth = 0.3) +
+    ggplot2::geom_jitter(data = observed_data, ggplot2::aes(color = status),
+                         width = 0.15, alpha = 0.4, size = 0.5) +
     ggplot2::facet_wrap(ggplot2::vars(metric), scales = "free_y") +
-    ggplot2::labs(x = if (is.null(strata$batch)) NULL else "Batch",
+    ggplot2::scale_color_manual(values = c("Not flagged" = "#697586",
+                                           "Flagged" = "#D55E00",
+                                           "Unresolved" = "#0072B2")) +
+    ggplot2::labs(x = if (is.null(batch)) NULL else "Batch",
                   y = NULL, color = "QC status") +
-    ggplot2::theme_bw()
+    ggplot2::theme_classic() +
+    ggplot2::theme(legend.position = "top",
+                   strip.background = ggplot2::element_rect(fill = "grey96", color = NA))
+}
+
+#' Plot the relationship between two QC metrics
+#'
+#' Show paired raw values and per-batch Spearman correlations. The correlation
+#' and finite-pair count are descriptive; no p-values are calculated. Requires
+#' `ggplot2`.
+#'
+#' @param data Annotated data frame or Seurat object returned by [mad_qc()].
+#' @param x,y Character names of two distinct annotated numeric metrics.
+#' @param batch Optional non-missing vector with one batch label per
+#'   observation. If omitted, plot all observations in one panel.
+#' @return A `ggplot` object with one panel per batch.
+#' @export
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   x <- data.frame(counts = c(1:5, 20), pct_mito = c(2:6, 30))
+#'   x <- mad_qc(x, c(counts = "lower", pct_mito = "upper"), verbose = FALSE)
+#'   plot_mad_qc_scatter(x, "counts", "pct_mito")
+#' }
+plot_mad_qc_scatter <- function(data, x, y, batch = NULL) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("`plot_mad_qc_scatter()` requires the `ggplot2` package.", call. = FALSE)
+  }
+  if (!is.character(x) || length(x) != 1L || is.na(x) || !nzchar(x) ||
+      !is.character(y) || length(y) != 1L || is.na(y) || !nzchar(y) || identical(x, y)) {
+    stop("`x` and `y` must name two distinct metric columns.", call. = FALSE)
+  }
+  plot_input <- .validate_qc_plot_input(data, c(x, y), batch)
+  data <- plot_input$data
+  batch <- plot_input$batch
+  flags <- paste0(c(x, y), "_mad_outlier")
+  batch_labels <- if (is.null(batch)) rep("All observations", nrow(data)) else batch
+  flag_x <- data[[flags[1L]]]
+  flag_y <- data[[flags[2L]]]
+  status <- ifelse(flag_x %in% TRUE | flag_y %in% TRUE, "Flagged",
+                   ifelse(is.na(flag_x) | is.na(flag_y), "Unresolved", "Not flagged"))
+  plot_data <- data.frame(
+    x = data[[x]], y = data[[y]], batch = batch_labels,
+    status = factor(status, levels = c("Not flagged", "Flagged", "Unresolved")),
+    stringsAsFactors = FALSE
+  )
+  plot_data$batch <- factor(plot_data$batch, levels = unique(plot_data$batch))
+  point_data <- plot_data[is.finite(plot_data$x) & is.finite(plot_data$y), , drop = FALSE]
+  correlations <- do.call(rbind, lapply(levels(plot_data$batch), function(group) {
+    group_data <- plot_data[plot_data$batch == group, , drop = FALSE]
+    finite <- is.finite(group_data$x) & is.finite(group_data$y)
+    pair_x <- group_data$x[finite]
+    pair_y <- group_data$y[finite]
+    rho <- if (length(pair_x) > 1L && length(unique(pair_x)) > 1L &&
+               length(unique(pair_y)) > 1L) {
+      stats::cor(pair_x, pair_y, method = "spearman")
+    } else {
+      NA_real_
+    }
+    label <- if (is.na(rho)) "rho = NA" else sprintf("rho = %.2f", rho)
+    data.frame(batch = group, rho = rho, n = length(pair_x),
+               label = sprintf("%s\nn = %d", label, length(pair_x)))
+  }))
+  correlations$batch <- factor(correlations$batch, levels = levels(plot_data$batch))
+
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = x, y = y)) +
+    ggplot2::geom_point(data = point_data, ggplot2::aes(color = status),
+                        alpha = 0.45, size = 0.6) +
+    ggplot2::geom_text(
+      data = correlations,
+      ggplot2::aes(x = -Inf, y = Inf, label = label),
+      inherit.aes = FALSE, hjust = -0.05, vjust = 1.1, size = 3.2
+    ) +
+    ggplot2::facet_wrap(ggplot2::vars(batch)) +
+    ggplot2::scale_color_manual(values = c("Not flagged" = "#697586",
+                                           "Flagged" = "#D55E00",
+                                           "Unresolved" = "#0072B2")) +
+    ggplot2::labs(x = x, y = y, color = "QC status") +
+    ggplot2::theme_classic() +
+    ggplot2::theme(legend.position = "top",
+                   strip.background = ggplot2::element_rect(fill = "grey96", color = NA))
 }
 
 .inform_qc <- function(result, n) {

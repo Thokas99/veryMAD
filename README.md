@@ -92,8 +92,10 @@ estimate thresholds within each sample. Use `subset` for an independently
 defined reference set; thresholds are still applied to every observation.
 Within-sample thresholds can miss a uniformly poor sample, so inspect
 distributions and consider separately justified absolute criteria.
-`plot_mad_qc()` compares raw metric values and flags by batch (requires
-`ggplot2`).
+`plot_mad_qc()` shows each metric's distribution by batch with flags highlighted.
+`plot_mad_qc_scatter()` shows a pair of metrics and reports within-batch
+Spearman rho and the number of finite pairs (requires `ggplot2`). These
+correlations are descriptive; no p-values are calculated.
 
 For Seurat, QC metrics must already be present in cell metadata. For example,
 use a species-appropriate feature set and the intended RNA assay with

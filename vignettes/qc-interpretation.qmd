@@ -198,8 +198,15 @@ if (requireNamespace("ggplot2", quietly = TRUE)) {
   plot_mad_qc(rna_annotated,
               c("nCount_RNA", "nFeature_RNA", "percent.mt"),
               batch = rna_metadata$sample)
+
+  plot_mad_qc_scatter(rna_annotated, "nCount_RNA", "percent.mt",
+                      batch = rna_metadata$sample)
 }
 ```
+
+The scatter plot reports descriptive Spearman correlations and finite-pair
+counts within each sample. It omits p-values because cells are not independent
+experimental replicates; interpret rho descriptively.
 
 ## Seurat metadata
 

@@ -37,5 +37,5 @@ test_that("verymad_qc printing returns invisibly and does not mutate", {
 })
 
 test_that("the package exports its documented functions", {
-  expect_identical(sort(getNamespaceExports("veryMAD")), c("mad_qc", "mad_scale", "plot_mad_qc"))
+  expect_identical(sort(getNamespaceExports("veryMAD")), c("mad_qc", "mad_scale", "plot_mad_qc", "plot_mad_qc_scatter"))
 })
