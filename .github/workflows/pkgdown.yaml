@@ -35,8 +35,8 @@ jobs:
           repos <- BiocManager::repositories()
           repos["CRAN"] <- getOption("repos")["CRAN"]
           options(repos = repos)
-          install.packages(c("devtools", "remotes"), lib = lib)
-          devtools::install_gitlab("sysbiobig/sparsim", lib = lib, force = TRUE)
+          install.packages("remotes", lib = lib)
+          remotes::install_gitlab("sysbiobig/sparsim", lib = lib, force = TRUE)
         shell: Rscript {0}
 
       - uses: r-lib/actions/setup-r-dependencies@v2
