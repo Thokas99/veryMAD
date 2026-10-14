@@ -8,6 +8,7 @@ consistent with the standard deviation for normally distributed data.
 ## Vectors
 
 ``` r
+
 gene_expression <- c(
   gene_A = 8.2,
   gene_B = 8.7,
@@ -35,6 +36,7 @@ For matrices, the margin selects which groups are scaled:
 Here, rows are genes and columns are samples.
 
 ``` r
+
 expression_matrix <- matrix(
   c(
     8.2, 8.5, 8.4, 8.6,
@@ -66,6 +68,7 @@ how to handle it:
 | `"error"` | Stop |
 
 ``` r
+
 constant_values <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
 mad_scale(constant_values)
 #> value_1 value_2 value_3 outlier 

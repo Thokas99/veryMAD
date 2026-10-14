@@ -25,6 +25,7 @@ decisions.
 ## Install
 
 ``` r
+
 pak::pak("Thokas99/veryMAD")
 ```
 
@@ -41,6 +42,7 @@ adds one logical flag per metric and a combined `mad_qc_outlier` flag.
 | `both`    | Below or above the thresholds |
 
 ``` r
+
 library(veryMAD)
 
 metadata <- data.frame(
@@ -71,6 +73,7 @@ Set `output = "report"` to return flags, thresholds, and settings
 without adding columns to the input.
 
 ``` r
+
 report <- mad_qc(
   metadata,
   metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower",
@@ -113,6 +116,7 @@ selected-feature counts by all counts in the chosen assay and reports
 ## Scale with MAD
 
 ``` r
+
 gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
 mad_scale(gene_expression)
 ```
