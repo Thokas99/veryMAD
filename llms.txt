@@ -12,10 +12,10 @@ release](https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=t
 [![MIT
 license](https://img.shields.io/badge/license-MIT-blue.svg)](https://thokas99.github.io/veryMAD/LICENSE)
 
-`veryMAD` flags selected numeric metrics using median absolute deviation
+`veryMAD` flags selected numeric metrics with median absolute deviation
 (MAD) thresholds and scales numeric vectors, matrices, and data frames.
-You choose the metrics, directions, transformations, and downstream
-filtering decisions.
+You choose the metrics, directions, transformations, and filtering
+decisions.
 
 > \[!IMPORTANT\] A flag marks a statistical outlier in the supplied
 > data. It does not diagnose low-quality cells or remove observations.
@@ -25,7 +25,6 @@ filtering decisions.
 ## Install
 
 ``` r
-
 pak::pak("Thokas99/veryMAD")
 ```
 
@@ -42,7 +41,6 @@ adds one logical flag per metric and a combined `mad_qc_outlier` flag.
 | `both`    | Below or above the thresholds |
 
 ``` r
-
 library(veryMAD)
 
 metadata <- data.frame(
@@ -73,7 +71,6 @@ Set `output = "report"` to return flags, thresholds, and settings
 without adding columns to the input.
 
 ``` r
-
 report <- mad_qc(
   metadata,
   metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower",
@@ -100,9 +97,10 @@ absolute criteria.
 [`plot_mad_qc()`](https://thokas99.github.io/veryMAD/reference/plot_mad_qc.md)
 shows each metric’s distribution by batch with flags highlighted.
 [`plot_mad_qc_scatter()`](https://thokas99.github.io/veryMAD/reference/plot_mad_qc_scatter.md)
-shows a pair of metrics and reports within-batch Spearman rho and the
-number of finite pairs (requires `ggplot2`). These correlations are
-descriptive; no p-values are calculated.
+shows paired metrics and reports within-batch Spearman rho and finite
+observation-pair counts. Pass a matching `output = "report"` result to
+add raw-scale cutoff lines. Correlations are descriptive; no p-values
+are calculated. Both plot functions require `ggplot2`.
 
 For Seurat, QC metrics must already be present in cell metadata. For
 example, use a species-appropriate feature set and the intended RNA
@@ -115,16 +113,16 @@ selected-feature counts by all counts in the chosen assay and reports
 ## Scale with MAD
 
 ``` r
-
 gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
 mad_scale(gene_expression)
 ```
 
 Numeric data frames are returned as matrices; matrix dimensions and
 dimnames are preserved. For matrices and data frames, `margin = 1`
-scales rows and `margin = 2` scales columns. The default
+scales rows and `margin = 2` scales columns. When scaling,
 `zero_mad = "na"` returns `NA` for zero-MAD groups. `"zero"` uses a unit
-denominator; centered results are unscaled deviations. `"error"` stops.
+denominator; centered results are deviations from the median. `"error"`
+stops.
 
 ## Guides
 
@@ -132,6 +130,7 @@ denominator; centered results are unscaled deviations. `"error"` stops.
   started](https://thokas99.github.io/veryMAD/articles/getting-started.html)
 - [Interpreting
   QC](https://thokas99.github.io/veryMAD/articles/qc-interpretation.html)
+- [QC plots](https://thokas99.github.io/veryMAD/articles/qc-plots.html)
 - [MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)
 - [Function reference](https://thokas99.github.io/veryMAD/reference/)
@@ -147,8 +146,6 @@ denominator; centered results are unscaled deviations. `"error"` stops.
   QC](https://doi.org/10.1186/s13059-022-02820-w)
 - [Single-cell best practices: quality
   control](https://www.sc-best-practices.org/preprocessing-visualization/quality-control/)
-- Documentation guidance: [Kassis et al. (2026), *Scientific Agent
-  Skills*](https://doi.org/10.48550/arXiv.2609.00065)
 
 # Package index
 
@@ -179,6 +176,11 @@ denominator; centered results are unscaled deviations. `"error"` stops.
   flags](https://thokas99.github.io/veryMAD/articles/qc-interpretation.md):
 
   Review MAD-based QC flags in single-cell RNA and ATAC workflows.
+
+- [Inspect MAD QC
+  plots](https://thokas99.github.io/veryMAD/articles/qc-plots.md):
+
+  Use SPARSim-generated counts to inspect batch-aware MAD QC plots.
 
 - [Robust MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.md):

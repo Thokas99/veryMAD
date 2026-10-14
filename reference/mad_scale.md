@@ -1,6 +1,6 @@
 # Center and scale with the median and MAD
 
-Optionally subtract the median and divide by the median absolute
+Optionally center on the median and scale by the median absolute
 deviation (MAD). For matrices, `margin = 1` operates on rows and
 `margin = 2` on columns.
 

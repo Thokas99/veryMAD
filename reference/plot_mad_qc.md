@@ -1,7 +1,8 @@
 # Plot MAD QC flags by metric and batch
 
-Show raw metric values by batch with violins, boxplots, and colored
-observations. Each metric has its own panel. Requires `ggplot2`.
+Plot raw metric values by batch. Violins and boxplots show
+distributions; point color marks QC flags. Each metric has its own
+panel. Requires `ggplot2`.
 
 ## Usage
 

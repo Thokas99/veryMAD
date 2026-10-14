@@ -16,7 +16,6 @@ without modifying the input.
 The example uses percentage points for `pct_mito`: 8 denotes 8%.
 
 ``` r
-
 sample_metadata <- data.frame(
   sample = paste0("sample_", 1:8),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.6e6, 0.45e6, 2.5e6),
@@ -70,7 +69,6 @@ Use `output = "report"` to inspect thresholds and flags without adding
 columns to the input.
 
 ``` r
-
 qc_report <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
@@ -95,3 +93,6 @@ qc_report$thresholds[, c("metric", "direction", "lower_raw",
 Threshold rows report limits on the transformed and raw scales. `n_used`
 is the number of non-missing reference observations; `min_n` defaults to
 5.
+
+For batch-specific distribution and relationship plots, see [QC
+plots](https://thokas99.github.io/veryMAD/articles/qc-plots.qmd).

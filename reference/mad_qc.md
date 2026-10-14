@@ -1,10 +1,9 @@
 # Annotate MAD-based quality-control flags
 
-Rows are observations. For each selected numeric metric, estimate limits
-at the median plus or minus `nmads` scaled MADs, then flag the selected
-tail. Estimation follows any transformation and can be stratified by
-`batch` or restricted to a reference set with `subset`. Flags are
-returned for every observation.
+Rows are observations. For each selected metric, estimate limits around
+the median using `nmads` scaled MADs, then flag the selected tail.
+Transform metrics before estimation, fit limits by `batch`, or select
+reference rows with `subset`. Return flags for every observation.
 
 ## Usage
 

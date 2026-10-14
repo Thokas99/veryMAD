@@ -12,6 +12,11 @@
 
   Review MAD-based QC flags in single-cell RNA and ATAC workflows.
 
+- [Inspect MAD QC
+  plots](https://thokas99.github.io/veryMAD/articles/qc-plots.md):
+
+  Use SPARSim-generated counts to inspect batch-aware MAD QC plots.
+
 - [Robust MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.md):
 

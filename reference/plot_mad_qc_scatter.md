@@ -1,13 +1,15 @@
 # Plot the relationship between two QC metrics
 
-Show paired raw values and per-batch Spearman correlations. The
-correlation and finite-pair count are descriptive; no p-values are
-calculated. Requires `ggplot2`.
+Plot paired raw values with per-batch Spearman rho and finite-pair
+counts. A matching
+[`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md)
+report can add raw-scale cutoff lines. Correlations are descriptive; no
+p-values are calculated. Requires `ggplot2`.
 
 ## Usage
 
 ``` r
-plot_mad_qc_scatter(data, x, y, batch = NULL)
+plot_mad_qc_scatter(data, x, y, batch = NULL, report = NULL)
 ```
 
 ## Arguments
@@ -25,6 +27,13 @@ plot_mad_qc_scatter(data, x, y, batch = NULL)
 
   Optional non-missing vector with one batch label per observation. If
   omitted, plot all observations in one panel.
+
+- report:
+
+  Optional `verymad_qc` report from the same observations and metrics.
+  Finite raw-scale limits are drawn in each batch panel. A pooled report
+  is repeated across panels; a batch-specific report requires matching
+  `batch` labels.
 
 ## Value
 
