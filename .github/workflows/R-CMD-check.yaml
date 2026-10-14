@@ -26,8 +26,17 @@ jobs:
         with:
           r-version: ${{ matrix.r }}
           use-public-rspm: true
+
+      - name: Install SPARSim from GitLab
+        run: |
+          lib <- .libPaths()[1]
+          install.packages("devtools", lib = lib)
+          devtools::install_gitlab("sysbiobig/sparsim", lib = lib, force = TRUE)
+        shell: Rscript {0}
+
       - uses: r-lib/actions/setup-r-dependencies@v2
         with:
           extra-packages: any::rcmdcheck, local::.
           needs: check
+          lockfile-create-lib: .libPaths()[1]
       - uses: r-lib/actions/check-r-package@v2
