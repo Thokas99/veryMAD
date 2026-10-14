@@ -81,3 +81,6 @@ constant_values <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
 mad_scale(constant_values)
 mad_scale(constant_values, zero_mad = "zero")
 ```
+
+For QC flags and their visual review, see [Getting started](getting-started.qmd)
+and [QC plots](qc-plots.qmd).

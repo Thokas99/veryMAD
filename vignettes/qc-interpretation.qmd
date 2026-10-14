@@ -254,3 +254,6 @@ if (requireNamespace("SeuratObject", quietly = TRUE)) {
                                 "percent.mt", "mad_qc_outlier")])
 }
 ```
+
+For a larger simulated example with batch-specific plots and raw-scale
+thresholds, see [QC plots](qc-plots.qmd).

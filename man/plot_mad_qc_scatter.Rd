@@ -4,7 +4,7 @@
 \alias{plot_mad_qc_scatter}
 \title{Plot the relationship between two QC metrics}
 \usage{
-plot_mad_qc_scatter(data, x, y, batch = NULL)
+plot_mad_qc_scatter(data, x, y, batch = NULL, report = NULL)
 }
 \arguments{
 \item{data}{Annotated data frame or Seurat object returned by \code{\link[=mad_qc]{mad_qc()}}.}
@@ -13,14 +13,19 @@ plot_mad_qc_scatter(data, x, y, batch = NULL)
 
 \item{batch}{Optional non-missing vector with one batch label per
 observation. If omitted, plot all observations in one panel.}
+
+\item{report}{Optional \code{verymad_qc} report from the same observations and
+metrics. Finite raw-scale limits are drawn in each batch panel. A pooled
+report is repeated across panels; a batch-specific report requires matching
+\code{batch} labels.}
 }
 \value{
 A \code{ggplot} object with one panel per batch.
 }
 \description{
-Show paired raw values and per-batch Spearman correlations. The correlation
-and finite-pair count are descriptive; no p-values are calculated. Requires
-\code{ggplot2}.
+Plot paired raw values with per-batch Spearman rho and finite-pair counts.
+A matching \code{\link[=mad_qc]{mad_qc()}} report can add raw-scale cutoff lines. Correlations
+are descriptive; no p-values are calculated. Requires \code{ggplot2}.
 }
 \examples{
 if (requireNamespace("ggplot2", quietly = TRUE)) {

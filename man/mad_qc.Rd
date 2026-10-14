@@ -62,11 +62,10 @@ limits on transformed and raw scales, status, and used, flagged, and
 unresolved counts. A batch adds one row per metric and batch.
 }
 \description{
-Rows are observations. For each selected numeric metric, estimate limits at
-the median plus or minus \code{nmads} scaled MADs, then flag the selected tail.
-Estimation follows any transformation and can be stratified by \code{batch} or
-restricted to a reference set with \code{subset}. Flags are returned for every
-observation.
+Rows are observations. For each selected metric, estimate limits around the
+median using \code{nmads} scaled MADs, then flag the selected tail. Transform
+metrics before estimation, fit limits by \code{batch}, or select reference rows
+with \code{subset}. Return flags for every observation.
 }
 \examples{
 qc_metadata <- data.frame(

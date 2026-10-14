@@ -13,9 +13,9 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
 
-`veryMAD` flags selected numeric metrics using median absolute deviation (MAD)
+`veryMAD` flags selected numeric metrics with median absolute deviation (MAD)
 thresholds and scales numeric vectors, matrices, and data frames. You choose
-the metrics, directions, transformations, and downstream filtering decisions.
+the metrics, directions, transformations, and filtering decisions.
 
 > [!IMPORTANT]
 > A flag marks a statistical outlier in the supplied data. It does not diagnose
@@ -93,9 +93,10 @@ defined reference set; thresholds are still applied to every observation.
 Within-sample thresholds can miss a uniformly poor sample, so inspect
 distributions and consider separately justified absolute criteria.
 `plot_mad_qc()` shows each metric's distribution by batch with flags highlighted.
-`plot_mad_qc_scatter()` shows a pair of metrics and reports within-batch
-Spearman rho and the number of finite pairs (requires `ggplot2`). These
-correlations are descriptive; no p-values are calculated.
+`plot_mad_qc_scatter()` shows paired metrics and reports within-batch Spearman
+rho and finite observation-pair counts. Pass a matching `output = "report"`
+result to add raw-scale cutoff lines. Correlations are descriptive; no
+p-values are calculated. Both plot functions require `ggplot2`.
 
 For Seurat, QC metrics must already be present in cell metadata. For example,
 use a species-appropriate feature set and the intended RNA assay with
@@ -113,14 +114,15 @@ mad_scale(gene_expression)
 
 Numeric data frames are returned as matrices; matrix dimensions and dimnames
 are preserved. For matrices and data frames, `margin = 1` scales rows and
-`margin = 2` scales columns. The default
-`zero_mad = "na"` returns `NA` for zero-MAD groups. `"zero"` uses a unit
-denominator; centered results are unscaled deviations. `"error"` stops.
+`margin = 2` scales columns. When scaling, `zero_mad = "na"` returns `NA` for
+zero-MAD groups. `"zero"` uses a unit denominator; centered results are
+deviations from the median. `"error"` stops.
 
 ## Guides
 
 - [Getting started](https://thokas99.github.io/veryMAD/articles/getting-started.html)
 - [Interpreting QC](https://thokas99.github.io/veryMAD/articles/qc-interpretation.html)
+- [QC plots](https://thokas99.github.io/veryMAD/articles/qc-plots.html)
 - [MAD scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)
 - [Function reference](https://thokas99.github.io/veryMAD/reference/)
 - [Release notes](NEWS.md)
@@ -131,4 +133,3 @@ denominator; centered results are unscaled deviations. `"error"` stops.
 - [OSCA workflows: batch-aware QC](https://bioconductor.org/books/3.23/OSCA.workflows/lun-416b-cell-line-smart-seq2.html#quality-control)
 - [Subramanian et al. (2022): biology-inspired, data-driven QC](https://doi.org/10.1186/s13059-022-02820-w)
 - [Single-cell best practices: quality control](https://www.sc-best-practices.org/preprocessing-visualization/quality-control/)
-- Documentation guidance: [Kassis et al. (2026), *Scientific Agent Skills*](https://doi.org/10.48550/arXiv.2609.00065)

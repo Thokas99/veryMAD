@@ -18,8 +18,9 @@ observation. If omitted, plot all observations in one group.}
 A \code{ggplot} object with one facet per metric.
 }
 \description{
-Show raw metric values by batch with violins, boxplots, and colored
-observations. Each metric has its own panel. Requires \code{ggplot2}.
+Plot raw metric values by batch. Violins and boxplots show distributions;
+point color marks QC flags. Each metric has its own panel. Requires
+\code{ggplot2}.
 }
 \examples{
 if (requireNamespace("ggplot2", quietly = TRUE)) {

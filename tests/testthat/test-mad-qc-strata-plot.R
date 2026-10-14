@@ -98,6 +98,74 @@ test_that("plot_mad_qc_scatter reports within-batch Spearman rho and n", {
   expect_error(plot_mad_qc_scatter(d, "x", "x"), "distinct")
 })
 
+test_that("plot_mad_qc_scatter overlays raw report thresholds by batch", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(
+    x = c(1:5, 101:105),
+    y = c(5:1, 110:106),
+    sample = rep(c("A", "B"), each = 5)
+  )
+  metrics <- c(x = "lower", y = "upper")
+  transforms <- c(x = "log1p", y = "log1p")
+  annotated <- mad_qc(d, metrics, transform = transforms,
+                      batch = d$sample, verbose = FALSE)
+  report <- mad_qc(d, metrics, transform = transforms, batch = d$sample,
+                   output = "report", verbose = FALSE)
+
+  plot <- plot_mad_qc_scatter(
+    annotated, "x", "y", batch = d$sample, report = report
+  )
+  vline <- plot$layers[[which(vapply(plot$layers, function(layer) {
+    inherits(layer$geom, "GeomVline")
+  }, logical(1)))]]
+  hline <- plot$layers[[which(vapply(plot$layers, function(layer) {
+    inherits(layer$geom, "GeomHline")
+  }, logical(1)))]]
+
+  expect_equal(vline$data$cutoff, report$thresholds$lower_raw[report$thresholds$metric == "x"])
+  expect_equal(hline$data$cutoff, report$thresholds$upper_raw[report$thresholds$metric == "y"])
+  expect_equal(as.character(vline$data$batch), report$thresholds$batch[report$thresholds$metric == "x"])
+  expect_no_warning(ggplot2::ggplotGrob(plot))
+})
+
+test_that("plot_mad_qc_scatter omits unresolved limits and repeats pooled limits", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = rep(1, 5), y = 1:5,
+                  sample = rep(c("A", "B"), length.out = 5))
+  metrics <- c(x = "lower", y = "upper")
+  annotated <- mad_qc(d, metrics, verbose = FALSE)
+  pooled_report <- mad_qc(d, metrics, output = "report", verbose = FALSE)
+
+  pooled_plot <- plot_mad_qc_scatter(
+    annotated, "x", "y", batch = d$sample, report = pooled_report
+  )
+  geoms <- vapply(pooled_plot$layers, function(layer) class(layer$geom)[1], character(1))
+  expect_false("GeomVline" %in% geoms)
+  expect_true("GeomHline" %in% geoms)
+  hline <- pooled_plot$layers[[which(geoms == "GeomHline")]]
+  expect_equal(nrow(hline$data), length(unique(d$sample)))
+  expect_true(all(hline$data$cutoff == pooled_report$thresholds$upper_raw[
+    pooled_report$thresholds$metric == "y"
+  ]))
+})
+
+test_that("plot_mad_qc_scatter requires a matching QC report", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(x = c(1:5, 100), y = 6:1)
+  annotated <- mad_qc(d, c(x = "lower", y = "upper"), verbose = FALSE)
+  report <- mad_qc(d[5:1, ], c(x = "lower", y = "upper"),
+                   output = "report", verbose = FALSE)
+  mismatched_report <- mad_qc(d, c(x = "both", y = "upper"),
+                              output = "report", verbose = FALSE)
+
+  expect_error(plot_mad_qc_scatter(annotated, "x", "y", report = list()),
+               "`verymad_qc` report")
+  expect_error(plot_mad_qc_scatter(annotated, "x", "y", report = report),
+               "same observations and order")
+  expect_error(plot_mad_qc_scatter(annotated, "x", "y", report = mismatched_report),
+               "flags must match")
+})
+
 test_that("QC plotting rejects empty annotated metadata", {
   skip_if_not_installed("ggplot2")
   d <- data.frame(

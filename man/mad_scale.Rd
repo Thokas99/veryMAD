@@ -41,7 +41,7 @@ A numeric vector or matrix. Matrices preserve dimensions and
 dimnames; data frames are returned as matrices.
 }
 \description{
-Optionally subtract the median and divide by the median absolute deviation
+Optionally center on the median and scale by the median absolute deviation
 (MAD). For matrices, \code{margin = 1} operates on rows and \code{margin = 2} on
 columns.
 }

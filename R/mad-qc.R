@@ -1,10 +1,9 @@
 #' Annotate MAD-based quality-control flags
 #'
-#' Rows are observations. For each selected numeric metric, estimate limits at
-#' the median plus or minus `nmads` scaled MADs, then flag the selected tail.
-#' Estimation follows any transformation and can be stratified by `batch` or
-#' restricted to a reference set with `subset`. Flags are returned for every
-#' observation.
+#' Rows are observations. For each selected metric, estimate limits around the
+#' median using `nmads` scaled MADs, then flag the selected tail. Transform
+#' metrics before estimation, fit limits by `batch`, or select reference rows
+#' with `subset`. Return flags for every observation.
 #'
 #' @param data A data frame, numeric matrix, or Seurat object. For Seurat,
 #'   metrics must already be present in cell metadata.
@@ -290,8 +289,9 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
 
 #' Plot MAD QC flags by metric and batch
 #'
-#' Show raw metric values by batch with violins, boxplots, and colored
-#' observations. Each metric has its own panel. Requires `ggplot2`.
+#' Plot raw metric values by batch. Violins and boxplots show distributions;
+#' point color marks QC flags. Each metric has its own panel. Requires
+#' `ggplot2`.
 #'
 #' @param data Annotated data frame or Seurat object returned by [mad_qc()].
 #' @param metrics Character vector of annotated numeric metric columns.
@@ -333,7 +333,7 @@ plot_mad_qc <- function(data, metrics, batch = NULL) {
     ggplot2::geom_boxplot(data = observed_data, outlier.shape = NA, width = 0.14,
                           fill = "white", color = "grey35", linewidth = 0.3) +
     ggplot2::geom_jitter(data = observed_data, ggplot2::aes(color = status),
-                         width = 0.15, alpha = 0.4, size = 0.5) +
+                         width = 0.15, alpha = 0.15, size = 0.35) +
     ggplot2::facet_wrap(ggplot2::vars(metric), scales = "free_y") +
     ggplot2::scale_color_manual(values = c("Not flagged" = "#697586",
                                            "Flagged" = "#D55E00",
@@ -347,14 +347,18 @@ plot_mad_qc <- function(data, metrics, batch = NULL) {
 
 #' Plot the relationship between two QC metrics
 #'
-#' Show paired raw values and per-batch Spearman correlations. The correlation
-#' and finite-pair count are descriptive; no p-values are calculated. Requires
-#' `ggplot2`.
+#' Plot paired raw values with per-batch Spearman rho and finite-pair counts.
+#' A matching [mad_qc()] report can add raw-scale cutoff lines. Correlations
+#' are descriptive; no p-values are calculated. Requires `ggplot2`.
 #'
 #' @param data Annotated data frame or Seurat object returned by [mad_qc()].
 #' @param x,y Character names of two distinct annotated numeric metrics.
 #' @param batch Optional non-missing vector with one batch label per
 #'   observation. If omitted, plot all observations in one panel.
+#' @param report Optional `verymad_qc` report from the same observations and
+#'   metrics. Finite raw-scale limits are drawn in each batch panel. A pooled
+#'   report is repeated across panels; a batch-specific report requires matching
+#'   `batch` labels.
 #' @return A `ggplot` object with one panel per batch.
 #' @export
 #' @examples
@@ -363,7 +367,7 @@ plot_mad_qc <- function(data, metrics, batch = NULL) {
 #'   x <- mad_qc(x, c(counts = "lower", pct_mito = "upper"), verbose = FALSE)
 #'   plot_mad_qc_scatter(x, "counts", "pct_mito")
 #' }
-plot_mad_qc_scatter <- function(data, x, y, batch = NULL) {
+plot_mad_qc_scatter <- function(data, x, y, batch = NULL, report = NULL) {
   if (!requireNamespace("ggplot2", quietly = TRUE)) {
     stop("`plot_mad_qc_scatter()` requires the `ggplot2` package.", call. = FALSE)
   }
@@ -386,6 +390,49 @@ plot_mad_qc_scatter <- function(data, x, y, batch = NULL) {
     stringsAsFactors = FALSE
   )
   plot_data$batch <- factor(plot_data$batch, levels = unique(plot_data$batch))
+  thresholds <- NULL
+  if (!is.null(report)) {
+    if (!inherits(report, "verymad_qc") || !is.list(report) ||
+        !is.data.frame(report$flags) || !is.data.frame(report$thresholds) ||
+        !"id" %in% names(report$flags)) {
+      stop("`report` must be a `verymad_qc` report returned by `mad_qc()`.", call. = FALSE)
+    }
+    if (!identical(.observation_ids(data), report$flags$id)) {
+      stop("`report` must use the same observations and order as `data`.", call. = FALSE)
+    }
+    if (!all(vapply(c(x, y), function(metric) {
+      metric %in% names(report$flags) &&
+        identical(data[[paste0(metric, "_mad_outlier")]], report$flags[[metric]])
+    }, logical(1)))) {
+      stop("`report` flags must match the annotations in `data`.", call. = FALSE)
+    }
+    if (!all(c("metric", "lower_raw", "upper_raw") %in% names(report$thresholds))) {
+      stop("`report` does not contain raw-scale thresholds.", call. = FALSE)
+    }
+    thresholds <- report$thresholds[report$thresholds$metric %in% c(x, y), , drop = FALSE]
+    if (!all(c(x, y) %in% thresholds$metric)) {
+      stop("`report` must contain thresholds for both plotted metrics.", call. = FALSE)
+    }
+    batch_levels <- levels(plot_data$batch)
+    if ("batch" %in% names(thresholds)) {
+      if (is.null(batch) || !setequal(unique(as.character(thresholds$batch)), batch_levels)) {
+        stop("Batch-specific `report` thresholds require matching `batch` labels.", call. = FALSE)
+      }
+      thresholds$batch <- as.character(thresholds$batch)
+    } else {
+      thresholds <- do.call(rbind, lapply(batch_levels, function(group) {
+        out <- thresholds
+        out$batch <- group
+        out
+      }))
+    }
+    if (anyDuplicated(thresholds[c("metric", "batch")]) ||
+        any(table(factor(thresholds$metric, levels = c(x, y)),
+                  factor(thresholds$batch, levels = batch_levels)) != 1L)) {
+      stop("`report` must contain one threshold row per plotted metric and batch.", call. = FALSE)
+    }
+    thresholds$batch <- factor(thresholds$batch, levels = batch_levels)
+  }
   point_data <- plot_data[is.finite(plot_data$x) & is.finite(plot_data$y), , drop = FALSE]
   correlations <- do.call(rbind, lapply(levels(plot_data$batch), function(group) {
     group_data <- plot_data[plot_data$batch == group, , drop = FALSE]
@@ -404,13 +451,45 @@ plot_mad_qc_scatter <- function(data, x, y, batch = NULL) {
   }))
   correlations$batch <- factor(correlations$batch, levels = levels(plot_data$batch))
 
-  ggplot2::ggplot(plot_data, ggplot2::aes(x = x, y = y)) +
+  plot <- ggplot2::ggplot(plot_data, ggplot2::aes(x = x, y = y))
+  if (!is.null(thresholds)) {
+    cutoffs <- rbind(
+      data.frame(metric = thresholds$metric, batch = thresholds$batch,
+                 cutoff = thresholds$lower_raw),
+      data.frame(metric = thresholds$metric, batch = thresholds$batch,
+                 cutoff = thresholds$upper_raw)
+    )
+    cutoffs <- cutoffs[is.finite(cutoffs$cutoff), , drop = FALSE]
+    x_cutoffs <- cutoffs[cutoffs$metric == x, , drop = FALSE]
+    y_cutoffs <- cutoffs[cutoffs$metric == y, , drop = FALSE]
+    if (nrow(x_cutoffs)) {
+      plot <- plot + ggplot2::geom_vline(
+        data = x_cutoffs,
+        ggplot2::aes(xintercept = cutoff, linetype = "MAD cutoff"),
+        inherit.aes = FALSE, color = "grey35", linewidth = 0.4
+      )
+    }
+    if (nrow(y_cutoffs)) {
+      plot <- plot + ggplot2::geom_hline(
+        data = y_cutoffs,
+        ggplot2::aes(yintercept = cutoff, linetype = "MAD cutoff"),
+        inherit.aes = FALSE, color = "grey35", linewidth = 0.4
+      )
+    }
+    if (nrow(x_cutoffs) || nrow(y_cutoffs)) {
+      plot <- plot + ggplot2::scale_linetype_manual(
+        values = c("MAD cutoff" = "dashed"), name = NULL
+      )
+    }
+  }
+  plot +
     ggplot2::geom_point(data = point_data, ggplot2::aes(color = status),
-                        alpha = 0.45, size = 0.6) +
-    ggplot2::geom_text(
+                        alpha = 0.15, size = 0.4) +
+    ggplot2::geom_label(
       data = correlations,
       ggplot2::aes(x = -Inf, y = Inf, label = label),
-      inherit.aes = FALSE, hjust = -0.05, vjust = 1.1, size = 3.2
+      inherit.aes = FALSE, hjust = -0.05, vjust = 1.1, size = 3.2,
+      fill = "white", color = "grey20", linewidth = 0.1
     ) +
     ggplot2::facet_wrap(ggplot2::vars(batch)) +
     ggplot2::scale_color_manual(values = c("Not flagged" = "#697586",
@@ -450,3 +529,5 @@ print.verymad_qc <- function(x, ...) {
   if (length(status)) cat("Threshold status:", paste(names(status), status, sep = "=", collapse = ", "), "\n")
   invisible(x)
 }
+
+utils::globalVariables("cutoff")

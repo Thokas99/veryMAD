@@ -19,10 +19,14 @@ Imports:
 Suggests:
     ggplot2,
     knitr,
+    patchwork,
     quarto,
     scuttle,
     SeuratObject,
+    SPARSim,
     testthat (>= 3.0.0)
+Remotes:
+    gitlab::sysbiobig/sparsim
 Config/testthat/edition: 3
 VignetteBuilder: quarto
 URL: https://github.com/Thokas99/veryMAD,

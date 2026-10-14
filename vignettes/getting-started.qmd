@@ -83,3 +83,6 @@ qc_report$thresholds[, c("metric", "direction", "lower_raw",
 
 Threshold rows report limits on the transformed and raw scales. `n_used` is
 the number of non-missing reference observations; `min_n` defaults to 5.
+
+For batch-specific distribution and relationship plots, see
+[QC plots](qc-plots.qmd).
