@@ -39,7 +39,65 @@
       <small>Source: <a href="https://github.com/Thokas99/veryMAD/blob/HEAD/NEWS.md" class="external-link"><code>NEWS.md</code></a></small>
     </div>
 
-  </main></div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="development version" id="verymad-development-versionunreleased"><a href="https://github.com/Thokas99/veryMAD/compare/v0.7.0...HEAD" class="external-link">veryMAD (development version)</a><a class="anchor" aria-label="anchor" href="#verymad-development-versionunreleased"></a></h2>
+<div class="section level3">
+<h3 id="added-development-version">Added<a class="anchor" aria-label="anchor" href="#added-development-version"></a></h3>
+<ul><li>Added raw-scale MAD cutoff overlays to <code><a href="../reference/plot_mad_qc_scatter.html">plot_mad_qc_scatter()</a></code> when given a matching <code><a href="../reference/mad_qc.html">mad_qc()</a></code> report.</li>
+<li>Added a 10,000-cell SPARSim vignette with a composed, batch-aware QC plot.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-development-version">Changed<a class="anchor" aria-label="anchor" href="#changed-development-version"></a></h3>
+<ul><li>Reduced point size and opacity to keep dense QC plots readable.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.7.0" id="verymad-070070---2026-10-14">
+<a href="https://github.com/Thokas99/veryMAD/compare/v0.6.0...v0.7.0" class="external-link">veryMAD 0.7.0</a> - 2026-10-14<a class="anchor" aria-label="anchor" href="#verymad-070070---2026-10-14"></a></h2>
+<div class="section level3">
+<h3 id="added-0-7-0">Added<a class="anchor" aria-label="anchor" href="#added-0-7-0"></a></h3>
+<ul><li>Added batch-specific and reference-set thresholds to <code><a href="../reference/mad_qc.html">mad_qc()</a></code>.</li>
+<li>Added <code><a href="../reference/plot_mad_qc.html">plot_mad_qc()</a></code> for batch distributions and <code><a href="../reference/plot_mad_qc_scatter.html">plot_mad_qc_scatter()</a></code> for paired metrics with per-batch Spearman rho and finite-pair counts.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-7-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-7-0"></a></h3>
+<ul><li>Clarified Seurat metric definitions and QC review guidance.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.6.0" id="verymad-060060---2026-10-14">
+<a href="https://github.com/Thokas99/veryMAD/compare/v0.5.1...v0.6.0" class="external-link">veryMAD 0.6.0</a> - 2026-10-14<a class="anchor" aria-label="anchor" href="#verymad-060060---2026-10-14"></a></h2>
+<div class="section level3">
+<h3 id="added-0-6-0">Added<a class="anchor" aria-label="anchor" href="#added-0-6-0"></a></h3>
+<ul><li>Added threshold counts and report-only output to <code><a href="../reference/mad_qc.html">mad_qc()</a></code>.</li>
+<li>Added single-cell examples and a reproducible benchmark.</li>
+</ul></div>
+<div class="section level3">
+<h3 id="changed-0-6-0">Changed<a class="anchor" aria-label="anchor" href="#changed-0-6-0"></a></h3>
+<ul><li>Set <code><a href="../reference/mad_scale.html">mad_scale()</a></code> to <code>zero_mad = "na"</code> by default; <code>"zero"</code> uses a unit denominator and returns unscaled deviations when centered.</li>
+<li>Reserved <code>id</code> and <code>mad_qc_outlier</code> as metric names in <code><a href="../reference/mad_qc.html">mad_qc()</a></code>.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.1" id="verymad-051051---2026-08-06">
+<a href="https://github.com/Thokas99/veryMAD/compare/v0.5.0...v0.5.1" class="external-link">veryMAD 0.5.1</a> - 2026-08-06<a class="anchor" aria-label="anchor" href="#verymad-051051---2026-08-06"></a></h2>
+<div class="section level3">
+<h3 id="added-0-5-1">Added<a class="anchor" aria-label="anchor" href="#added-0-5-1"></a></h3>
+<ul><li>Established <code><a href="../reference/mad_qc.html">mad_qc()</a></code> and <code><a href="../reference/mad_scale.html">mad_scale()</a></code> as the public API.</li>
+<li>Added the combined <code>mad_qc_outlier</code> flag and compact report printing.</li>
+</ul></div>
+</div>
+    <div class="section level2">
+<h2 class="pkg-version" data-toc-text="0.5.0" id="verymad-050050---2026-08-06">
+<a href="https://github.com/Thokas99/veryMAD/tree/v0.5.0" class="external-link">veryMAD 0.5.0</a> - 2026-08-06<a class="anchor" aria-label="anchor" href="#verymad-050050---2026-08-06"></a></h2>
+<div class="section level3">
+<h3 id="added-0-5-0">Added<a class="anchor" aria-label="anchor" href="#added-0-5-0"></a></h3>
+<ul><li>Introduced explicit metric settings, annotation and report output, and robust scaling for vectors and matrices.</li>
+<li>Added Seurat metadata support, raw-scale thresholds, and unresolved flags for zero MAD.</li>
+</ul></div>
+</div>
+  </main><aside class="col-md-3"><nav id="toc" aria-label="Table of contents"><h2>On this page</h2>
+    </nav></aside></div>
 
 
     <footer><div class="pkgdown-footer-left">
