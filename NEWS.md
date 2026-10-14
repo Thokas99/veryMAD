@@ -1,10 +1,8 @@
-# Changelog
-
 All notable changes to veryMAD are documented here. This changelog follows
 [Keep a Changelog 1.1.0](https://keepachangelog.com/en/1.1.0/) and
 [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [Unreleased]
+## [veryMAD (development version)][Unreleased]
 
 ### Added
 
@@ -16,7 +14,7 @@ All notable changes to veryMAD are documented here. This changelog follows
 
 - Reduced point size and opacity to keep dense QC plots readable.
 
-## [0.7.0] - 2026-10-14
+## [veryMAD 0.7.0][0.7.0] - 2026-10-14
 
 ### Added
 
@@ -28,7 +26,7 @@ All notable changes to veryMAD are documented here. This changelog follows
 
 - Clarified Seurat metric definitions and QC review guidance.
 
-## [0.6.0] - 2026-10-14
+## [veryMAD 0.6.0][0.6.0] - 2026-10-14
 
 ### Added
 
@@ -41,14 +39,14 @@ All notable changes to veryMAD are documented here. This changelog follows
   denominator and returns unscaled deviations when centered.
 - Reserved `id` and `mad_qc_outlier` as metric names in `mad_qc()`.
 
-## [0.5.1] - 2026-08-06
+## [veryMAD 0.5.1][0.5.1] - 2026-08-06
 
 ### Added
 
 - Established `mad_qc()` and `mad_scale()` as the public API.
 - Added the combined `mad_qc_outlier` flag and compact report printing.
 
-## [0.5.0] - 2026-08-06
+## [veryMAD 0.5.0][0.5.0] - 2026-08-06
 
 ### Added
 
