@@ -26,7 +26,6 @@ per-metric counts alongside it.
 The example uses percentage points for `pct_mito`: 8 denotes 8%.
 
 ``` r
-
 qc_metadata <- data.frame(
   sample = paste0("sample_", 1:7),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 0.5e6, NA_real_),
@@ -61,7 +60,6 @@ The threshold report gives `status`, limits on raw and transformed
 scales, and counts of reference, flagged, and unresolved observations.
 
 ``` r
-
 transformed_result <- mad_qc(
   qc_metadata,
   metrics = c(library_size = "lower", pct_mito = "upper"),
@@ -118,7 +116,6 @@ signal were defined. Inspect distributions by sample and known cell
 groups before filtering.
 
 ``` r
-
 rna_metadata <- data.frame(
   sample = rep(c("sample_A", "sample_B"), each = 6),
   nCount_RNA = c(820, 910, 970, 1050, 1120, 100, 125, 150, 175, 190, 210, 230),
@@ -146,7 +143,6 @@ rna_report$thresholds[, c("metric", "direction", "transform", "status")]
 ```
 
 ``` r
-
 atac_metadata <- data.frame(
   nCount_peaks = c(1200, 1800, 3200, 6000, 9000, 20000, 2500, 4100),
   TSS.enrichment = c(0.8, 1.3, 3.0, 5.4, 8.0, 15.0, 4.1, 6.2),
@@ -196,7 +192,6 @@ uses MAD-based thresholds on supplied metrics; it does not reproduce
 [`scuttle::quickPerCellQC()`](https://rdrr.io/pkg/scuttle/man/quickPerCellQC.html).
 
 ``` r
-
 rna_annotated <- mad_qc(
   rna_metadata,
   metrics = c(
@@ -241,7 +236,6 @@ This synthetic example checks that annotation preserves cell order and
 accepts a reference set defined before QC.
 
 ``` r
-
 if (requireNamespace("SeuratObject", quietly = TRUE)) {
   counts <- Matrix::Matrix(
     seq_len(40) %% 6,

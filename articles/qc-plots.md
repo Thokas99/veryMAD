@@ -28,7 +28,6 @@ contrasts illustrate plotting and threshold behavior; they do not model
 general cell damage or benchmark biological QC.
 
 ``` r
-
 data("Bacher_param_preset", package = "SPARSim")
 reference <- Bacher_param_preset[["Bacher_C1"]]
 gene_subset <- sample(seq_along(reference$intensity), 5000L)
@@ -88,7 +87,6 @@ Here, library size is the column sum and detected features are the
 number of nonzero genes in each column.
 
 ``` r
-
 library_by_cell <- c(
   stats::setNames(rep("library_A", n_cells), cells_A),
   stats::setNames(rep("library_B", n_cells), cells_B)
@@ -114,7 +112,6 @@ transformation reduces the influence of the long right tail in
 count-like metrics.
 
 ``` r
-
 metrics <- c(nCount_RNA = "lower", nFeature_RNA = "lower")
 transforms <- c(nCount_RNA = "log1p", nFeature_RNA = "log1p")
 
@@ -148,7 +145,6 @@ qc_report$thresholds[, c(
 The table reports the raw-scale limits and flag counts for each library.
 
 ``` r
-
 distribution_plot <- plot_mad_qc(
   qc_annotated,
   metrics = names(metrics),
@@ -183,7 +179,6 @@ low-depth cells and flags other cells in this run. These labels
 represent an imposed depth reduction, not general biological quality.
 
 ``` r
-
 with(qc_annotated, table(library, known_low_depth, mad_qc_outlier))
 #> , , mad_qc_outlier = FALSE
 #> 
