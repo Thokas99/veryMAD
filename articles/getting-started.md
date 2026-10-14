@@ -1,14 +1,19 @@
 # Getting started with veryMAD
 
-`veryMAD` estimates one median absolute deviation (MAD) threshold per
-selected metric. Choose the metrics, tail directions, and
-transformations. Annotation retains every input row; report mode returns
-flags and thresholds.
+[`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md)
+estimates one threshold per metric from the median and scaled MAD.
+Choose the metrics, tail directions, and transformations. Annotation
+retains all rows; report mode returns flags, thresholds, and settings
+without modifying the input.
 
-## A basic QC workflow
+> **Note**
+>
+> A flag identifies an outlier in the supplied distribution. Review each
+> metric in context before deciding whether to filter an observation.
 
-This sequencing metadata example uses percentage points for `pct_mito`:
-8 denotes 8%.
+## Annotate metrics
+
+The example uses percentage points for `pct_mito`: 8 denotes 8%.
 
 ``` r
 
@@ -19,24 +24,18 @@ sample_metadata <- data.frame(
   pct_mito = c(4, 5, 6, 5, 7, 6, 8, 29)
 )
 
-# Select the tail to review for each metric
 qc_directions <- c(
   library_size = "lower",
   detected_genes = "lower",
   pct_mito = "upper"
 )
 
-# Add one flag per metric and a combined flag
 qc_annotated <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
+  transform = c(library_size = "log1p", detected_genes = "log1p"),
   verbose = FALSE
 )
-```
-
-The result keeps every row and adds logical flags:
-
-``` r
 
 qc_annotated[, c("sample", "library_size_mad_outlier",
                  "detected_genes_mad_outlier", "pct_mito_mad_outlier",
@@ -61,10 +60,11 @@ qc_annotated[, c("sample", "library_size_mad_outlier",
 #> 8                 TRUE           TRUE
 ```
 
-`mad_qc_outlier` is `TRUE` when any selected metric is flagged. Use the
-flags to guide review in the analysis workflow.
+Each metric flag is `TRUE`, `FALSE`, or `NA` when its threshold is
+unresolved. The combined flag is `TRUE` if any metric is flagged;
+otherwise it is `NA` if any metric remains unresolved.
 
-## Inspect thresholds with a report
+## Inspect thresholds
 
 Use `output = "report"` to inspect thresholds and flags without adding
 columns to the input.
@@ -74,26 +74,24 @@ columns to the input.
 qc_report <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
+  transform = c(library_size = "log1p", detected_genes = "log1p"),
   output = "report",
   verbose = FALSE
 )
 
 qc_report$thresholds[, c("metric", "direction", "lower_raw",
-                         "upper_raw", "status")]
-#>           metric direction  lower_raw upper_raw status
-#> 1   library_size     lower 2105220.00        NA     ok
-#> 2 detected_genes     lower   10770.88        NA     ok
-#> 3       pct_mito     upper         NA   10.4478     ok
-qc_report$flags[, c("id", "mad_qc_outlier")]
-#>   id mad_qc_outlier
-#> 1  1          FALSE
-#> 2  2          FALSE
-#> 3  3          FALSE
-#> 4  4          FALSE
-#> 5  5          FALSE
-#> 6  6          FALSE
-#> 7  7           TRUE
-#> 8  8           TRUE
+                         "upper_raw", "status", "n_used", "n_flagged",
+                         "n_unresolved")]
+#>           metric direction  lower_raw upper_raw status n_used n_flagged
+#> 1   library_size     lower 2148451.65        NA     ok      8         1
+#> 2 detected_genes     lower   10908.88        NA     ok      8         1
+#> 3       pct_mito     upper         NA   10.4478     ok      8         1
+#>   n_unresolved
+#> 1            0
+#> 2            0
+#> 3            0
 ```
 
-The threshold table records each metric’s status and observation counts.
+Threshold rows report limits on the transformed and raw scales. `n_used`
+is the number of non-missing reference observations; `min_n` defaults to
+5.

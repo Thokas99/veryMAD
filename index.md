@@ -2,7 +2,7 @@
 
 ![veryMAD logo](reference/figures/veryMAD-logo.svg)
 
-**MAD quality control and robust scaling for R**
+**MAD-based QC annotation and robust scaling for R**
 
 [![R CMD
 check](https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/badge.svg)](https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml)
@@ -12,10 +12,15 @@ release](https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=t
 [![MIT
 license](https://img.shields.io/badge/license-MIT-blue.svg)](https://thokas99.github.io/veryMAD/LICENSE)
 
-veryMAD computes median absolute deviation (MAD) thresholds for selected
-numeric metrics. It adds observation-level flags or returns a threshold
-report. Rows stay in the output; filtering remains part of your
-analysis.
+`veryMAD` flags selected numeric metrics using median absolute deviation
+(MAD) thresholds and scales numeric vectors, matrices, and data frames.
+You choose the metrics, directions, transformations, and downstream
+filtering decisions.
+
+> \[!IMPORTANT\] A flag marks a statistical outlier in the supplied
+> data. It does not diagnose low-quality cells or remove observations.
+> Review metric definitions, distributions, and biological context
+> before filtering.
 
 ## Install
 
@@ -26,9 +31,15 @@ pak::pak("Thokas99/veryMAD")
 
 ## Annotate QC metrics
 
-Choose each metric, its outlier direction, and any transformation. For
-example, count-like RNA metrics can use an explicit `log1p`
-transformation.
+Rows are observations. Choose a tail for each metric;
+[`mad_qc()`](https://thokas99.github.io/veryMAD/reference/mad_qc.md)
+adds one logical flag per metric and a combined `mad_qc_outlier` flag.
+
+| Direction | Flagged values                |
+|-----------|-------------------------------|
+| `lower`   | Below the lower threshold     |
+| `upper`   | Above the upper threshold     |
+| `both`    | Below or above the thresholds |
 
 ``` r
 
@@ -52,10 +63,11 @@ annotated[, c("nCount_RNA_mad_outlier", "nFeature_RNA_mad_outlier",
               "percent.mt_mad_outlier", "mad_qc_outlier")]
 ```
 
-For Seurat metadata, `percent.mt` is usually stored on a 0–100 scale:
-`8` means 8%.
+Transformations are applied before threshold estimation. Count-like
+metrics often benefit from `log1p`; choose transformations and
+directions for the assay and protocol.
 
-## Review thresholds
+## Inspect thresholds
 
 Set `output = "report"` to return flags, thresholds, and settings
 without adding columns to the input.
@@ -75,9 +87,30 @@ report$thresholds[, c("metric", "direction", "lower_raw", "upper_raw",
                       "status", "n_used", "n_flagged", "n_unresolved")]
 ```
 
-The report returns flags, thresholds, and settings. Status identifies
-missing, insufficient, and zero-MAD metrics; counts show evaluated and
-unresolved observations. Zero-MAD flags are `NA` by default.
+`n_used` counts non-missing reference observations. The status and
+unresolved counts identify metrics or groups without usable thresholds;
+zero MADs produce unresolved flags by default.
+
+For multi-sample data, pass one batch label per observation to `batch`
+to estimate thresholds within each sample. Use `subset` for an
+independently defined reference set; thresholds are still applied to
+every observation. Within-sample thresholds can miss a uniformly poor
+sample, so inspect distributions and consider separately justified
+absolute criteria.
+[`plot_mad_qc()`](https://thokas99.github.io/veryMAD/reference/plot_mad_qc.md)
+shows each metric’s distribution by batch with flags highlighted.
+[`plot_mad_qc_scatter()`](https://thokas99.github.io/veryMAD/reference/plot_mad_qc_scatter.md)
+shows a pair of metrics and reports within-batch Spearman rho and the
+number of finite pairs (requires `ggplot2`). These correlations are
+descriptive; no p-values are calculated.
+
+For Seurat, QC metrics must already be present in cell metadata. For
+example, use a species-appropriate feature set and the intended RNA
+assay with [Seurat’s
+`PercentageFeatureSet()`](https://satijalab.org/seurat/reference/percentagefeatureset)
+to calculate mitochondrial percentage. The function divides
+selected-feature counts by all counts in the chosen assay and reports
+0–100%. `veryMAD` flags supplied metrics but does not calculate them.
 
 ## Scale with MAD
 
@@ -87,11 +120,11 @@ gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
 mad_scale(gene_expression)
 ```
 
-For matrices, `margin = 1` scales rows and `margin = 2` scales columns.
-Dimensions and dimnames are preserved. The default `zero_mad = "na"`
-returns `NA` for zero-MAD groups. `zero_mad = "zero"` uses a unit
-denominator and returns unscaled deviations when centered;
-`zero_mad = "error"` stops.
+Numeric data frames are returned as matrices; matrix dimensions and
+dimnames are preserved. For matrices and data frames, `margin = 1`
+scales rows and `margin = 2` scales columns. The default
+`zero_mad = "na"` returns `NA` for zero-MAD groups. `"zero"` uses a unit
+denominator; centered results are unscaled deviations. `"error"` stops.
 
 ## Guides
 
@@ -106,9 +139,13 @@ denominator and returns unscaled deviations when centered;
 
 ## Further reading
 
-- [Subramanian et al. (2022), adaptive QC in single-cell
-  transcriptomics](https://doi.org/10.1186/s13059-022-02820-w)
+- [OSCA basic: QC motivation and adaptive
+  thresholds](https://bioconductor.org/books/3.23/OSCA.basic/quality-control.html#quality-control-motivation)
+- [OSCA workflows: batch-aware
+  QC](https://bioconductor.org/books/3.23/OSCA.workflows/lun-416b-cell-line-smart-seq2.html#quality-control)
+- [Subramanian et al. (2022): biology-inspired, data-driven
+  QC](https://doi.org/10.1186/s13059-022-02820-w)
 - [Single-cell best practices: quality
-  control](https://www.sc-best-practices.org/preprocessing_visualization/quality_control.html)
-- [OSCA: quality
-  control](https://bioconductor.org/books/3.13/OSCA.basic/quality-control.html#common-choices-of-qc-metrics)
+  control](https://www.sc-best-practices.org/preprocessing-visualization/quality-control/)
+- Documentation guidance: [Kassis et al. (2026), *Scientific Agent
+  Skills*](https://doi.org/10.48550/arXiv.2609.00065)

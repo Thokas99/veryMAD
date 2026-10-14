@@ -1,7 +1,8 @@
-# Robust MAD scaling
+# Center and scale with the median and MAD
 
-Center numeric data by its median and optionally divide by its MAD. For
-matrices, `margin = 1` scales rows and `margin = 2` scales columns.
+Optionally subtract the median and divide by the median absolute
+deviation (MAD). For matrices, `margin = 1` operates on rows and
+`margin = 2` on columns.
 
 ## Usage
 
@@ -21,40 +22,43 @@ mad_scale(
 
 - x:
 
-  A numeric vector, matrix, or numeric data frame.
+  Numeric vector, matrix, or data frame with numeric columns.
 
 - center:
 
-  Subtract the median?
+  Subtract the median from each vector or matrix margin?
 
 - scale:
 
-  Divide by the MAD?
+  Divide each vector or matrix margin by its MAD?
 
 - constant:
 
-  Positive MAD consistency constant.
+  Positive consistency constant applied to the MAD. The default, 1.4826,
+  makes it consistent with the standard deviation under a normal
+  distribution.
 
 - na_rm:
 
-  Remove missing values when calculating medians and MADs?
+  Omit missing values when estimating medians and MADs. Missing input
+  values remain missing in the result.
 
 - zero_mad:
 
-  Handling of zero MAD when `scale = TRUE`: `"na"` (default) returns
-  `NA`; `"zero"` uses a unit denominator; `"error"` stops. With
-  `center = TRUE`, `"zero"` returns centered deviations without MAD
-  scaling.
+  Policy for a zero MAD when `scale = TRUE`: `"na"` returns `NA` for the
+  affected vector or margin, `"zero"` uses a unit denominator, and
+  `"error"` stops. Centered results under `"zero"` are deviations from
+  the median without MAD scaling.
 
 - margin:
 
-  Matrix margin, `1` for rows or `2` for columns. Names `"rows"` and
-  `"columns"` are also accepted.
+  Matrix margin: `1` or `"rows"` operates on rows; `2` or `"columns"`
+  operates on columns. Ignored for vectors.
 
 ## Value
 
-A numeric vector or matrix. Matrix input preserves dimensions and
-dimnames; data-frame input returns a matrix.
+A numeric vector or matrix. Matrices preserve dimensions and dimnames;
+data frames are returned as matrices.
 
 ## Examples
 
