@@ -16,6 +16,7 @@ without modifying the input.
 The example uses percentage points for `pct_mito`: 8 denotes 8%.
 
 ``` r
+
 sample_metadata <- data.frame(
   sample = paste0("sample_", 1:8),
   library_size = c(2.4e6, 2.5e6, 2.6e6, 2.7e6, 2.8e6, 2.6e6, 0.45e6, 2.5e6),
@@ -69,6 +70,7 @@ Use `output = "report"` to inspect thresholds and flags without adding
 columns to the input.
 
 ``` r
+
 qc_report <- mad_qc(
   sample_metadata,
   metrics = qc_directions,

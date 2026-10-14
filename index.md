@@ -10,7 +10,7 @@ check](https://github.com/Thokas99/veryMAD/actions/workflows/R-CMD-check.yaml/ba
 [![Latest
 release](https://img.shields.io/github/v/release/Thokas99/veryMAD?display_name=tag&sort=semver)](https://github.com/Thokas99/veryMAD/releases)
 [![MIT
-license](https://img.shields.io/badge/license-MIT-blue.svg)](https://thokas99.github.io/veryMAD/LICENSE)
+license](https://img.shields.io/badge/license-MIT-blue.svg)](https://github.com/Thokas99/veryMAD/blob/main/LICENSE)
 
 `veryMAD` flags selected numeric metrics with median absolute deviation
 (MAD) thresholds and scales numeric vectors, matrices, and data frames.
@@ -25,6 +25,7 @@ decisions.
 ## Install
 
 ``` r
+
 pak::pak("Thokas99/veryMAD")
 ```
 
@@ -41,6 +42,7 @@ adds one logical flag per metric and a combined `mad_qc_outlier` flag.
 | `both`    | Below or above the thresholds |
 
 ``` r
+
 library(veryMAD)
 
 metadata <- data.frame(
@@ -71,6 +73,7 @@ Set `output = "report"` to return flags, thresholds, and settings
 without adding columns to the input.
 
 ``` r
+
 report <- mad_qc(
   metadata,
   metrics = c(nCount_RNA = "lower", nFeature_RNA = "lower",
@@ -113,6 +116,7 @@ selected-feature counts by all counts in the chosen assay and reports
 ## Scale with MAD
 
 ``` r
+
 gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)
 mad_scale(gene_expression)
 ```
@@ -134,7 +138,7 @@ stops.
 - [MAD
   scaling](https://thokas99.github.io/veryMAD/articles/mad-scaling.html)
 - [Function reference](https://thokas99.github.io/veryMAD/reference/)
-- [Release notes](https://thokas99.github.io/veryMAD/NEWS.md)
+- [Release notes](https://thokas99.github.io/veryMAD/news/index.html)
 
 ## Further reading
 
