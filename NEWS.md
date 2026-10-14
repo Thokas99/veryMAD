@@ -1,24 +1,28 @@
+# veryMAD (development version)
+
+- Added batch-specific and reference-set thresholds to `mad_qc()`.
+- Added `plot_mad_qc()` to review metric distributions and flags by batch.
+- Clarified Seurat metric definitions and QC review guidance.
+
 # veryMAD 0.6.0
 
-- `mad_scale()` defaults to `zero_mad = "na"`; `"zero"` uses a unit
+- Set `mad_scale()` to `zero_mad = "na"` by default; `"zero"` uses a unit
   denominator and returns unscaled deviations when centered.
-- `mad_qc()` reserves `id` and `mad_qc_outlier` as metric names.
-- Threshold reports include used, flagged, and unresolved counts. Combined
-  flags are vectorized, and report-only calls skip annotation.
+- Reserved `id` and `mad_qc_outlier` as metric names in `mad_qc()`.
+- Added threshold counts, vectorized combined flags, and report-only output.
 - Added single-cell examples, regression tests, an optional `scuttle`
-  comparison, and a reproducible benchmark script.
+  comparison, and a reproducible benchmark.
 
 # veryMAD 0.5.1
 
-- The public API is `mad_qc()` and `mad_scale()`; QC reports include an overall
-  `mad_qc_outlier` flag.
-- Added compact report printing and expanded input and edge-case coverage.
-- Updated the README, guides, and package checks.
+- Established `mad_qc()` and `mad_scale()` as the public API.
+- Added the combined `mad_qc_outlier` flag and compact report printing.
+- Expanded input and edge-case coverage and updated package guides.
 
 # veryMAD 0.5.0
 
-- Centered the API on `mad_qc()` and `mad_scale()`, with annotation or report
-  output, explicit metric settings, and robust scaling for vectors and matrices.
-- Added Seurat metadata support and set raw-scale thresholds and unresolved
-  zero-MAD flags as QC defaults.
-- Added focused guides and streamlined internal calculations.
+- Introduced explicit metric settings, annotation and report output, and robust
+  scaling for vectors and matrices.
+- Added Seurat metadata support, raw-scale thresholds, and unresolved flags for
+  zero MAD.
+- Added package guides and streamlined internal calculations.

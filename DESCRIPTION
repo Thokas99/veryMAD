@@ -1,12 +1,13 @@
 Package: veryMAD
-Title: Explicit MAD Quality Control and Robust Scaling
+Title: MAD-Based Quality Control and Robust Scaling
 Version: 0.6.0
 Authors@R: 
     person("Thomas", "Sirchi", , "thomasirchi@gmail.com", role = c("aut", "cre"))
-Description: Computes median absolute deviation quality-control flags and
-    robust scaling for numeric metadata, vectors, and matrices. Users select
-    the metrics, directions, and transformations; filtering remains in the
-    analysis workflow.
+Description: Annotates numeric metrics with user-specified median absolute
+    deviation thresholds and robustly scales numeric vectors, matrices, and
+    data frames.
+    Users choose the metrics, directions, transformations, and filtering
+    decisions.
 License: MIT + file LICENSE
 Depends:
     R (>= 4.1.0)
@@ -16,6 +17,7 @@ Imports:
     cli,
     matrixStats
 Suggests:
+    ggplot2,
     knitr,
     quarto,
     scuttle,

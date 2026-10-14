@@ -1,0 +1,58 @@
+test_that("batch-specific thresholds apply to their own observations", {
+  d <- data.frame(
+    value = c(1:5, 101:105, 1000),
+    sample = factor(c(rep("A", 5), rep("B", 6)), levels = c("A", "B", "unused"))
+  )
+  report <- mad_qc(d, c(value = "upper"), batch = d$sample,
+                   output = "report", verbose = FALSE)
+
+  expect_equal(report$thresholds$batch, c("A", "B"))
+  expect_equal(report$thresholds$median, c(3, 103.5))
+  expect_equal(report$thresholds$n_used, c(5L, 6L))
+  expect_equal(report$thresholds$n_flagged, c(0L, 1L))
+  expect_true(tail(report$flags$value, 1) %in% TRUE)
+})
+
+test_that("reference rows estimate thresholds while all rows are flagged", {
+  d <- data.frame(value = c(1:5, 1000))
+  report <- mad_qc(d, c(value = "upper"), subset = c(rep(TRUE, 5), FALSE),
+                   output = "report", verbose = FALSE)
+
+  expect_equal(report$thresholds$median, 3)
+  expect_equal(report$thresholds$n_used, 5L)
+  expect_equal(report$settings$n_reference, 5L)
+  expect_true(report$flags$value[6] %in% TRUE)
+})
+
+test_that("undersized batches retain unresolved flags", {
+  d <- data.frame(value = c(1:5, 20, 21), sample = c(rep("A", 5), rep("B", 2)))
+  expect_warning(report <- mad_qc(
+    d, c(value = "upper"), batch = d$sample, min_n = 3,
+    output = "report", verbose = FALSE
+  ), "value \\[B\\]")
+
+  expect_equal(report$thresholds$status, c("ok", "insufficient_n"))
+  expect_true(all(is.na(report$flags$value[6:7])))
+  expect_equal(sum(report$thresholds$status != "ok"), 1L)
+  expect_output(print(report), "Metrics without estimated thresholds: 1")
+})
+
+test_that("batch and reference selectors are validated", {
+  d <- data.frame(value = 1:5)
+  expect_error(mad_qc(d, c(value = "upper"), batch = "one", verbose = FALSE), "batch")
+  expect_error(mad_qc(d, c(value = "upper"), batch = c("A", NA, "A", "A", "A"), verbose = FALSE), "batch")
+  expect_error(mad_qc(d, c(value = "upper"), subset = c(TRUE, NA, TRUE, TRUE, TRUE), verbose = FALSE), "subset")
+  expect_error(mad_qc(d, c(value = "upper"), subset = 1:5, verbose = FALSE), "subset")
+})
+
+test_that("plot_mad_qc shows QC status by batch", {
+  skip_if_not_installed("ggplot2")
+  d <- data.frame(value = c(1:5, 100), sample = rep(c("A", "B"), each = 3))
+  annotated <- mad_qc(d, c(value = "upper"), batch = d$sample,
+                      min_n = 3, verbose = FALSE)
+  plot <- plot_mad_qc(annotated, "value", batch = d$sample)
+
+  expect_s3_class(plot, "ggplot")
+  expect_equal(plot$data$batch, factor(d$sample, levels = c("A", "B")))
+  expect_true(any(plot$data$status == "Flagged"))
+})

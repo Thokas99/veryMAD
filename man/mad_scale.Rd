@@ -2,7 +2,7 @@
 % Please edit documentation in R/mad-scale.R
 \name{mad_scale}
 \alias{mad_scale}
-\title{Robust MAD scaling}
+\title{Center and scale with the median and MAD}
 \usage{
 mad_scale(
   x,
@@ -15,30 +15,35 @@ mad_scale(
 )
 }
 \arguments{
-\item{x}{A numeric vector, matrix, or numeric data frame.}
+\item{x}{Numeric vector, matrix, or data frame with numeric columns.}
 
-\item{center}{Subtract the median?}
+\item{center}{Subtract the median from each vector or matrix margin?}
 
-\item{scale}{Divide by the MAD?}
+\item{scale}{Divide each vector or matrix margin by its MAD?}
 
-\item{constant}{Positive MAD consistency constant.}
+\item{constant}{Positive consistency constant applied to the MAD. The
+default, 1.4826, makes it consistent with the standard deviation under a
+normal distribution.}
 
-\item{na_rm}{Remove missing values when calculating medians and MADs?}
+\item{na_rm}{Omit missing values when estimating medians and MADs. Missing
+input values remain missing in the result.}
 
-\item{zero_mad}{Handling of zero MAD when \code{scale = TRUE}: \code{"na"} (default)
-returns \code{NA}; \code{"zero"} uses a unit denominator; \code{"error"} stops. With
-\code{center = TRUE}, \code{"zero"} returns centered deviations without MAD scaling.}
+\item{zero_mad}{Policy for a zero MAD when \code{scale = TRUE}: \code{"na"} returns
+\code{NA} for the affected vector or margin, \code{"zero"} uses a unit denominator,
+and \code{"error"} stops. Centered results under \code{"zero"} are deviations from
+the median without MAD scaling.}
 
-\item{margin}{Matrix margin, \code{1} for rows or \code{2} for columns. Names
-\code{"rows"} and \code{"columns"} are also accepted.}
+\item{margin}{Matrix margin: \code{1} or \code{"rows"} operates on rows; \code{2} or
+\code{"columns"} operates on columns. Ignored for vectors.}
 }
 \value{
-A numeric vector or matrix. Matrix input preserves dimensions and
-dimnames; data-frame input returns a matrix.
+A numeric vector or matrix. Matrices preserve dimensions and
+dimnames; data frames are returned as matrices.
 }
 \description{
-Center numeric data by its median and optionally divide by its MAD. For
-matrices, \code{margin = 1} scales rows and \code{margin = 2} scales columns.
+Optionally subtract the median and divide by the median absolute deviation
+(MAD). For matrices, \code{margin = 1} operates on rows and \code{margin = 2} on
+columns.
 }
 \examples{
 gene_expression <- c(gene_A = 8.2, gene_B = 8.7, gene_C = 18.0)

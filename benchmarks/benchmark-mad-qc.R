@@ -1,8 +1,7 @@
-# Run with the current veryMAD installation:
-#   Rscript benchmarks/benchmark-mad-qc.R
-# Set VERYMAD_BENCH_ITERATIONS to repeat measurements (default: 1).
-# Allocation totals include profiled allocations of at least 1 MiB; they are
-# not peak resident memory. Allocation values are NA if R lacks memory profiling.
+# Run: Rscript benchmarks/benchmark-mad-qc.R
+# Repeat with VERYMAD_BENCH_ITERATIONS (default: 1).
+# Allocation totals include profiled events of at least 1 MiB; they are not peak
+# memory. Values are NA when R lacks memory profiling.
 
 if (!requireNamespace("veryMAD", quietly = TRUE)) {
   stop("Install the current veryMAD package before running this benchmark.")
@@ -89,8 +88,7 @@ add_record <- function(n, n_metrics, task, result) {
   )
 }
 
-# shortcut: the row-wise reference stops at 100k rows to keep the default
-# optional run practical; raise this limit on hosts with more time and memory.
+# shortcut: caps the row-wise reference at 100k rows; raise when time and memory permit.
 baseline_limit <- 100000L
 for (n in c(10000L, 100000L, 500000L, 1000000L)) {
   metadata <- make_metadata(n)

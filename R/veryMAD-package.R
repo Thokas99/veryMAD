@@ -1,7 +1,7 @@
-#' veryMAD: MAD quality control and robust scaling
+#' veryMAD: MAD-Based QC and Robust Scaling
 #'
-#' Computes observation-level MAD flags and robust scaling. Users choose the
-#' metrics and settings; filtering remains in the analysis workflow.
+#' Annotates selected metrics with median absolute deviation (MAD) flags and
+#' scales numeric data. Users define the metrics and make filtering decisions.
 #'
 #' @keywords internal
 "_PACKAGE"

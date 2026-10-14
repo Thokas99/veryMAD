@@ -1,7 +1,7 @@
 ---
 title: "Getting started with veryMAD"
 description: >
-  Annotate sequencing metadata with explicit MAD thresholds.
+  Flag selected QC metrics with median absolute deviation thresholds.
 vignette: >
   %\VignetteIndexEntry{Getting started with veryMAD}
   %\VignetteEngine{quarto::html}
@@ -12,9 +12,15 @@ knitr:
     comment: "#>"
 ---
 
-`veryMAD` estimates one median absolute deviation (MAD) threshold per selected
-metric. Choose the metrics, tail directions, and transformations. Annotation
-retains every input row; report mode returns flags and thresholds.
+`mad_qc()` estimates one threshold per metric from the median and scaled MAD.
+Choose the metrics, tail directions, and transformations. Annotation retains
+all rows; report mode returns flags, thresholds, and settings without modifying
+the input.
+
+::: {.callout-note}
+A flag identifies an outlier in the supplied distribution. Review each metric
+in context before deciding whether to filter an observation.
+:::
 
 ```{r}
 #| label: setup
@@ -22,10 +28,9 @@ retains every input row; report mode returns flags and thresholds.
 library(veryMAD)
 ```
 
-## A basic QC workflow
+## Annotate metrics
 
-This sequencing metadata example uses percentage points for `pct_mito`: 8
-denotes 8%.
+The example uses percentage points for `pct_mito`: 8 denotes 8%.
 
 ```{r}
 sample_metadata <- data.frame(
@@ -35,33 +40,29 @@ sample_metadata <- data.frame(
   pct_mito = c(4, 5, 6, 5, 7, 6, 8, 29)
 )
 
-# Select the tail to review for each metric
 qc_directions <- c(
   library_size = "lower",
   detected_genes = "lower",
   pct_mito = "upper"
 )
 
-# Add one flag per metric and a combined flag
 qc_annotated <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
+  transform = c(library_size = "log1p", detected_genes = "log1p"),
   verbose = FALSE
 )
-```
 
-The result keeps every row and adds logical flags:
-
-```{r}
 qc_annotated[, c("sample", "library_size_mad_outlier",
                  "detected_genes_mad_outlier", "pct_mito_mad_outlier",
                  "mad_qc_outlier")]
 ```
 
-`mad_qc_outlier` is `TRUE` when any selected metric is flagged. Use the flags
-to guide review in the analysis workflow.
+Each metric flag is `TRUE`, `FALSE`, or `NA` when its threshold is unresolved.
+The combined flag is `TRUE` if any metric is flagged; otherwise it is `NA` if
+any metric remains unresolved.
 
-## Inspect thresholds with a report
+## Inspect thresholds
 
 Use `output = "report"` to inspect thresholds and flags without adding columns
 to the input.
@@ -70,13 +71,15 @@ to the input.
 qc_report <- mad_qc(
   sample_metadata,
   metrics = qc_directions,
+  transform = c(library_size = "log1p", detected_genes = "log1p"),
   output = "report",
   verbose = FALSE
 )
 
 qc_report$thresholds[, c("metric", "direction", "lower_raw",
-                         "upper_raw", "status")]
-qc_report$flags[, c("id", "mad_qc_outlier")]
+                         "upper_raw", "status", "n_used", "n_flagged",
+                         "n_unresolved")]
 ```
 
-The threshold table records each metric's status and observation counts.
+Threshold rows report limits on the transformed and raw scales. `n_used` is
+the number of non-missing reference observations; `min_n` defaults to 5.

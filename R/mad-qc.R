@@ -1,24 +1,40 @@
-#' Explicit MAD quality-control annotation
+#' Annotate MAD-based quality-control flags
 #'
-#' Rows are observations. Select numeric metric columns and a tail direction
-#' for each. veryMAD estimates one threshold per metric across the input rows
-#' and returns annotated metadata or a `verymad_qc` report.
+#' Rows are observations. For each selected numeric metric, estimate limits at
+#' the median plus or minus `nmads` scaled MADs, then flag the selected tail.
+#' Estimation follows any transformation and can be stratified by `batch` or
+#' restricted to a reference set with `subset`. Flags are returned for every
+#' observation.
 #'
-#' @param data A data frame, tibble, numeric matrix, or Seurat object.
-#' @param metrics A non-empty named character vector with unique metric names;
-#'   values are `"lower"`, `"upper"`, or `"both"`.
-#' @param nmads Positive number of MADs from the median for the limits.
-#' @param transform A scalar transformation or named partial overrides.
-#'   Supported values are `"none"`, `"log1p"`, and `"log10"`.
-#' @param output Return annotated data by default; use `"report"` for flags,
-#'   thresholds, and settings.
-#' @param min_n Minimum number of finite, non-missing observations required.
-#' @param zero_mad Handling of a zero MAD: `"na"`, `"zero"`, or `"error"`.
-#' @param overwrite Replace existing flag columns?
+#' @param data A data frame, numeric matrix, or Seurat object. For Seurat,
+#'   metrics must already be present in cell metadata.
+#' @param metrics A non-empty named character vector with unique numeric
+#'   column names and values `"lower"`, `"upper"`, or `"both"`.
+#' @param nmads Positive finite number of scaled MADs from the median used for
+#'   each limit. The MAD uses the normal-consistency constant 1.4826.
+#' @param transform One method for all metrics or named overrides; unspecified
+#'   metrics use `"none"`. Supported methods are `"none"`, `"log1p"`, and
+#'   `"log10"`.
+#' @param output `"annotate"` adds flags to the input; `"report"` returns flags,
+#'   limits, and settings without modifying the input.
+#' @param min_n Positive integer minimum number of non-missing reference
+#'   observations per metric and batch group (default 5). Smaller groups have
+#'   unresolved flags.
+#' @param zero_mad Policy when a group's MAD is zero: `"na"` (default) leaves
+#'   flags unresolved, `"zero"` sets the limit at the median, and `"error"`
+#'   stops.
+#' @param overwrite Replace existing QC flag columns when annotating?
 #' @param verbose Print a summary?
-#' @return Annotated input or a `verymad_qc` list with `flags`, `thresholds`,
-#'   and `settings`. Threshold reports include finite observations used and
-#'   per-metric flagged and unresolved counts.
+#' @param batch Optional non-missing vector with one label per observation.
+#'   Estimate separate limits within each label.
+#' @param subset Optional non-missing logical vector selecting reference
+#'   observations for estimation. Apply the resulting limits to every row.
+#' @return With `output = "annotate"`, returns the input with per-metric and
+#'   combined flags; matrix input returns a data frame and Seurat input remains
+#'   a Seurat object. With `output = "report"`, returns a `verymad_qc` list
+#'   containing `flags`, `thresholds`, and `settings`. Threshold rows report
+#'   limits on transformed and raw scales, status, and used, flagged, and
+#'   unresolved counts. A batch adds one row per metric and batch.
 #' @export
 #' @examples
 #' qc_metadata <- data.frame(
@@ -43,7 +59,8 @@
 mad_qc <- function(data, metrics, nmads = 3, transform = "none",
                    output = c("annotate", "report"), min_n = 5,
                    zero_mad = c("na", "zero", "error"),
-                   overwrite = FALSE, verbose = TRUE) {
+                   overwrite = FALSE, verbose = TRUE, batch = NULL,
+                   subset = NULL) {
   output <- match.arg(output)
   zero_mad <- match.arg(zero_mad)
   .validate_scalar_flag(overwrite, "overwrite")
@@ -66,6 +83,7 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   }
 
   metrics <- .validate_metrics(data, metrics)
+  strata <- .validate_qc_strata(batch, subset, nrow(data))
   transforms <- .resolve_transforms(transform, names(metrics))
   targets <- c(paste0(names(metrics), "_mad_outlier"), "mad_qc_outlier")
   if (output == "annotate" && !overwrite) {
@@ -76,7 +94,8 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   }
 
   result <- .qc_engine(data, metrics, transforms, nmads, min_n, zero_mad,
-                       annotate = output == "annotate" && !is_seurat)
+                       annotate = output == "annotate" && !is_seurat,
+                       batch = strata$batch, reference = strata$reference)
   if (verbose) .inform_qc(result, nrow(data))
   if (output == "report") return(result)
 
@@ -87,6 +106,20 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
     return(SeuratObject::AddMetaData(original, metadata = metadata))
   }
   result$annotated
+}
+
+.validate_qc_strata <- function(batch, subset, n) {
+  if (!is.null(batch)) {
+    if (!is.atomic(batch) || !is.null(dim(batch)) || length(batch) != n || anyNA(batch)) {
+      stop("`batch` must be a non-missing vector with one value per observation.", call. = FALSE)
+    }
+    batch <- as.character(batch)
+    if (any(batch == "")) stop("`batch` cannot contain empty labels.", call. = FALSE)
+  }
+  if (!is.null(subset) && (!is.logical(subset) || !is.null(dim(subset)) || length(subset) != n || anyNA(subset))) {
+    stop("`subset` must be a non-missing logical vector with one value per observation.", call. = FALSE)
+  }
+  list(batch = batch, reference = if (is.null(subset)) rep(TRUE, n) else subset)
 }
 
 .validate_scalar_flag <- function(x, name) {
@@ -146,54 +179,70 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
 }
 
 .qc_engine <- function(data, metrics, transforms, nmads, min_n, zero_mad,
-                       annotate = FALSE) {
+                       annotate = FALSE, batch = NULL, reference = rep(TRUE, nrow(data))) {
   n <- nrow(data); ids <- .observation_ids(data)
   flags <- data.frame(id = ids, stringsAsFactors = FALSE, check.names = FALSE)
-  thresholds <- vector("list", length(metrics)); insufficient <- character()
+  groups <- if (is.null(batch)) list(seq_len(n)) else
+    split(seq_len(n), factor(batch, levels = unique(batch)))
+  labels <- names(groups)
+  if (!length(groups)) {
+    groups <- list(integer())
+    labels <- if (is.null(batch)) NULL else NA_character_
+  }
+  thresholds <- list(); insufficient <- character(); threshold_i <- 0L
   for (i in seq_along(metrics)) {
     metric <- names(metrics)[i]; direction <- unname(metrics[[i]])
     raw <- if (is.matrix(data)) data[, metric] else data[[metric]]
     value <- .transform_metric(raw, transforms[[metric]], metric)
-    n_used <- sum(!is.na(value))
-    status <- "ok"; centre <- spread <- lower <- upper <- NA_real_
-    if (!n_used) status <- "all_missing" else if (n_used < min_n) {
-      status <- "insufficient_n"; insufficient <- c(insufficient, metric)
-    } else {
-      centre <- stats::median(value, na.rm = TRUE)
-      spread <- stats::mad(value, center = centre, constant = 1.4826, na.rm = TRUE)
-      if (spread == 0) {
-        status <- "zero_mad"
-        if (zero_mad == "error") stop(sprintf("MAD is zero for metric `%s`.", metric), call. = FALSE)
-        if (zero_mad == "zero") {
-          if (direction %in% c("lower", "both")) lower <- centre
-          if (direction %in% c("upper", "both")) upper <- centre
-        }
-      } else {
-        if (direction %in% c("lower", "both")) lower <- centre - nmads * spread
-        if (direction %in% c("upper", "both")) upper <- centre + nmads * spread
-      }
-    }
     flag <- rep(NA, n)
-    if (status == "ok" || (status == "zero_mad" && zero_mad == "zero")) {
-      present <- !is.na(value)
-      flag[present] <- switch(direction, lower = value[present] < lower, upper = value[present] > upper, both = value[present] < lower | value[present] > upper)
+    for (g in seq_along(groups)) {
+      rows <- groups[[g]]
+      reference_values <- value[rows[reference[rows]]]
+      n_used <- sum(!is.na(reference_values))
+      status <- "ok"; centre <- spread <- lower <- upper <- NA_real_
+      if (!any(!is.na(value[rows]))) status <- "all_missing" else if (n_used < min_n) {
+        status <- "insufficient_n"
+        insufficient <- c(insufficient, if (is.null(batch)) metric else paste0(metric, " [", labels[g], "]"))
+      } else {
+        centre <- stats::median(reference_values, na.rm = TRUE)
+        spread <- stats::mad(reference_values, center = centre, constant = 1.4826, na.rm = TRUE)
+        if (spread == 0) {
+          status <- "zero_mad"
+          if (zero_mad == "error") stop(sprintf("MAD is zero for metric `%s`.", metric), call. = FALSE)
+          if (zero_mad == "zero") {
+            if (direction %in% c("lower", "both")) lower <- centre
+            if (direction %in% c("upper", "both")) upper <- centre
+          }
+        } else {
+          if (direction %in% c("lower", "both")) lower <- centre - nmads * spread
+          if (direction %in% c("upper", "both")) upper <- centre + nmads * spread
+        }
+      }
+      if (status == "ok" || (status == "zero_mad" && zero_mad == "zero")) {
+        present <- rows[!is.na(value[rows])]
+        flag[present] <- switch(direction, lower = value[present] < lower, upper = value[present] > upper, both = value[present] < lower | value[present] > upper)
+      }
+      threshold_i <- threshold_i + 1L
+      thresholds[[threshold_i]] <- data.frame(
+        metric = metric, direction = direction, transform = transforms[[metric]],
+        median = centre, mad = spread, lower = lower, upper = upper,
+        lower_raw = if (is.na(lower)) NA_real_ else switch(transforms[[metric]], none = lower, log1p = expm1(lower), log10 = 10^lower),
+        upper_raw = if (is.na(upper)) NA_real_ else switch(transforms[[metric]], none = upper, log1p = expm1(upper), log10 = 10^upper),
+        status = status, n_used = n_used, n_flagged = sum(flag[rows], na.rm = TRUE),
+        n_unresolved = sum(is.na(flag[rows])), stringsAsFactors = FALSE,
+        check.names = FALSE
+      )
+      if (!is.null(batch)) thresholds[[threshold_i]]$batch <- labels[g]
     }
     flags[[metric]] <- flag
-    n_flagged <- sum(flag, na.rm = TRUE)
-    n_unresolved <- sum(is.na(flag))
-    inverse <- switch(transforms[[metric]], none = identity, log1p = expm1, log10 = function(x) 10^x)
-    thresholds[[i]] <- data.frame(metric = metric, direction = direction, transform = transforms[[metric]],
-      median = centre, mad = spread, lower = lower, upper = upper,
-      lower_raw = if (is.na(lower)) NA_real_ else inverse(lower),
-      upper_raw = if (is.na(upper)) NA_real_ else inverse(upper), status = status,
-      n_used = n_used, n_flagged = n_flagged, n_unresolved = n_unresolved,
-      stringsAsFactors = FALSE, check.names = FALSE)
   }
   if (length(insufficient)) warning(sprintf("Insufficient usable observations for metric(s): %s.", paste(insufficient, collapse = ", ")), call. = FALSE)
   flags$mad_qc_outlier <- .combine_flags(flags[names(metrics)])
-  out <- list(flags = flags, thresholds = do.call(rbind, thresholds), settings = list(
+  settings <- list(
     metrics = metrics, transform = transforms, nmads = nmads, constant = 1.4826,
-    min_n = min_n, zero_mad = zero_mad))
+    min_n = min_n, zero_mad = zero_mad)
+  if (any(!reference)) settings$n_reference <- sum(reference)
+  out <- list(flags = flags, thresholds = do.call(rbind, thresholds), settings = settings)
   class(out) <- c("verymad_qc", "list")
   if (annotate) {
     annotated <- if (is.matrix(data)) as.data.frame(data, check.names = FALSE,
@@ -214,10 +263,72 @@ mad_qc <- function(data, metrics, nmads = 3, transform = "none",
   unname(out)
 }
 
+#' Plot MAD QC flags by metric and batch
+#'
+#' Show raw metric values by batch with flagged and unresolved observations
+#' highlighted. Each metric has its own panel. Requires `ggplot2`.
+#'
+#' @param data Annotated data frame or Seurat object returned by [mad_qc()].
+#' @param metrics Character vector of annotated numeric metric columns.
+#' @param batch Optional non-missing vector with one batch label per
+#'   observation. If omitted, plot all observations in one group.
+#' @return A `ggplot` object with one facet per metric.
+#' @export
+#' @examples
+#' if (requireNamespace("ggplot2", quietly = TRUE)) {
+#'   x <- data.frame(metric = c(1:5, 100), sample = rep(c("A", "B"), each = 3))
+#'   x <- mad_qc(x, c(metric = "upper"), batch = x$sample, verbose = FALSE)
+#'   plot_mad_qc(x, "metric", batch = x$sample)
+#' }
+plot_mad_qc <- function(data, metrics, batch = NULL) {
+  if (!requireNamespace("ggplot2", quietly = TRUE)) {
+    stop("`plot_mad_qc()` requires the `ggplot2` package.", call. = FALSE)
+  }
+  if (inherits(data, "Seurat")) {
+    if (!requireNamespace("SeuratObject", quietly = TRUE)) {
+      stop("Seurat input requires the `SeuratObject` package.", call. = FALSE)
+    }
+    data <- data[[]]
+  }
+  if (!is.data.frame(data)) stop("`data` must be annotated metadata or a Seurat object.", call. = FALSE)
+  if (!is.character(metrics) || !length(metrics) || anyNA(metrics) || any(metrics == "") || anyDuplicated(metrics)) {
+    stop("`metrics` must be a non-empty character vector with unique metric names.", call. = FALSE)
+  }
+  missing <- setdiff(c(metrics, paste0(metrics, "_mad_outlier")), names(data))
+  if (length(missing)) stop(sprintf("Missing metric or QC flag column(s): %s.", paste(missing, collapse = ", ")), call. = FALSE)
+  if (!all(vapply(metrics, function(metric) is.numeric(data[[metric]]), logical(1)))) {
+    stop("Selected metric columns must be numeric.", call. = FALSE)
+  }
+  flag_names <- paste0(metrics, "_mad_outlier")
+  if (!all(vapply(flag_names, function(flag) is.logical(data[[flag]]), logical(1)))) {
+    stop("Selected QC flag columns must be logical.", call. = FALSE)
+  }
+  strata <- .validate_qc_strata(batch, NULL, nrow(data))
+  batch_labels <- if (is.null(strata$batch)) rep("All observations", nrow(data)) else strata$batch
+  plots <- lapply(seq_along(metrics), function(i) {
+    metric <- metrics[i]
+    flag <- data[[paste0(metric, "_mad_outlier")]]
+    status <- ifelse(is.na(flag), "Unresolved", ifelse(flag, "Flagged", "Not flagged"))
+    data.frame(metric = metric, value = data[[metric]],
+               status = factor(status, levels = c("Not flagged", "Flagged", "Unresolved")),
+               batch = batch_labels, stringsAsFactors = FALSE)
+  })
+  plot_data <- do.call(rbind, plots)
+  plot_data$batch <- factor(plot_data$batch, levels = unique(plot_data$batch))
+  ggplot2::ggplot(plot_data, ggplot2::aes(x = batch, y = value)) +
+    ggplot2::geom_boxplot(outlier.shape = NA, color = "grey55") +
+    ggplot2::geom_jitter(ggplot2::aes(color = status), width = 0.15,
+                         alpha = 0.5, size = 0.7) +
+    ggplot2::facet_wrap(ggplot2::vars(metric), scales = "free_y") +
+    ggplot2::labs(x = if (is.null(strata$batch)) NULL else "Batch",
+                  y = NULL, color = "QC status") +
+    ggplot2::theme_bw()
+}
+
 .inform_qc <- function(result, n) {
   metrics <- names(result$settings$metrics)
   combined <- result$flags$mad_qc_outlier
-  unsuccessful <- sum(result$thresholds$status != "ok")
+  unsuccessful <- length(unique(result$thresholds$metric[result$thresholds$status != "ok"]))
   cli::cli_inform("veryMAD \u2022 observation QC")
   n_metrics <- length(metrics)
   cli::cli_inform(sprintf("%d observations checked across %d metric%s", n, n_metrics,
@@ -238,7 +349,7 @@ print.verymad_qc <- function(x, ...) {
   cat("Metrics:", length(metrics), "\n")
   cat("Observations flagged:", sum(x$flags$mad_qc_outlier %in% TRUE), "\n")
   cat("Observations unresolved:", sum(is.na(x$flags$mad_qc_outlier)), "\n")
-  cat("Metrics without estimated thresholds:", sum(x$thresholds$status != "ok"), "\n")
+  cat("Metrics without estimated thresholds:", length(unique(x$thresholds$metric[x$thresholds$status != "ok"])), "\n")
   if (length(status)) cat("Threshold status:", paste(names(status), status, sep = "=", collapse = ", "), "\n")
   invisible(x)
 }

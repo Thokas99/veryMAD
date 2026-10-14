@@ -1,3 +1,5 @@
+utils::globalVariables(c("metric", "status", "value"))
+
 .verymad_banner <- function(version = as.character(utils::packageVersion("veryMAD"))) {
   paste0("veryMAD ", version, ": MAD quality control and robust scaling")
 }

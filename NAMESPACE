@@ -3,3 +3,4 @@
 S3method(print,verymad_qc)
 export(mad_qc)
 export(mad_scale)
+export(plot_mad_qc)

@@ -2,7 +2,7 @@
 % Please edit documentation in R/mad-qc.R
 \name{mad_qc}
 \alias{mad_qc}
-\title{Explicit MAD quality-control annotation}
+\title{Annotate MAD-based quality-control flags}
 \usage{
 mad_qc(
   data,
@@ -13,40 +13,60 @@ mad_qc(
   min_n = 5,
   zero_mad = c("na", "zero", "error"),
   overwrite = FALSE,
-  verbose = TRUE
+  verbose = TRUE,
+  batch = NULL,
+  subset = NULL
 )
 }
 \arguments{
-\item{data}{A data frame, tibble, numeric matrix, or Seurat object.}
+\item{data}{A data frame, numeric matrix, or Seurat object. For Seurat,
+metrics must already be present in cell metadata.}
 
-\item{metrics}{A non-empty named character vector with unique metric names;
-values are \code{"lower"}, \code{"upper"}, or \code{"both"}.}
+\item{metrics}{A non-empty named character vector with unique numeric
+column names and values \code{"lower"}, \code{"upper"}, or \code{"both"}.}
 
-\item{nmads}{Positive number of MADs from the median for the limits.}
+\item{nmads}{Positive finite number of scaled MADs from the median used for
+each limit. The MAD uses the normal-consistency constant 1.4826.}
 
-\item{transform}{A scalar transformation or named partial overrides.
-Supported values are \code{"none"}, \code{"log1p"}, and \code{"log10"}.}
+\item{transform}{One method for all metrics or named overrides; unspecified
+metrics use \code{"none"}. Supported methods are \code{"none"}, \code{"log1p"}, and
+\code{"log10"}.}
 
-\item{output}{Return annotated data by default; use \code{"report"} for flags,
-thresholds, and settings.}
+\item{output}{\code{"annotate"} adds flags to the input; \code{"report"} returns flags,
+limits, and settings without modifying the input.}
 
-\item{min_n}{Minimum number of finite, non-missing observations required.}
+\item{min_n}{Positive integer minimum number of non-missing reference
+observations per metric and batch group (default 5). Smaller groups have
+unresolved flags.}
 
-\item{zero_mad}{Handling of a zero MAD: \code{"na"}, \code{"zero"}, or \code{"error"}.}
+\item{zero_mad}{Policy when a group's MAD is zero: \code{"na"} (default) leaves
+flags unresolved, \code{"zero"} sets the limit at the median, and \code{"error"}
+stops.}
 
-\item{overwrite}{Replace existing flag columns?}
+\item{overwrite}{Replace existing QC flag columns when annotating?}
 
 \item{verbose}{Print a summary?}
+
+\item{batch}{Optional non-missing vector with one label per observation.
+Estimate separate limits within each label.}
+
+\item{subset}{Optional non-missing logical vector selecting reference
+observations for estimation. Apply the resulting limits to every row.}
 }
 \value{
-Annotated input or a \code{verymad_qc} list with \code{flags}, \code{thresholds},
-and \code{settings}. Threshold reports include finite observations used and
-per-metric flagged and unresolved counts.
+With \code{output = "annotate"}, returns the input with per-metric and
+combined flags; matrix input returns a data frame and Seurat input remains
+a Seurat object. With \code{output = "report"}, returns a \code{verymad_qc} list
+containing \code{flags}, \code{thresholds}, and \code{settings}. Threshold rows report
+limits on transformed and raw scales, status, and used, flagged, and
+unresolved counts. A batch adds one row per metric and batch.
 }
 \description{
-Rows are observations. Select numeric metric columns and a tail direction
-for each. veryMAD estimates one threshold per metric across the input rows
-and returns annotated metadata or a \code{verymad_qc} report.
+Rows are observations. For each selected numeric metric, estimate limits at
+the median plus or minus \code{nmads} scaled MADs, then flag the selected tail.
+Estimation follows any transformation and can be stratified by \code{batch} or
+restricted to a reference set with \code{subset}. Flags are returned for every
+observation.
 }
 \examples{
 qc_metadata <- data.frame(

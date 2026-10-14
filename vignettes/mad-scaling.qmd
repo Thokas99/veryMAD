@@ -12,9 +12,9 @@ knitr:
     comment: "#>"
 ---
 
-`mad_scale()` centers numeric data by its median and divides by its median
-absolute deviation (MAD). Set `center` or `scale` to `FALSE` to skip that
-operation.
+`mad_scale()` optionally subtracts the median and divides by the scaled
+median absolute deviation (MAD). The default MAD constant, 1.4826, is
+consistent with the standard deviation for normally distributed data.
 
 ```{r}
 #| label: setup
@@ -22,9 +22,7 @@ operation.
 library(veryMAD)
 ```
 
-## Scale a vector
-
-This example scales expression summaries for five genes.
+## Vectors
 
 ```{r}
 gene_expression <- c(
@@ -35,16 +33,21 @@ gene_expression <- c(
   gene_E = 18.0
 )
 
-scaled_expression <- mad_scale(gene_expression)
-round(scaled_expression, 2)
+round(mad_scale(gene_expression), 2)
 ```
 
 Names and missing values are preserved.
 
-## Scale an expression matrix
+## Matrices
 
-For a matrix, `margin = 1` scales rows and `margin = 2` scales columns. Here
-rows are genes and columns are samples.
+For matrices, the margin selects which groups are scaled:
+
+| `margin` | Groups scaled |
+| --- | --- |
+| `1` or `"rows"` | Each row |
+| `2` or `"columns"` | Each column |
+
+Here, rows are genes and columns are samples.
 
 ```{r}
 expression_matrix <- matrix(
@@ -61,16 +64,20 @@ expression_matrix <- matrix(
   )
 )
 
-scaled_by_sample <- mad_scale(expression_matrix, margin = 2)
-round(scaled_by_sample, 2)
+round(mad_scale(expression_matrix, margin = "columns"), 2)
 ```
 
-Dimensions and dimnames are preserved. The default `zero_mad = "na"` returns
-`NA` for zero-MAD groups. `"zero"` uses a unit denominator; centered results
-are unscaled deviations. Choose `"error"` to stop on zero MAD.
+Dimensions and dimnames are preserved. When a group has zero MAD, choose how
+to handle it:
+
+| `zero_mad` | Behavior when `scale = TRUE` |
+| --- | --- |
+| `"na"` (default) | Return `NA` for the affected group |
+| `"zero"` | Use a unit denominator; centered values are deviations from the median |
+| `"error"` | Stop |
 
 ```{r}
-mostly_constant <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
-mad_scale(mostly_constant)
-mad_scale(mostly_constant, zero_mad = "zero")
+constant_values <- c(value_1 = 1, value_2 = 1, value_3 = 1, outlier = 100)
+mad_scale(constant_values)
+mad_scale(constant_values, zero_mad = "zero")
 ```

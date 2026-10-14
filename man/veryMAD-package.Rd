@@ -4,10 +4,10 @@
 \name{veryMAD-package}
 \alias{veryMAD}
 \alias{veryMAD-package}
-\title{veryMAD: MAD quality control and robust scaling}
+\title{veryMAD: MAD-Based QC and Robust Scaling}
 \description{
-Computes observation-level MAD flags and robust scaling. Users choose the
-metrics and settings; filtering remains in the analysis workflow.
+Annotates selected metrics with median absolute deviation (MAD) flags and
+scales numeric data. Users define the metrics and make filtering decisions.
 }
 \seealso{
 Useful links:

@@ -6,6 +6,7 @@ reference:
   - title: Quality control
     contents:
       - mad_qc
+      - plot_mad_qc
   - title: Robust scaling
     contents:
       - mad_scale
