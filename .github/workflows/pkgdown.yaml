@@ -31,6 +31,10 @@ jobs:
       - name: Install SPARSim from GitLab
         run: |
           lib <- .libPaths()[1]
+          install.packages("BiocManager", lib = lib)
+          repos <- BiocManager::repositories()
+          repos["CRAN"] <- getOption("repos")["CRAN"]
+          options(repos = repos)
           install.packages(c("devtools", "remotes"), lib = lib)
           devtools::install_gitlab("sysbiobig/sparsim", lib = lib, force = TRUE)
         shell: Rscript {0}
